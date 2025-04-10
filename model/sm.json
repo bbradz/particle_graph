@@ -1,0 +1,387 @@
+{
+    "nodes": {
+        "particles": [
+            {
+                "id": "f1",
+                "type": "fermion",
+                "name": "electron",
+                "label": "e",
+                "mass": 0.000511,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": -3}
+            },
+            {
+                "id": "f2",
+                "type": "fermion",
+                "name": "muon",
+                "label": "mu",
+                "mass": 0.1056583745,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": -3}
+            },
+            {
+                "id": "f3",
+                "type": "fermion",
+                "name": "tau",
+                "label": "ta",
+                "mass": 1.77686,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": -3}
+            },
+            {
+                "id": "f4",
+                "type": "fermion",
+                "name": "electron-neutrino",
+                "label": "ve",
+                "mass": 0,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": 0}
+            },
+            {
+                "id": "f5",
+                "type": "fermion",
+                "name": "muon-neutrino",
+                "label": "vm",
+                "mass": 0,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": 0}
+            },
+            {
+                "id": "f6",
+                "type": "fermion",
+                "name": "tau-neutrino",
+                "label": "vt",
+                "mass": 0,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": 0}
+            },
+            {
+                "id": "f7",
+                "type": "fermion",
+                "name": "up-quark",
+                "label": "u",
+                "mass": 0.0023,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": 2}
+            },
+            {
+                "id": "f8",
+                "type": "fermion",
+                "name": "down-quark",
+                "label": "d",
+                "mass": 0.0047,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": -1}
+            },
+            {
+                "id": "f9",
+                "type": "fermion",
+                "name": "charm-quark",
+                "label": "c",
+                "mass": 1.27,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": 2}
+            },
+            {
+                "id": "f10",
+                "type": "fermion",
+                "name": "strange-quark",
+                "label": "s",
+                "mass": 0.095,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": -1}
+            },
+            {
+                "id": "f11",
+                "type": "fermion",
+                "name": "top-quark",
+                "label": "t",
+                "mass": 172.44,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": 2}
+            },
+            {
+                "id": "f12",
+                "type": "fermion",
+                "name": "bottom-quark",
+                "label": "b",
+                "mass": 4.18,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": -1}
+            },
+            {
+                "id": "s1",
+                "type": "scalar",
+                "scalar_type": "real",
+                "name": "Higgs",
+                "label": "H",
+                "goldstone": null, 
+                "mass": 125.09,
+                "self_conjugate": true,
+                "QuantumNumber": {"Q": 0}
+            },
+            {
+                "id": "s2",
+                "type": "scalar",
+                "scalar_type": "real",
+                "name": "neutral Goldstone Boson",
+                "label": "G0",
+                "goldstone": "Z",
+                "mass": 91.1876,
+                "self_conjugate": true,
+                "QuantumNumber": {"Q": 0}
+            },
+            {
+                "id": "s3",
+                "type": "scalar",
+                "scalar_type": "complex",
+                "name": "charged Goldstone Boson",
+                "label": "G",
+                "goldstone": "W",
+                "mass": 80.385,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": 3}
+            }
+        ],
+        "multiplets": [
+            {
+                "id": "m1",
+                "label": "LL",
+                "dim": 2,
+                "gen":3,
+                "reps": ["singlet", "fnd", -3],
+                "QuantumNumber": {"LeptonNumber": 3, "BaryonNumber": 0}
+            },
+            {
+                "id": "m2",
+                "label": "LR",
+                "dim": 1,
+                "gen": 3,
+                "reps": ["singlet", "singlet", -6],
+                "QuantumNumber": {"LeptonNumber": 3, "BaryonNumber": 0}
+            },
+            {
+                "id": "m3",
+                "label": "QL",
+                "dim": 2,
+                "gen": 3,
+                "reps": ["fnd", "fnd", 1],
+                "QuantumNumber": {"LeptonNumber": 3, "BaryonNumber": 1}
+            },
+            {
+                "id": "m4",
+                "label": "uR",
+                "dim": 1,
+                "gen": 3,
+                "reps": ["fnd", "fnd", 4],
+                "QuantumNumber": {"LeptonNumber": 0, "BaryonNumber": 2}
+            },
+            {
+                "id": "m5",
+                "label": "dR",
+                "dim": 1,
+                "gen": 3,   
+                "reps": ["fnd", "fnd", -2],
+                "QuantumNumber": {"LeptonNumber": 0, "BaryonNumber": -1}
+            }
+        ],
+        "interactions": [
+            {
+                "id": "i1",
+                "type": "yukawa"
+            },
+            {
+                "id": "i2",
+                "type": "yukawa"
+            },
+            {
+                "id": "i3",
+                "type": "yukawa"
+            },
+            {
+                "id": "i4",
+                "type": "scalar_mass"
+            },
+            {
+                "id": "i5",
+                "type": "scalar4"
+            },
+            {
+                "id": "i6",
+                "type": "DC"
+            },
+            {
+                "id": "i7",
+                "type": "DC"
+            },
+            {
+                "id": "i8",
+                "type": "DC"
+            },
+            {
+                "id": "i9",
+                "type": "DC"
+            },
+            {
+                "id": "i10",
+                "type": "DC"
+            },
+            {
+                "id": "i11",
+                "type": "DC"
+            }
+        ]
+    },
+    "links": {
+        "multiplets": [
+            {
+                "source": "f1",
+                "target": "m1",
+                "spin_state": "left",
+                "loc": [1, 1]
+            },
+            {
+                "source": "f4",
+                "target": "m1",
+                "spin_state": "left",
+                "loc": [1, 2]
+            },
+            {
+                "source": "f2",
+                "target": "m1",
+                "spin_state": "left",
+                "loc": [2, 1]
+            },
+            {
+                "source": "f5",
+                "target": "m1",
+                "spin_state": "left",
+                "loc": [2, 2]
+            },
+            {
+                "source": "f3",
+                "target": "m1",
+                "spin_state": "left",
+                "loc": [3, 1]
+            },
+            {
+                "source": "f6",
+                "target": "m1",
+                "spin_state": "left",
+                "loc": [3, 2]
+            },
+            {
+                "source": "f1",
+                "target": "m2",
+                "spin_state": "right",
+                "loc": [1, 1]
+            },
+            {
+                "source": "f2",
+                "target": "m2",
+                "spin_state": "right",
+                "loc": [2, 1]
+            },
+            {
+                "source": "f3",
+                "target": "m2",
+                "spin_state": "right",
+                "loc": [3, 1]
+            },
+            {
+                "source": "f7",
+                "target": "m3",
+                "spin_state": "left",
+                "loc": [1, 1]
+            },
+            {
+                "source": "f8",
+                "target": "m3",
+                "spin_state": "left",
+                "loc": [1, 2]
+            },
+            {
+                "source": "f9",
+                "target": "m3",
+                "spin_state": "left",
+                "loc": [2, 1]
+            },
+            {
+                "source": "f10",
+                "target": "m3",
+                "spin_state": "left",
+                "loc": [2, 2]
+            },
+            {
+                "source": "f11",
+                "target": "m3",
+                "spin_state": "left",
+                "loc": [3, 1]
+            },
+            {
+                "source": "f12",
+                "target": "m3",
+                "spin_state": "left",
+                "loc": [3, 2]
+            },
+            {
+                "source": "f7",
+                "target": "m4",
+                "spin_state": "right",
+                "loc": [1, 1]
+            },
+            {
+                "source": "f9",
+                "target": "m4",
+                "spin_state": "right",
+                "loc": [2, 1]
+            },
+            {
+                "source": "f11",
+                "target": "m4",
+                "spin_state": "right",
+                "loc": [3, 1]
+            },
+            {
+                "source": "f8",
+                "target": "m5",
+                "spin_state": "right",
+                "loc": [1, 1]
+            },
+            {
+                "source": "f10",
+                "target": "m5",
+                "spin_state": "right",
+                "loc": [2, 1]
+            },
+            {
+                "source": "f12",
+                "target": "m5",
+                "spin_state": "right",
+                "loc": [3, 1]
+            }
+        ],
+        "interactions": [
+            {
+                "source": "i6",
+                "target": "m1"
+            },
+            {
+                "source": "i7",
+                "target": "m2"
+            },
+            {
+                "source": "i8",
+                "target": "m3"
+            },
+            {
+                "source": "i9",
+                "target": "m4"
+            },
+            {
+                "source": "i10",
+                "target": "m5"
+            }
+        ]
+    }
+}
