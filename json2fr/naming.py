@@ -8,10 +8,8 @@ def number_to_greek(number):
     if number < 1 or number > 24:
         number = (number - 1) % 24 + 1  # Convert any int to an int between 1 and 24
     greek_letters = [
-        'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa',
-        'lambda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
-        'phi', 'chi', 'psi', 'omega'
-    ]
+        'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega']
+    
     if 0 <= number <= 24:
         return greek_letters[number - 1]  # Convert 1 to 'alpha', 2 to 'beta', etc.
     else:
@@ -19,11 +17,8 @@ def number_to_greek(number):
     
 def number_to_english(number):
     english_numbers = [
-        "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
-        "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen",
-        "Eighteen", "Nineteen", "Twenty", "TwentyOne", "TwentyTwo", "TwentyThree",
-        "TwentyFour"
-    ]
+        "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen", "Twenty", "TwentyOne", "TwentyTwo", "TwentyThree", "TwentyFour"
+        ]
     if 1 <= number <= 24:
         return english_numbers[number - 1]
     else:
@@ -36,4 +31,10 @@ def number_to_plural(number):
     if number < 1 or number > 10:
         raise ValueError("Number must be between 1 and 10")
     return plural[number - 1]
+    
+
+def index_style(index):
+    idx = ["i", "j", "k", "l", "m", "n", "a", "b", "c", "d"]
+    
+    return idx[index % 10] * (index // 10 + 1)
     

@@ -1,11 +1,47 @@
 {
     "nodes": {
+        "GaugeGroups": [
+            {
+                "id": "g1",
+                "name": "U1Y",
+                "charge": "Y",
+                "group": "U(1)",
+                "confinement": false,
+                "CouplingConstant": "g1",
+                "gauge_boson": "B"
+            },
+            {
+                "id": "g2",
+                "name": "SU2L",
+                "charge": "I",
+                "group": "SU(2)",
+                "confinement": false,
+                "CouplingConstant": "gw",
+                "gauge_boson": "Wi"
+            },
+            {
+                "id": "g3",
+                "name": "SU3C",
+                "charge": "C",
+                "group": "SU(3)",
+                "confinement": true,
+                "CouplingConstant": "gs",
+                "gauge_boson": "G"
+            }
+        ],
+        "vev": [
+            {
+                "id": "vev1",
+                "vacuum": [0, 1],
+                "value": 246.22
+            }
+        ],
         "particles": [
             {
                 "id": "f1",
                 "type": "fermion",
-                "name": "electron",
-                "label": "e",
+                "full_name": "electron",
+                "name": "e",
                 "mass": 0.000511,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": -3}
@@ -13,8 +49,8 @@
             {
                 "id": "f2",
                 "type": "fermion",
-                "name": "muon",
-                "label": "mu",
+                "full_name": "muon",
+                "name": "mu",
                 "mass": 0.1056583745,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": -3}
@@ -22,8 +58,8 @@
             {
                 "id": "f3",
                 "type": "fermion",
-                "name": "tau",
-                "label": "ta",
+                "full_name": "tau",
+                "name": "ta",
                 "mass": 1.77686,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": -3}
@@ -31,8 +67,8 @@
             {
                 "id": "f4",
                 "type": "fermion",
-                "name": "electron-neutrino",
-                "label": "ve",
+                "full_name": "electron-neutrino",
+                "name": "ve",
                 "mass": 0,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": 0}
@@ -40,8 +76,8 @@
             {
                 "id": "f5",
                 "type": "fermion",
-                "name": "muon-neutrino",
-                "label": "vm",
+                "full_name": "muon-neutrino",
+                "name": "vm",
                 "mass": 0,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": 0}
@@ -49,8 +85,8 @@
             {
                 "id": "f6",
                 "type": "fermion",
-                "name": "tau-neutrino",
-                "label": "vt",
+                "full_name": "tau-neutrino",
+                "name": "vt",
                 "mass": 0,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": 0}
@@ -58,8 +94,8 @@
             {
                 "id": "f7",
                 "type": "fermion",
-                "name": "up-quark",
-                "label": "u",
+                "full_name": "up-quark",
+                "name": "u",
                 "mass": 0.0023,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": 2}
@@ -67,8 +103,8 @@
             {
                 "id": "f8",
                 "type": "fermion",
-                "name": "down-quark",
-                "label": "d",
+                "full_name": "down-quark",
+                "name": "d",
                 "mass": 0.0047,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": -1}
@@ -76,8 +112,8 @@
             {
                 "id": "f9",
                 "type": "fermion",
-                "name": "charm-quark",
-                "label": "c",
+                "full_name": "charm-quark",
+                "name": "c",
                 "mass": 1.27,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": 2}
@@ -85,8 +121,8 @@
             {
                 "id": "f10",
                 "type": "fermion",
-                "name": "strange-quark",
-                "label": "s",
+                "full_name": "strange-quark",
+                "name": "s",
                 "mass": 0.095,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": -1}
@@ -94,8 +130,8 @@
             {
                 "id": "f11",
                 "type": "fermion",
-                "name": "top-quark",
-                "label": "t",
+                "full_name": "top-quark",
+                "name": "t",
                 "mass": 172.44,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": 2}
@@ -103,8 +139,8 @@
             {
                 "id": "f12",
                 "type": "fermion",
-                "name": "bottom-quark",
-                "label": "b",
+                "full_name": "bottom-quark",
+                "name": "b",
                 "mass": 4.18,
                 "self_conjugate": false,
                 "QuantumNumber": {"Q": -1}
@@ -112,77 +148,72 @@
             {
                 "id": "s1",
                 "type": "scalar",
-                "scalar_type": "real",
-                "name": "Higgs",
-                "label": "H",
-                "goldstone": null, 
-                "mass": 125.09,
-                "self_conjugate": true,
-                "QuantumNumber": {"Q": 0}
+                "scalar_type": "complex",
+                "full_name": "charged boson",
+                "name": "phi+",
+                "mass": null,
+                "self_conjugate": false,
+                "QuantumNumber": {"Q": 1}
             },
             {
                 "id": "s2",
                 "type": "scalar",
-                "scalar_type": "real",
-                "name": "neutral Goldstone Boson",
-                "label": "G0",
-                "goldstone": "Z",
-                "mass": 91.1876,
-                "self_conjugate": true,
-                "QuantumNumber": {"Q": 0}
-            },
-            {
-                "id": "s3",
-                "type": "scalar",
                 "scalar_type": "complex",
-                "name": "charged Goldstone Boson",
-                "label": "G",
-                "goldstone": "W",
-                "mass": 80.385,
+                "full_name": "neutral boson",
+                "name": "phi0",
+                "mass": null,
                 "self_conjugate": false,
-                "QuantumNumber": {"Q": 3}
+                "QuantumNumber": {"Q": 0}
             }
         ],
         "multiplets": [
             {
                 "id": "m1",
-                "label": "LL",
+                "name": "LL",
                 "dim": 2,
                 "gen":3,
-                "reps": ["singlet", "fnd", -3],
+                "reps": {"g1": -3, "g2": "fnd", "g3": "singlet"},
                 "QuantumNumber": {"LeptonNumber": 3, "BaryonNumber": 0}
             },
             {
                 "id": "m2",
-                "label": "LR",
+                "name": "LR",
                 "dim": 1,
                 "gen": 3,
-                "reps": ["singlet", "singlet", -6],
+                "reps": {"g1": -3, "g2": "singlet", "g3": "singlet"},
                 "QuantumNumber": {"LeptonNumber": 3, "BaryonNumber": 0}
             },
             {
                 "id": "m3",
-                "label": "QL",
+                "name": "QL",
                 "dim": 2,
                 "gen": 3,
-                "reps": ["fnd", "fnd", 1],
+                "reps": {"g1": 1, "g2": "fnd", "g3": "fnd"},
                 "QuantumNumber": {"LeptonNumber": 3, "BaryonNumber": 1}
             },
             {
                 "id": "m4",
-                "label": "uR",
+                "name": "uR",
                 "dim": 1,
                 "gen": 3,
-                "reps": ["fnd", "fnd", 4],
+                "reps": {"g1": 4, "g2": "fnd", "g3": "fnd"},
                 "QuantumNumber": {"LeptonNumber": 0, "BaryonNumber": 2}
             },
             {
                 "id": "m5",
-                "label": "dR",
+                "name": "dR",
                 "dim": 1,
                 "gen": 3,   
-                "reps": ["fnd", "fnd", -2],
+                "reps": {"g1": -2, "g2": "fnd", "g3": "fnd"},
                 "QuantumNumber": {"LeptonNumber": 0, "BaryonNumber": -1}
+            },
+            {
+                "id": "m6",
+                "name": "Higgs",
+                "dim": 2,
+                "gen": 1,
+                "reps": {"g1": -3, "g2": "fnd", "g3": "singlet"},
+                "QuantumNumber": {"LeptonNumber": 0, "BaryonNumber": 0}
             }
         ],
         "interactions": [
@@ -193,42 +224,6 @@
             {
                 "id": "i2",
                 "type": "yukawa"
-            },
-            {
-                "id": "i3",
-                "type": "yukawa"
-            },
-            {
-                "id": "i4",
-                "type": "scalar_mass"
-            },
-            {
-                "id": "i5",
-                "type": "scalar4"
-            },
-            {
-                "id": "i6",
-                "type": "DC"
-            },
-            {
-                "id": "i7",
-                "type": "DC"
-            },
-            {
-                "id": "i8",
-                "type": "DC"
-            },
-            {
-                "id": "i9",
-                "type": "DC"
-            },
-            {
-                "id": "i10",
-                "type": "DC"
-            },
-            {
-                "id": "i11",
-                "type": "DC"
             }
         ]
     },
@@ -359,6 +354,18 @@
                 "target": "m5",
                 "spin_state": "right",
                 "loc": [3, 1]
+            },
+            {
+                "source": "s1",
+                "target": "m6",
+                "spin_state": null,
+                "loc": [1, 1]
+            },
+            {
+                "source": "s2",
+                "target": "m6",
+                "spin_state": null,
+                "loc": [1, 2]
             }
         ],
         "interactions": [
