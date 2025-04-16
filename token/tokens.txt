@@ -1,0 +1,54 @@
+[Group]
+    - type (U, SU)
+    - N (int)
+
+[GuageGroup]
+    - name (str)
+    - label (str)
+    - group (Group)
+
+[Q Numbers]
+    - dict
+
+[Higgs]
+    - vev (list of floats)
+    - Scalar Multiplets (Multiplet)
+    
+[Multiplet]
+    - label (str)
+    - name (str) id (int)
+    - dimension (int)
+    - generation (int)
+    - reps (list of int)
+    - gauge groups (list of GuageGroup)
+    - particles (list of ids)
+    
+[Particle]
+    - id (int)
+    - type (fermion, scalar, gauge)
+    - name (str)
+    - label (str)
+    - mass (float)
+    - self-conjugate (bool)
+    - quantum number (dict)
+    
+[Interaction]
+    - id (int)
+    - type (DC, Yukawa, PhiMass, Phi4, FmnFmn, FmnF~mn...)
+    - particles (list of ids)
+
+# ================================ #
+# =          Modules             = #
+# ================================ #
+
+Group Module
+[G] -> [type] -> [N]
+
+Particle Module
+[P] -> [type] -> [name] -> [label] -> [mass] -> [self-conjugate] -> [quantum number]
+
+Multiplet Module
+[M] -> [label] -> [name] -> [id] -> [dimension] -> [generation] -> [reps] -> [gauge groups] -> [P-id]
+
+Interaction Module
+[I] -> [id] -> [type] -> [M-id]
