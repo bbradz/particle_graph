@@ -1,6 +1,7 @@
 import naming
 from fractions import Fraction
 import numpy as np
+
 class UnphysicalMultiplet:  
     """
     Base class for multiplets representing gauge group representations.
@@ -15,7 +16,7 @@ class UnphysicalMultiplet:
         particles: List of particle objects contained in the multiplet
         QuantumNumber: Dictionary of quantum numbers
     """
-    def __init__(self, id, name, dim, gen, reps, gauge_groups, particles=[], QuantumNumber=None):
+    def __init__(self, id, name, dim, gen, reps, gauge_groups, particles=[], QuantumNumber=None, spin_state=None):
         self.id = id
         self.name = name
         self.dim = dim
@@ -23,29 +24,15 @@ class UnphysicalMultiplet:
         self.reps = reps
         self.gauge_groups = gauge_groups
         self.particles = particles
+        self.spin_state = spin_state
         self.QuantumNumber = QuantumNumber
         self.physical = False
 
-        # Apply multiplet quantum numbers to each particle
-        for g_idx, gen_particles in enumerate(self.particles):
-            for p_idx, particle in enumerate(gen_particles):
-                if particle == 0.0:
-                    raise ValueError(f"No particle is assigned to {self.name} at generation {g_idx} and position {p_idx}")
-
-                if self.color:
-                    particle.color = True
-                else:
-                    particle.color = False
-                    
-                if self.QuantumNumber is not None:
-                    if particle.QuantumNumber is None:
-                        particle.QuantumNumber = self.QuantumNumber
-                    else:
-                        # Merge quantum numbers if particle already has some
-                        particle.QuantumNumber.update(self.QuantumNumber)
-
         self.particle_full_names = self.get_particle_info("full_name")
         self.particle_names = self.get_particle_info("name")
+
+        self._merge_qnumbers()
+        self._assign_flavor()
 
     @property
     def GenerationIndex(self):
@@ -56,11 +43,17 @@ class UnphysicalMultiplet:
         
     @property
     def color(self):
-        return self.full_reps['SU3C']['confinement'] and self.full_reps['SU3C']["rep"] == "fnd"
+        """ Check if the multiplet has color. """
+        if self.full_reps['g3']['confinement'] and self.full_reps['g3']["rep"] == "fnd":
+            return 3
+        elif self.full_reps['g3']['confinement'] and self.full_reps['g3']["rep"] == "adj":
+            return 8
+        else:
+            return 1
     
     @property
     def full_reps(self):
-        """Sort the reps of the multiplet."""
+        """ Sort the reps of the multiplet. """
         assert len(self.reps) == len(self.gauge_groups)
 
         _full_reps = {}
@@ -74,7 +67,7 @@ class UnphysicalMultiplet:
                 'abelian': group.abelian,
                 'confinement': group.confinement
             }   
-            _full_reps[group.name] = rep_info
+            _full_reps[group.id] = rep_info
         return _full_reps
     
     @property
@@ -89,7 +82,6 @@ class UnphysicalMultiplet:
     @property
     def indices(self):
         """Write Indices for the unphysical multiplet."""
-        
         indices = []
         for key, value in self.full_reps.items():
             if not value['abelian']:
@@ -108,8 +100,34 @@ class UnphysicalMultiplet:
         return indices
 
     def __str__(self):
-        return f"Multiplet(name={self.name}, dim={self.dim}, gen={self.gen}, reps={self.reps}, type = {self.particle_type}, particles={self.particle_names})"
+        return f"Multiplet(name={self.name}, dim={self.dim}, gen={self.gen}, reps={self.reps}, type = {self.particle_type}, particles={self.particle_names}, spin_state={self.spin_state})"
     
+
+    def _merge_qnumbers(self):
+        for g_idx, gen_particles in enumerate(self.particles):
+            for p_idx, particle in enumerate(gen_particles):
+                if particle == 0.0:
+                    raise ValueError(f"No particle is assigned to {self.name} at generation {g_idx} and position {p_idx}")
+
+                particle.color = self.color
+
+                if self.QuantumNumber is not None:
+                    if particle.QuantumNumber is None:
+                        particle.QuantumNumber = self.QuantumNumber
+                    else:
+                        particle.QuantumNumber.update(self.QuantumNumber)
+
+    def _assign_flavor(self):
+        """ Assign flavor quantum number to the leptons in the multiplet. """
+        if self.QuantumNumber['LeptonNumber'] != 0:
+            for gen in self.particles:
+                flavor = [p.name for p in gen if p.QuantumNumber['Q'] == -3]
+                for particle in gen:
+                    if len(flavor) == 1:
+                        particle.flavor = flavor[0]
+                    else:
+                        raise ValueError(f"Invalid flavor for {particle.name}")
+
     def get_particle_info(self, info_type):
         """
         Extract specific information from particles.
@@ -164,11 +182,12 @@ class UnphysicalMultiplet:
     def write_Definition(self):
         """Write FeynRules definition for the multiplet."""
         definition = []
-        if self.dim > 1:
-            for i in range(self.dim):
-                definition.append(f"{self.name}[sp1_, {i}, ff_, cc] :> Module[{{sp2}}, {self.name}[sp2, cc, ff]]")
-        else:
-            definition.append(f"{self.name}[sp1_, ff_, cc] :> Module[{{sp2}}, Proj{self.name}[sp2, cc, ff]]")
+        if self.particle_type == "fermion":
+            if self.dim > 1:
+                for i in range(self.dim):
+                    definition.append(f"{self.name}[sp1_, {i}, ff_, cc] :> Module[{{sp2}}, {self.name}[sp2, cc, ff]]")
+            else:
+                definition.append(f"{self.name}[sp1_, ff_, cc] :> Module[{{sp2}}, Proj{self.name}[sp2, cc, ff]]")
 
         return str(definition).replace("'", "")
     
@@ -188,8 +207,6 @@ class UnphysicalMultiplet:
             "gauge_groups": self.group_names,
             "QuantumNumber": self.QuantumNumber
         }
-
-
 
 
 class PhysicalMultiplet:
@@ -234,7 +251,6 @@ class PhysicalMultiplet:
                 raise ValueError("All particles must have the same self-conjugate property in the multiplet.")
         return self_conjugate
 
-
     def __str__(self):
         return f"PhysicalMultiplet(id={self.id}, full_name={self.full_name}, name={self.name}, dim={self.dim}, gen={self.gen}, particles={self.particle_names}, QuantumNumber={self.QuantumNumber})"
 
@@ -261,8 +277,6 @@ class PhysicalMultiplet:
             else:
                 raise ValueError(f"Invalid info type: {info_type}")
         return particle_info
-
-
 
     def write_ClassMembers(self):
         """Format particle names for FeynRules ClassMembers."""
@@ -299,6 +313,11 @@ class PhysicalMultiplet:
 
         return str(self.QuantumNumber).replace(":", "->").replace("'", "")
 
+    def write_PDGID(self):
+        """Format PDG ID for FeynRules."""
+        PDG_list = [particle.pdg_id for particle in self.particles]
+        return str(PDG_list).replace("'", "").replace("[", "{").replace("]", "}")
+
     def write_Indices(self):
         """Format indices for FeynRules Indices."""
         idx_list = []
@@ -330,12 +349,7 @@ class PhysicalMultiplet:
 
 
 
-class HiggsSector:
-    """
-    Higgs sector of the Standard Model.
-    """
-    def __init__(self, Higgs_fields, vev):
-        self.Higgs_fields = Higgs_fields
-        self.vev = vev
-
-    
+if __name__ == "__main__":
+    from pdg_id import get_pdg_id
+    electron_id = get_pdg_id(mass=0.000511, charge=-3, color=1, spin=1)
+    print(f"Electron PDG ID: {electron_id}")

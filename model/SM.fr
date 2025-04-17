@@ -16,15 +16,15 @@ M$ModelName = "SM";
 
 M$Information = { 
   Authors      -> Bohr Network, 
-  Date         -> "2025-04-14", 
+  Date         -> "2025-04-17", 
 };
 
 FeynmanGauge = True;
 
 (* ************************** *)
-(* *****       VEV      ***** *)
+(* *****      vevs      ***** *)
 (* ************************** *)
-M$vevs = {}
+M$vevs = { {Phi[2], vev} }
 
 (* ************************** *)
 (* *****  Gauge groups  ***** *)
@@ -59,20 +59,24 @@ M$gaugeGroup = {
 (* *****    Indices     ***** *)
 (* ************************** *)
 
-IndexRange[Index[SU2D]] = Unfold[Range[2]],
-IndexRange[Index[Colour]] = NoUnfold[Range[3]],
 IndexRange[Index[ThreeGen]] = Range[3],
+IndexRange[Index[Colour]] = NoUnfold[Range[3]],
+IndexRange[Index[SU2D]] = Unfold[Range[2]],
 
-IndexStyle[SU2D, i];
+IndexStyle[ThreeGen, i];
 IndexStyle[Colour, j];
-IndexStyle[ThreeGen, k];
+IndexStyle[SU2D, k];
 
 
 (* ************************** *)
 (* *** Interaction orders *** *)
 (* ***  (as used by mg5)  *** *)
 (* ************************** *)
-M$InteractionOrderHierarchy = { }
+
+M$InteractionOrderHierarchy = {
+  {QCD, 1},
+  {QED, 2}
+};
 
 
 

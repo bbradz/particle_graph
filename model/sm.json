@@ -17,7 +17,7 @@
                 "group": "SU(2)",
                 "confinement": false,
                 "CouplingConstant": "gw",
-                "gauge_boson": "Wi"
+                "gauge_boson": "Wi"   
             },
             {
                 "id": "g3",
@@ -29,9 +29,10 @@
                 "gauge_boson": "G"
             }
         ],
-        "vev": [
+        "vevs": [
             {
-                "id": "vev1",
+                "id": "v1",
+                "name": "vev",
                 "vacuum": [0, 1],
                 "value": 246.22
             }
@@ -189,7 +190,7 @@
                 "dim": 2,
                 "gen": 3,
                 "reps": {"g1": 1, "g2": "fnd", "g3": "fnd"},
-                "QuantumNumber": {"LeptonNumber": 3, "BaryonNumber": 1}
+                "QuantumNumber": {"LeptonNumber": 0, "BaryonNumber": 1}
             },
             {
                 "id": "m4",
@@ -209,7 +210,7 @@
             },
             {
                 "id": "m6",
-                "name": "Higgs",
+                "name": "Phi",
                 "dim": 2,
                 "gen": 1,
                 "reps": {"g1": -3, "g2": "fnd", "g3": "singlet"},
@@ -366,6 +367,12 @@
                 "target": "m6",
                 "spin_state": null,
                 "loc": [1, 2]
+            }
+        ],
+        "vevs": [
+            {
+                "source": "v1",
+                "target": "m6"
             }
         ],
         "interactions": [

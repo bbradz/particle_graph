@@ -27,11 +27,10 @@ class model:
         # read JSON file and write FR model file
         self.read_model()
 
-
     def read_json(self):
         """Read JSON file and return the data as a dictionary."""
         import json
-        
+
         try:
             with open(self.JSON_PATH, 'r') as f:
                 data = json.load(f)
@@ -73,14 +72,35 @@ class model:
         return gauge_groups
 
     @staticmethod
+    def read_higgs_gauge_sector(model_data, unphy_scalars, gauge_groups):
+        """Read vev from JSON file"""
+
+        from higgs_gauge_sector import HiggsGaugeSector
+        
+        higgs_gauge_sector = {}
+        
+        for vev in model_data['nodes']['vevs']:
+            vev_id = vev['id']
+            for link in model_data['links']['vevs']:
+                if link['source'] == vev_id:
+                    where = "target"
+                elif link['target'] == vev_id:
+                    where = "source"
+                else:
+                    continue 
+
+            higgs_gauge_sector[vev['id']] = HiggsGaugeSector(unphy_scalars[link[where]], gauge_groups, vev)
+
+        return higgs_gauge_sector
+
+    @staticmethod
     def read_particles(model_data):
         """Read particles from JSON file"""
 
-        from particles import Fermion, Scalar, VectorBoson
+        from particles import Fermion, Scalar
         
         scalars = {}
         fermions = {}
-        vector_bosons = {}
         for particle in model_data['nodes']['particles']:
             #= fermions =#
             if particle['type'] == 'fermion':
@@ -116,13 +136,8 @@ class model:
 
             #= gauge bosons =#
             elif particle['type'] == 'gauge':
-                raise ValueError(f"Gauge bosons are not automatically generated from Gauge Groups.")
-                # new_gauge = VectorBoson(id = particle['id'], 
-                #                         name = particle['name'],
-                #                         mass = 0, # Gauge Bosons are massless before SSB
-                #                         self_conjugate = particle['self_conjugate'])
-                # vector_bosons[particle['id']] = new_gauge
-                
+                raise ValueError(f"Gauge bosons are not automatically generated from Guage.")
+            
             else:
                 raise ValueError(f"Invalid particle type: {particle['type']}")
             
@@ -152,15 +167,7 @@ class model:
 
                 particles[link[where]].gen_idx = link['loc'][0]
                 particles[link[where]].dim_idx = link['loc'][1]
-
-                if link['spin_state'] == 'left':
-                    particles_list[gen_idx][dim_idx] = particles[link[where]].left()
-                elif link['spin_state'] == 'right':
-                    particles_list[gen_idx][dim_idx] = particles[link[where]].right()
-                elif link['spin_state'] is None:
-                    particles_list[gen_idx][dim_idx] = particles[link[where]]
-                else:
-                    raise ValueError(f"Invalid Chirality for particle {link[where]}")
+                particles_list[gen_idx][dim_idx] = particles[link[where]]
             
             new_unphy_mltplt = UnphysicalMultiplet(id = multiplet_id, 
                                                    name = multiplet["name"],
@@ -169,7 +176,8 @@ class model:
                                                    reps = multiplet["reps"],
                                                    gauge_groups = gauge_groups,
                                                    particles = particles_list,
-                                                   QuantumNumber = multiplet["QuantumNumber"]
+                                                   QuantumNumber = multiplet["QuantumNumber"],
+                                                   spin_state = link["spin_state"]
                                                    )
             unphy_mltplt[multiplet_id] = new_unphy_mltplt
         return unphy_mltplt
@@ -211,7 +219,7 @@ class model:
                     charge = qnumbers["Q"]
                     full_name = naming.number_to_alphabet(charge) + "Lepton"
                     name = naming.number_to_alphabet(charge) + "l"
-        
+
             fermions_in_multiplet = [fermion for fermion in fermions.values() if fermion.QuantumNumber == qnumbers]
             fermions_in_multiplet.sort(key=lambda fermion: fermion.gen_idx)
 
@@ -226,45 +234,38 @@ class model:
                                                )
             phy_mltplt[id] = new_phy_mltplt
         return phy_mltplt
-        
-    @staticmethod
-    def read_scalar_fields(scalars):
-        """Read scalar fields from JSON file"""
-        pass
 
     def read_model(self):
         """Read model from JSON file"""
         self.indices = []
         model_data = self.read_json()
         self.gauge_groups = model.read_gauge_groups(model_data)
-
-        self.scalars, self.fermions, self.vector_bosons = model.read_particles(model_data)
-        self.particles = {**self.scalars, **self.fermions, **self.vector_bosons}
+        
+        self.scalars, self.fermions = model.read_particles(model_data)
+        self.particles = {**self.scalars, **self.fermions}
+        
         self.unphy_mltplts = model.read_multiplets(self.gauge_groups, self.particles, model_data)
 
         self.unphy_fermions = {}
         self.unphy_scalars = {}
-        self.unphy_vector_bosons = {}
+        # unphysical gauge bosons will be produced in HiggsGaugeSector
 
         for m in self.unphy_mltplts.values():
             if m.particle_type == 'fermion':
                 self.unphy_fermions[m.id] = m
             elif m.particle_type == 'scalar':
                 self.unphy_scalars[m.id] = m
-            elif m.particle_type == 'gauge':
-                self.unphy_vector_bosons[m.id] = m
 
         self.phy_fermions = model.read_fermions(self.fermions)
+        self.higgs_gauge_sector = model.read_higgs_gauge_sector(model_data, self.unphy_scalars, self.gauge_groups)
 
         for m in self.unphy_mltplts.values():
             self.indices.extend(m.indices)
 
         self.indices = list(set(self.indices))
-        
         for idx in self.indices:
             if idx[3] is not None:
                 self.gauge_groups[idx[3]].reps.append(idx[1])
-
 
     def write_info(self, file):
         file.write(f"(* ************************** *)\n")
@@ -284,9 +285,12 @@ class model:
 
     def write_vev(self, file):
         file.write(f"(* ************************** *)\n")
-        file.write(f"(* *****       VEV      ***** *)\n")
+        file.write(f"(* *****      vevs      ***** *)\n")
         file.write(f"(* ************************** *)\n")
-        file.write(f"M$vevs = {{}}\n")
+        file.write(f"M$vevs = {{")
+        for _, h in self.higgs_gauge_sector.items():
+            file.write(f"{h.write_vev()}")
+        file.write(f"}}\n")
         file.write(f"\n")
         
     def write_group(self, file):
@@ -333,7 +337,11 @@ class model:
         file.write(f"(* *** Interaction orders *** *)\n")
         file.write(f"(* ***  (as used by mg5)  *** *)\n")
         file.write(f"(* ************************** *)\n")
-        file.write(f"M$InteractionOrderHierarchy = {{ }}\n")
+        file.write("\n")
+        file.write(f"M$InteractionOrderHierarchy = {{\n")
+        file.write(f"  {{QCD, 1}},\n")
+        file.write(f"  {{QED, 2}}\n")
+        file.write(f"}};\n")
         file.write("\n" * 2)
 
     def write_particle_classes(self, file):
@@ -358,6 +366,7 @@ class model:
             file.write(f"    PropagatorType   -> Straight,\n")
             file.write(f"    PropagatorArrow  -> Forward,\n")
             file.write(f"    SelfConjugate    -> {multiplet.self_conjugate},\n")
+            file.write(f"    PDG              -> {multiplet.write_PDGID()},\n")
             file.write(f"    ParticleName     -> {multiplet.write_ParticleName()},\n")
             file.write(f"    AntiParticleName -> {multiplet.write_AntiParticleName()},\n")
             file.write(f"    FullName         -> {multiplet.write_FullName()}\n")
@@ -416,9 +425,9 @@ class model:
 
             f.write("(******************************************************************************************************************)\n")
             f.write("(****** " + f"This is the FeynRules mod-file for {self.model_name}" + " " * (65 - len(self.model_name) ) + " ******)\n")
-            f.write("(****** " + " " * 100 + " ******)\n")
-            f.write("(****** " + f"Author: {self.author}" + " " * (100 - len(self.author) - 8) + " ******)\n")
-            f.write("(****** " + " " * 100 + " ******)\n")
+            f.write("(****** " + " " * 100                                                                                    + " ******)\n")
+            f.write("(****** " + f"Author: {self.author}" + " " * (100 - len(self.author) - 8)                                + " ******)\n")
+            f.write("(****** " + " " * 100                                                                                    + " ******)\n")
             f.write("(****** Choose whether Feynman gauge is desired.                                                             ******)\n")
             f.write("(****** If set to False, unitary gauge is assumed.                                                           ******)\n")
             f.write("(****** Feynman gauge is especially useful for CalcHEP/CompHEP where the calculation is 10-100 times faster. ******)\n")
@@ -450,7 +459,7 @@ class model:
     
 
 if __name__ == "__main__":
-    JSON_PATH = 'particle_graph/model/sm.json'
-    MODEL_PATH = 'particle_graph/model'
+    JSON_PATH = 'model/sm.json'
+    MODEL_PATH = 'model'
     a = model('SM', 'Bohr Network', JSON_PATH)
     a.write_model(MODEL_PATH)

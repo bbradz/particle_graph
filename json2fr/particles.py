@@ -20,27 +20,23 @@ class Particle:
         self.mass = mass
         self.self_conjugate = self_conjugate
         self.QuantumNumber = QuantumNumber
+        self.flavor = None
+        self.color = None
+        self.charge = self.QuantumNumber['Q']
 
-    def get_id(self):
-        return self.id
-    
-    def get_name(self):
-        return self.name
-    
-    def get_label(self):
-        return self.label
+    @property
+    def pdg_id(self):
+        from pdg_id import get_pdg_id
+        if self.color is not None:
+            return get_pdg_id(mass=self.mass, 
+                              charge=self.charge, 
+                              color=self.color, 
+                              spin=self.spin * 2,
+                              flavor=self.flavor
+                              )
+        else:
+            return None
 
-    def get_mass(self):
-        return self.mass
-    
-    def is_self_conjugate(self):
-        return self.self_conjugate
-    
-    def get_QuantumNumber(self):
-        return self.QuantumNumber
-
-    def get_spin(self):
-        return self.spin
 
 class ComplexScalar(Particle):
     """
@@ -87,7 +83,6 @@ class RealScalar(Particle):
 class Scalar(Particle):
     """
     Scalar particle
-
     input:
     id: [string]
     name: [string]
@@ -165,7 +160,9 @@ class WeylSpinor(Particle):
         super().__init__("fermion", id, full_name, name, mass, self_conjugate, QuantumNumber)
         assert spin_state in ["left", "right"]
         self.spin_state = spin_state
+        self.color = None
     
+    @property
     def handedness(self):
         return self.spin_state
     
@@ -210,7 +207,7 @@ class Fermion(Particle):
                  self_conjugate, 
                  QuantumNumber):
         super().__init__("fermion", id, full_name, name, mass, self_conjugate, QuantumNumber)        
-    
+
         self.left_component = WeylSpinor(id + "_l", 
                                   full_name = "LH " + full_name, 
                                   name = name + "_L", 
@@ -263,13 +260,13 @@ class VectorBoson(Particle):
     def __init__(self, 
                  id, 
                  full_name, 
-                 name, 
+                 name,
+                 group, 
                  mass, 
                  self_conjugate, 
-                 abelian,
                  QuantumNumber):
         super().__init__("vector", id, full_name, name, mass, self_conjugate, QuantumNumber)
-        self.abelian = abelian
+        
+        self.abelian = group.abelian
+        self.group = group
 
-    def is_abelian(self):
-        return self.abelian

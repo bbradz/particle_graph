@@ -45,6 +45,22 @@ class U(Group):
         if type(self.dim) != int:
             raise ValueError("Dimension must be an integer")
 
+    @property
+    def adjoint_rep(self):
+        return self.dim**2
+
+    @property
+    def fnd_generators(self):
+        if self.dim == 1:
+            return 1
+        if self.dim == 2:
+            sigma0 = np.identity(2) * 0.5
+            sigma1 = np.array([[0, 1], [1, 0]]) * 0.5
+            sigma2 = np.array([[0, -1j], [1j, 0]]) * 0.5
+            sigma3 = np.array([[1, 0], [0, -1]]) * 0.5
+            return [sigma0, sigma1, sigma2, sigma3]
+        else:
+            raise ValueError("Dimension must be 1 or 2")
 
 
 class SU(Group):
@@ -97,6 +113,34 @@ class SU(Group):
             "sym": self.symmetric_rep,
         }
 
+    @property
+    def fnd_generators(self):
+        if self.dim == 2:
+            sigma1 = np.array([[0, 1], [1, 0]]) * 0.5
+            sigma2 = np.array([[0, -1j], [1j, 0]]) * 0.5
+            sigma3 = np.array([[1, 0], [0, -1]]) * 0.5
+            return [sigma1, sigma2, sigma3]
+        
+        elif self.dim == 3:
+
+            lambda1 = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]])
+            lambda2 = np.array([[0, -1j, 0], [1j, 0, 0], [0, 0, 0]])
+            lambda3 = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 0]])
+            lambda4 = np.array([[0, 0, 1], [0, 0, -1j], [1j, 0, 0]])
+            lambda5 = np.array([[0, 0, -1j], [0, 0, 1], [-1j, 0, 0]])
+            lambda6 = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 1]])
+            lambda7 = np.array([[0, 0, 0], [0, 0, -1j], [0, 1j, 0]])
+            lambda8 = np.array([[0, 0, 0], [0, 0, 1j], [-1j, 0, 0]]) * (1/np.sqrt(3))
+
+            return [lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda8]
+        
+        else:
+            raise ValueError("Dimension must be 2 or 3")
+            
+            
+
+
+
 
 
 class GaugeGroup:
@@ -133,9 +177,17 @@ class GaugeGroup:
             self.reps = ["T"]
 
     @property
+    def fnd_generators(self):
+        return self.group.fnd_generators
+
+    @property
     def dim(self):
         return self.group.dim
-    
+
+    @property
+    def adjoint_rep(self):
+        return self.group.adjoint_rep
+
     @property
     def group_type(self):
         return self.group.group_type

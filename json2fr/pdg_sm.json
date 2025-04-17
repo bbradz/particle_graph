@@ -1,0 +1,162 @@
+{
+    "particles": [
+      {
+        "name": "Photon",
+        "pdgid": 22,
+        "spin": 2,
+        "mass": 0.0,
+        "charge": 0,
+        "color": 1
+      },
+      {
+        "name": "Z Boson",
+        "pdgid": 23,
+        "spin": 2,
+        "mass": 91.1876,
+        "charge": 0,
+        "color": 1
+      },
+      {
+        "name": "W+ Boson",
+        "pdgid": 24,
+        "spin": 2,
+        "mass": 80.379,
+        "charge": 3,
+        "color": 1
+      },
+      {
+        "name": "Gluon",
+        "pdgid": 21,
+        "spin": 2,
+        "mass": 0.0,
+        "charge": 0,
+        "color": 8
+      },
+      {
+        "name": "Higgs Boson",
+        "pdgid": 25,
+        "spin": 0,
+        "mass": 125.25,
+        "charge": 0,
+        "color": 1
+      },
+      {
+        "name": "Electron",
+        "pdgid": 11,
+        "spin": 1,
+        "mass": 0.000511,
+        "charge": -3,
+        "color": 1,
+        "flavor": "e"
+      },
+      {
+        "name": "Muon",
+        "pdgid": 13,
+        "spin": 1,
+        "mass": 0.1057,
+        "charge": -3,
+        "color": 1,
+        "flavor": "mu"
+      },
+      {
+        "name": "Tau",
+        "pdgid": 15,
+        "spin": 1,
+        "mass": 1.777,
+        "charge": -3,
+        "color": 1,
+        "flavor": "ta"
+      },
+      {
+        "name": "Electron Neutrino",
+        "pdgid": 12,
+        "spin": 1,
+        "mass": 0.0,
+        "charge": 0,
+        "color": 1,
+        "flavor": "e"
+      },
+      {
+        "name": "Muon Neutrino",
+        "pdgid": 14,
+        "spin": 1,
+        "mass": 0.0,
+        "charge": 0,
+        "color": 1,
+        "flavor": "mu"
+      },
+      {
+        "name": "Tau Neutrino",
+        "pdgid": 16,
+        "spin": 1,
+        "mass": 0.0,
+        "charge": 0,
+        "color": 1,
+        "flavor": "ta"
+      },
+      {
+        "name": "Up Quark",
+        "pdgid": 2,
+        "spin": 1,
+        "mass": 0.0023,
+        "charge": 2,
+        "color": 3
+      },
+      {
+        "name": "Down Quark",
+        "pdgid": 1,
+        "spin": 1,
+        "mass": 0.0047,
+        "charge": -1,
+        "color": 3
+      },
+      {
+        "name": "Charm Quark",
+        "pdgid": 4,
+        "spin": 1,
+        "mass": 1.27,
+        "charge": 2,
+        "color": 3
+      },
+      {
+        "name": "Strange Quark",
+        "pdgid": 3,
+        "spin": 1,
+        "mass": 0.095,
+        "charge": -1,
+        "color": 3
+      },
+      {
+        "name": "Top Quark",
+        "pdgid": 6,
+        "spin": 1,
+        "mass": 172.76,
+        "charge": 2,
+        "color": 3
+      },
+      {
+        "name": "Bottom Quark",
+        "pdgid": 5,
+        "spin": 1,
+        "mass": 4.18,
+        "charge": -1,
+        "color": 3
+      },
+      {
+        "name": "Charged Goldstone Boson (G+)",
+        "pdgid": 251,
+        "spin": 0,
+        "mass": 0.0,
+        "charge": 3,
+        "color": 1
+      },
+      {
+        "name": "Neutral Goldstone Boson (G0)",
+        "pdgid": 250,
+        "spin": 0,
+        "mass": 0.0,
+        "charge": 0,
+        "color": 1
+      }
+    ]
+  }
