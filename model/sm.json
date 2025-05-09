@@ -148,8 +148,7 @@
             },
             {
                 "id": "s1",
-                "type": "scalar",
-                "scalar_type": "complex",
+                "type": "complex_scalar",
                 "full_name": "charged boson",
                 "name": "phi+",
                 "mass": null,
@@ -158,8 +157,7 @@
             },
             {
                 "id": "s2",
-                "type": "scalar",
-                "scalar_type": "complex",
+                "type": "complex_scalar",
                 "full_name": "neutral boson",
                 "name": "phi0",
                 "mass": null,

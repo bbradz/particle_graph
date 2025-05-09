@@ -1,16 +1,25 @@
+### =============================== ###
+###          Group Classes          ###
+### =============================== ###
+
 import numpy as np
 
 class Group:
     """
     Base class for groups
     """
-    def __init__(self, name):
+    def __init__(self, name, dim):
         self.name = name
+        self.dim = dim
+        self.__check__()
 
     def __str__(self):
         return self.name
     
-    def _validate(self):
+    def __check__(self):
+        pass
+
+    def __validate__(self):
         pass
     
     def reps(self):
@@ -23,67 +32,62 @@ class Group:
         pass
 
 
-
 class U(Group):
     """
     Unitary Group (only for U(1))
     """
     def __init__(self, dim):
-        super().__init__(f"U({dim})")
-        self.dim = dim
-        self.group_type = "U"
-        self.group_name = f"U({dim})"
+        super().__init__(f"U({dim})", dim)
+        self.type = "U"
         self.abelian = True
-        self.validate()
+        self.__check__()
 
-    def __str__(self):
-        return f"{self.group_name}: Unitary Group of dimension {self.dim}"
-
-    def validate(self):
-        if self.dim != 1:
-            raise ValueError("Dimension must be 1")
-        if type(self.dim) != int:
-            raise ValueError("Dimension must be an integer")
+    def __check__(self):
+        dim_check = self.dim == 1
+        self.checklist = {"dim": dim_check}
 
     @property
-    def adjoint_rep(self):
+    def fnd_rep(self):
+        return self.dim
+    
+    @property
+    def adj_rep(self):
         return self.dim**2
-
+    
     @property
-    def fnd_generators(self):
-        if self.dim == 1:
-            return 1
-        if self.dim == 2:
-            sigma0 = np.identity(2) * 0.5
-            sigma1 = np.array([[0, 1], [1, 0]]) * 0.5
-            sigma2 = np.array([[0, -1j], [1j, 0]]) * 0.5
-            sigma3 = np.array([[1, 0], [0, -1]]) * 0.5
-            return [sigma0, sigma1, sigma2, sigma3]
-        else:
-            raise ValueError("Dimension must be 1 or 2")
-
-
+    def rep_list(self):
+        return {"singlet": 1,
+                "fnd": self.fnd_rep, 
+                "adj": self.adj_rep}
+    
 class SU(Group):
     """
-    Special Unitary Group
+    Special Unitary Group (only for SU(N))
     """
     def __init__(self, dim):
-        super().__init__(f"SU({dim})")
-        self.dim = dim
-        self.group_type = "SU"
-        self.group_name = f"SU({dim})"
+        super().__init__(f"SU({dim})", dim)
+        self.type = "SU"
         self.abelian = False
-        self.validate()
+        self.__check__()
 
-    def __str__(self):
-        return f"{self.group_name}: Special Unitary Group of dimension {self.dim}"
+    def __check__(self):
+        dim_check = isinstance(self.dim, int) and self.dim > 1 and self.dim <= 3
+        self.checklist = {"dim": dim_check}
+
+    @property
+    def fnd_rep(self):
+        return self.dim
     
-    def validate(self):
-        if self.dim < 2:
-            raise ValueError("Dimension must be at least 2")
-        if type(self.dim) != int:
-            raise ValueError("Dimension must be an integer")
-
+    @property
+    def adj_rep(self):
+        return self.dim**2 - 1
+    
+    @property
+    def rep_list(self):
+        return {"singlet": 1,
+                "fnd": self.fnd_rep, 
+                "adj": self.adj_rep}
+    
     @property
     def structure_constants(self):
         if self.dim == 2:
@@ -91,117 +95,220 @@ class SU(Group):
         elif self.dim == 3:
             return "f"
         else:
-            raise ValueError("Current Version only supports SU(2) and SU(3)")
+            return None
         
+
+class O(Group):
+    """
+    Orthogonal Group (only for O(N))
+    """
+    def __init__(self, dim):
+        super().__init__(f"O({dim})", dim)
+        self.type = "O"
+        self.abelian = False
+        self.__check__()
+
+    def __check__(self):
+        dim_check = isinstance(self.dim, int) and self.dim > 1 and self.dim <= 3
+        self.checklist = {"dim": dim_check}
+
     @property
-    def adjoint_rep(self):
-        return self.dim**2 - 1
-    
-    @property
-    def fundamental_rep(self):
+    def fnd_rep(self):
         return self.dim
     
     @property
-    def symmetric_rep(self):
-        return self.dim * (self.dim + 1) // 2
+    def adj_rep(self):
+        return self.dim * (self.dim - 1) / 2
+    
+    @property
+    def rep_list(self):
+        return {"singlet": 1,
+                "fnd": self.fnd_rep, 
+                "adj": self.adj_rep}
+    
+class SO(Group):
+    """
+    Special Orthogonal Group (only for SO(N))
+    """
+    def __init__(self, dim):
+        super().__init__(f"SO({dim})", dim)
+        self.type = "SO"
+        self.abelian = False
+        self.__check__()
+
+    def __check__(self):
+        dim_check = isinstance(self.dim, int) and self.dim > 1 and self.dim <= 3
+        self.checklist = {"dim": dim_check}
 
     @property
-    def irreps(self):
-        return {
-            "adj": self.adjoint_rep,
-            "fnd": self.fundamental_rep,
-            "sym": self.symmetric_rep,
-        }
-
+    def fnd_rep(self):
+        return self.dim
+    
     @property
-    def fnd_generators(self):
-        if self.dim == 2:
-            sigma1 = np.array([[0, 1], [1, 0]]) * 0.5
-            sigma2 = np.array([[0, -1j], [1j, 0]]) * 0.5
-            sigma3 = np.array([[1, 0], [0, -1]]) * 0.5
-            return [sigma1, sigma2, sigma3]
-        
-        elif self.dim == 3:
-
-            lambda1 = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]])
-            lambda2 = np.array([[0, -1j, 0], [1j, 0, 0], [0, 0, 0]])
-            lambda3 = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 0]])
-            lambda4 = np.array([[0, 0, 1], [0, 0, -1j], [1j, 0, 0]])
-            lambda5 = np.array([[0, 0, -1j], [0, 0, 1], [-1j, 0, 0]])
-            lambda6 = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 1]])
-            lambda7 = np.array([[0, 0, 0], [0, 0, -1j], [0, 1j, 0]])
-            lambda8 = np.array([[0, 0, 0], [0, 0, 1j], [-1j, 0, 0]]) * (1/np.sqrt(3))
-
-            return [lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda8]
-        
-        else:
-            raise ValueError("Dimension must be 2 or 3")
-            
-            
-
-
-
-
-
+    def adj_rep(self):
+        return self.dim * (self.dim - 1) / 2
+    
+    @property
+    def rep_list(self):
+        return {"singlet": 1,
+                "fnd": self.fnd_rep, 
+                "adj": self.adj_rep}
+    
 class GaugeGroup:
     """
     Base class for gauge groups
     """
-    def __init__(self, id, name, charge, group, coupling_constant, confinement, boson):
+    def __init__(self, id, name, charge, group, coupling, boson):
         self.id = id
         self.name = name
         self.charge = charge
         self.group = group
-
-        self.definition = None
-        self.sym_tensors = None
-
-        self.coupling_constant = coupling_constant
-        self.confinement = confinement
+        self.coupling = coupling
         self.boson = boson
-        self.reps = []
-        
-        self._set_SM()
-        
-    def __str__(self):
-        return f"{self.group.name} Gauge Group"
+        self.__check__()
 
-    def _set_SM(self):
-        # Definition and Symmetric Tensor of SU(2) and SU(3) in FR are fixed
-        if self.name == "SU2L":
+        if self.group == "SU_2":
             self.definition = "{Ta[a_,b_,c_]->PauliSigma[a,b,c]/2, FSU2L[i_,j_,k_]:> I Eps[i,j,k]}"
             self.reps = ["Ta"]
+            self.sym_tensors = None
 
-        elif self.name == "SU3C":
+        elif self.group == "SU_3":
+            self.definition = None
             self.sym_tensors = "dSUN"
             self.reps = ["T"]
+        else:
+            self.definition = None
+            self.sym_tensors = None
+            self.reps = None
+            
+        self._check_in_SM()
+        self.define_group()
+        self.checklist.update(self.group.checklist)
 
-    @property
-    def fnd_generators(self):
-        return self.group.fnd_generators
+        
+        try:
+            self.abelian = self.group.abelian
+        except:
+            self.abelian = False
 
-    @property
-    def dim(self):
-        return self.group.dim
+        try:
+            self.fnd_rep = self.group.fnd_rep
+        except:
+            self.fnd_rep = -1
 
-    @property
-    def adjoint_rep(self):
-        return self.group.adjoint_rep
+        try:
+            self.adj_rep = self.group.adj_rep
+        except:
+            self.adj_rep = -1
 
-    @property
-    def group_type(self):
-        return self.group.group_type
+        try:
+            self.rep_list = self.group.rep_list
+        except:
+            self.rep_list = {"fnd": -1, "adj": -1}
+
+        try:
+            self.structure_constants = self.group.structure_constants
+        except:
+            self.structure_constants = None
+
+    def __str__(self):
+        return self.name
     
-    @property
-    def abelian(self):
-        return self.group.abelian
-    
-    @property
-    def structure_constants(self):
-        return self.group.structure_constants
+    def __repr__(self):
+        return f"[GROUP] {self.name:4} | {self.charge:1} | {self.boson:1} | {self.group}"
+
+    def _check_in_SM(self):
+        if self.name == "SU3C" and self.group == "SU_3" and self.boson == "G":
+            self.isSU3C = True
+        else:
+            self.isSU3C = False
+        if self.name == "SU2L" and self.group == "SU_2" and self.boson == "W":
+            self.isSU2L = True
+        else:
+            self.isSU2L = False
+        if self.name == "U1Y" and self.group == "U_1" and self.boson == "B":
+            self.isU1Y = True
+        else:
+            self.isU1Y = False
+
+    def define_group(self):
+        try:
+            type, N = self.group.split("_")
+            N = int(N)
+        except:
+            N = -1
+            type = "U"
+
+        if type == "U":
+            self.group = U(N)
+        elif type == "SU":
+            self.group = SU(N)
+        elif type == "O":
+            self.group = O(N)
+        elif type == "SO":
+            self.group = SO(N)
+        else:
+            self.group = U(-1)
+
+    def __check__(self):
+        id_check = isinstance(self.id, str)
+        name_check = isinstance(self.name, str)
+        charge_check = isinstance(self.charge, str)
+        group_check = isinstance(self.group, str) and len(self.group.split("_")) == 2
+        coupling_check = isinstance(self.coupling, str)
+        boson_check = isinstance(self.boson, str)
+
+        try:
+            group_type_check = self.group.split("_")[0] in ["U", "SU", "O", "SO"]
+            N_check = self.group.split("_")[1].isdigit()
+        except:
+            group_type_check = False
+            N_check = False
+
+        self.checklist = {"id": id_check, 
+                          "name": name_check, 
+                          "charge": charge_check, 
+                          "group": group_check, 
+                          "group_type": group_type_check,
+                          "N": N_check,
+                          "coupling": coupling_check, 
+                          "boson": boson_check}
 
     @property
-    def rep_list(self):
-        rep_list = str(self.reps)
-        rep_list = rep_list.replace("'", "").replace("[", "{").replace("]", "}")
-        return rep_list
+    def score(self):
+        max_score = len(self.checklist)
+        score = sum(1 for value in self.checklist.values() if value is True)
+        return f"{score}/{max_score}"
+
+    def pass_all_checks(self):
+        return len(self.checklist) == sum(1 for value in self.checklist.values() if value is True)
+
+    @staticmethod
+    def write_reps(reps):
+        return str(list(dict.fromkeys(reps))).replace("'", "").replace("[", "{").replace("]", "}")
+
+    def gauge_group_info(self):
+        gg_info = {
+            "Abelian": self.abelian,
+            "CouplingConstant": self.coupling,
+            "GaugeBoson": self.boson
+        }
+        if self.abelian:
+            gg_info["Charge"] = self.charge
+        else:
+            gg_info["StructureConstants"] = self.structure_constants
+            gg_info["Representations"] = self.write_reps(self.reps)
+            gg_info["SymmetryTensors"] = self.sym_tensors
+            gg_info["Definition"] = self.definition
+        return gg_info
+
+if __name__ == "__main__":
+    from utility import random_inputs
+    # Generate and print 6 random values
+    random_values = random_inputs()
+    print(random_values)
+    g = GaugeGroup(random_values[0], random_values[1], random_values[2], random_values[3], random_values[4], random_values[5])
+    print(g)
+    print(g.score())
+
+    

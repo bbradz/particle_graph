@@ -1,272 +1,163 @@
-from datetime import datetime
-import os
-import naming 
-import numpy as np
-from multiplet import UnphysicalMultiplet, PhysicalMultiplet
-
-
-class model:
+class Model:
     """
     Particle Physics Model Class: read JSON file and write FR model file
     """
-    def __init__(self, 
-                 model_name, 
-                 author, 
-                 JSON_PATH                
+    def __init__(self,
+                 model_name,
+                 author,
+                 JSON_PATH
                  ):
         
         self.model_name = model_name
         self.author = author
-        
         self.ai = True if author == 'Bohr Network' else False
-
         self.FeynmanGauge = True
         self.JSON_PATH = JSON_PATH
+
+        from datetime import datetime
         self.current_time = datetime.now().strftime("%Y-%m-%d")
 
-        # read JSON file and write FR model file
-        self.read_model()
+        self.checklist = {}
+        self._initialize_model()
 
-    def read_json(self):
-        """Read JSON file and return the data as a dictionary."""
-        import json
-
-        try:
-            with open(self.JSON_PATH, 'r') as f:
-                data = json.load(f)
-            return data
-        except json.JSONDecodeError:
-            print(f"Error: {self.JSON_PATH} is not a valid JSON file.")
-            return None
-        except FileNotFoundError:
-            print(f"Error: File {self.JSON_PATH} not found.")
-            return None
-        
-    @staticmethod
-    def read_gauge_groups(model_data):
-        """Read gauge groups from JSON file"""
-        
-        from group import U, SU, GaugeGroup
-        
-        gauge_groups = {}
+    def _gauge_group(self, model_data):
+        from group import GaugeGroup
+        self.gauge_groups = {}
         for g in model_data['nodes']['GaugeGroups']:
-            group_type = g['group'][:g['group'].find("(")]
-            N = int(g['group'][g['group'].find("(")+1:g['group'].find(")")])
+            self.gauge_groups[g["id"]] = GaugeGroup(**g)
 
-            if group_type == "U":
-                group = U(N)
-            elif group_type == "SU":
-                group = SU(N)
+    def _vev(self, model_data):
+        from vev import vev
+        self.vevs = {}
+        for v in model_data["nodes"]['vevs']:
+            self.vevs[v["id"]] = vev(**v)
+
+    def _particles(self, model_data):
+        from particle import Fermion, RealScalar, ComplexScalar #, VectorBoson
+        self.scalar_particles = {}
+        self.fermion_particles = {}
+        self.vector_particles = {}
+        for p in model_data['nodes']['particles']:
+            if p["type"] == "fermion":
+                p.pop("type")
+                self.fermion_particles[p["id"]] = Fermion(**p)
+            elif p["type"] == "real":
+                p.pop("type")
+                self.scalar_particles[p["id"]] = RealScalar(**p)
+            elif p["type"] == "complex":
+                p.pop("type")
+                self.scalar_particles[p["id"]] = ComplexScalar(**p)
             else:
-                raise ValueError(f"Invalid group: {g['group']}")    
-
-            new_gauge_group = GaugeGroup(g['id'],
-                                         g['name'],
-                                         g['charge'],
-                                         group,
-                                         g['CouplingConstant'],
-                                         g['confinement'],
-                                         g['gauge_boson']
-                                         )
-            gauge_groups[g['id']] = new_gauge_group
-        return gauge_groups
-
-    @staticmethod
-    def read_higgs_gauge_sector(model_data, unphy_scalars, gauge_groups):
-        """Read vev from JSON file"""
-
-        from higgs_gauge_sector import HiggsGaugeSector
-        
-        higgs_gauge_sector = {}
-        
-        for vev in model_data['nodes']['vevs']:
-            vev_id = vev['id']
-            for link in model_data['links']['vevs']:
-                if link['source'] == vev_id:
-                    where = "target"
-                elif link['target'] == vev_id:
-                    where = "source"
-                else:
-                    continue 
-
-            higgs_gauge_sector[vev['id']] = HiggsGaugeSector(unphy_scalars[link[where]], gauge_groups, vev)
-
-        return higgs_gauge_sector
-
-    @staticmethod
-    def read_particles(model_data):
-        """Read particles from JSON file"""
-
-        from particles import Fermion, Scalar
-        
-        scalars = {}
-        fermions = {}
-        for particle in model_data['nodes']['particles']:
-            #= fermions =#
-            if particle['type'] == 'fermion':
-                if not particle['self_conjugate']:
-                    # self-conjugate fermions can have antiparticles
-                    new_fermion = Fermion(particle['id'], 
-                                          particle['full_name'], 
-                                          particle['name'], 
-                                          particle['mass'], 
-                                          particle['self_conjugate'], 
-                                          particle['QuantumNumber'])
-                    
-                else:
-                    # self-conjugate fermions are their own antiparticles
-                    new_fermion = Fermion(particle['id'], 
-                                          particle['full_name'], 
-                                          particle['name'], 
-                                          particle['mass'], 
-                                          particle['self_conjugate'], 
-                                          particle['QuantumNumber'])
-                fermions[particle['id']] = new_fermion
-                            
-            #= scalars =#
-            elif particle['type'] == 'scalar':
-                new_scalar = Scalar(particle['id'], 
-                                    particle["scalar_type"],
-                                    particle['full_name'],
-                                    particle['name'],
-                                    particle['mass'], 
-                                    particle['self_conjugate'], 
-                                    particle['QuantumNumber'])
-                scalars[particle['id']] = new_scalar
-
-            #= gauge bosons =#
-            elif particle['type'] == 'gauge':
-                raise ValueError(f"Gauge bosons are not automatically generated from Guage.")
-            
-            else:
-                raise ValueError(f"Invalid particle type: {particle['type']}")
-            
-        return scalars, fermions
-
-
-    @staticmethod
-    def read_multiplets(gauge_groups, particles, model_data):
-        """Read multiplets from JSON file"""
-        unphy_mltplt = {}
-
-        for multiplet in model_data['nodes']['multiplets']:
-            multiplet_id = multiplet['id']
-            
-            # initialize particles_list
-            particles_list = np.zeros((multiplet["gen"], multiplet["dim"])).tolist()
-            for link in model_data['links']['multiplets']:
-                if link['source'] == multiplet_id:
-                    where = "target"
-                elif link['target'] == multiplet_id:
-                    where = "source"
-                else:
-                    continue
-
-                gen_idx = link['loc'][0]-1
-                dim_idx = link['loc'][1]-1
-
-                particles[link[where]].gen_idx = link['loc'][0]
-                particles[link[where]].dim_idx = link['loc'][1]
-                particles_list[gen_idx][dim_idx] = particles[link[where]]
-            
-            new_unphy_mltplt = UnphysicalMultiplet(id = multiplet_id, 
-                                                   name = multiplet["name"],
-                                                   dim = multiplet["dim"], 
-                                                   gen = multiplet["gen"],
-                                                   reps = multiplet["reps"],
-                                                   gauge_groups = gauge_groups,
-                                                   particles = particles_list,
-                                                   QuantumNumber = multiplet["QuantumNumber"],
-                                                   spin_state = link["spin_state"]
-                                                   )
-            unphy_mltplt[multiplet_id] = new_unphy_mltplt
-        return unphy_mltplt
+                type = p["type"]
+                print(f"invalid field type {type}")
     
-    @staticmethod
-    def read_fermions(fermions):
-        """Read fermions from JSON file"""
-        phy_mltplt = {}
+    def _scalar_fields(self, model_data):
+        from field import ScalarField
+        self.scalar_fields = {}
+        scalar_particles = self.scalar_particles.copy()
 
-        qnumbers_tuples = {tuple(f.QuantumNumber.items()) for f in fermions.values()}
-        unique_qnumbers = [dict(qn_tuple) for qn_tuple in qnumbers_tuples]
+        for sf in model_data["nodes"]["fields"]: # sf stands for "scalar field"
+            if sf["type"] in ["real", "complex", "scalar"]:
+                scalar_list = [self.scalar_particles[id] for id in sf["particles"]]
+                for s in scalar_list:
+                    scalar_particles.pop(s.id, None)
 
-        for idx, qnumbers in enumerate(unique_qnumbers):
-            full_name = ""
-            name = ""
-            if qnumbers["BaryonNumber"] != 0 and qnumbers["LeptonNumber"] == 0:
-                if qnumbers["Q"] == 2:
-                    full_name = "Up-Type Quark"
-                    name = "uq"
-                elif qnumbers["Q"] == -1:
-                    full_name = "Down-Type Quark"
-                    name = "dq"
-                elif qnumbers["Q"] == 0:
-                    full_name = "Neutral Quark"
-                    name = "nq"
-                else:
-                    charge = qnumbers["Q"]
-                    full_name = naming.number_to_alphabet(charge) + "Quark"
-                    name = naming.number_to_alphabet(charge) + "q"
+                sf.pop('chirality')
+                sf["groups"] = self.gauge_groups
+                sf["particles"] = scalar_list
+                new_scalar_field = ScalarField(**sf)
+                self.scalar_fields[sf["id"]] = new_scalar_field
+                new_scalar_field.__validate__()
 
-            elif qnumbers["BaryonNumber"] == 0 and qnumbers["LeptonNumber"] != 0:
-                if qnumbers["Q"] == 0:
-                    full_name = "Neutrino"
-                    name = "vl"
-                elif qnumbers["Q"] == -3:
-                    full_name = "Charged Lepton"
-                    name = "l"
-                else:
-                    charge = qnumbers["Q"]
-                    full_name = naming.number_to_alphabet(charge) + "Lepton"
-                    name = naming.number_to_alphabet(charge) + "l"
-
-            fermions_in_multiplet = [fermion for fermion in fermions.values() if fermion.QuantumNumber == qnumbers]
-            fermions_in_multiplet.sort(key=lambda fermion: fermion.gen_idx)
-
-            id = "mp" + str(idx + 1)
-            new_phy_mltplt = PhysicalMultiplet(id = id,
-                                               full_name = full_name,
-                                               name = name,
-                                               dim = 1,
-                                               gen = len(fermions_in_multiplet),
-                                               particles = fermions_in_multiplet,
-                                               QuantumNumber = qnumbers
-                                               )
-            phy_mltplt[id] = new_phy_mltplt
-        return phy_mltplt
-
-    def read_model(self):
-        """Read model from JSON file"""
-        self.indices = []
-        model_data = self.read_json()
-        self.gauge_groups = model.read_gauge_groups(model_data)
+    def _vector_fields(self, model_data):
+        from field import VectorField
+        self.vector_fields = {}
+        pass
+    
+    def _fermion_fields(self, model_data):
+        from field import FermionField
+        self.fermion_fields = {}
+        # we separate all fermion particles into left and right chiral fermions
+        chiral_fermions = {**{f"{key}_left": value.left for key, value in self.fermion_particles.items()},
+                          **{f"{key}_right": value.right for key, value in self.fermion_particles.items()}}
         
-        self.scalars, self.fermions = model.read_particles(model_data)
-        self.particles = {**self.scalars, **self.fermions}
+        for f in model_data["nodes"]["fields"]:
+            if f["type"] == "fermion":
+                cf_list = [chiral_fermions[f"{p}_left"] if f["chirality"] == "left" else chiral_fermions[f"{p}_right"] for p in f["particles"]]
         
-        self.unphy_mltplts = model.read_multiplets(self.gauge_groups, self.particles, model_data)
+                # add a check to see if the chiral fermion is in the chiral_fermions dictionary
+                for cf in cf_list:
+                    chiral_fermions.pop(cf.id, None)
 
-        self.unphy_fermions = {}
-        self.unphy_scalars = {}
-        # unphysical gauge bosons will be produced in HiggsGaugeSector
+                f["groups"] = self.gauge_groups
+                f["particles"] = cf_list
+                f.pop('type')
+                new_fermion_field = FermionField(**f)
+                self.fermion_fields[f["id"]] = new_fermion_field
+                new_fermion_field.__validate__()
+                self.unphy_fermion = []
+        self.phy_fermion = []
 
-        for m in self.unphy_mltplts.values():
-            if m.particle_type == 'fermion':
-                self.unphy_fermions[m.id] = m
-            elif m.particle_type == 'scalar':
-                self.unphy_scalars[m.id] = m
+        for f in self.fermion_fields.values():
+            self.phy_fermion.extend(f._phy_field_info())
+            self.unphy_fermion.append(f._unphy_field_info())
+        # remove duplicate physical fermionic fields based on PDG
+        seen = []
+        unique_fermion = []
+        for f in self.phy_fermion:
+            if f["PDG"] not in seen:
+                seen.append(f["PDG"])
+                unique_fermion.append(f)
+        self.phy_fermion = unique_fermion
 
-        self.phy_fermions = model.read_fermions(self.fermions)
-        self.higgs_gauge_sector = model.read_higgs_gauge_sector(model_data, self.unphy_scalars, self.gauge_groups)
+    def _fields(self, model_data):
+        self._scalar_fields(model_data)
+        self._fermion_fields(model_data)
+        self._vector_fields(model_data)
+        self.all_fields = {**self.scalar_fields, **self.fermion_fields, **self.vector_fields}
 
-        for m in self.unphy_mltplts.values():
-            self.indices.extend(m.indices)
+    def _symmetry_breakings(self):
+        pass
 
-        self.indices = list(set(self.indices))
-        for idx in self.indices:
-            if idx[3] is not None:
-                self.gauge_groups[idx[3]].reps.append(idx[1])
+    def _interactions(self, model_data):
+        from interaction import Yukawa
+        
+        self.interactions = {}
+        for itr in model_data["nodes"]["interactions"]:
+            fields = [self.all_fields[id] for id in itr["fields"]]
+            itr.pop("type")
+            itr["fields"] = fields
+            self.interactions[itr["id"]] = Yukawa(**itr)
 
+    def check_list(self):
+        for g in self.gauge_groups.values():
+            print(g.name, g.score)
+            for key, check in g.checklist.items():
+                print(f"{key:30} -> {check}")
+        for f in self.all_fields.values():
+            print(f.name, f.score) 
+            for key, check in f.checklist.items():
+                print(f"{key:30} -> {check}")
+        for itr in self.interactions.values():
+            print(itr.id, itr.score)
+            for key, check in itr.checklist.items():
+                print(f"{key:30} -> {check}")
+
+    def _initialize_model(self):
+        from utility import read_json
+        model_data = read_json(self.JSON_PATH)
+    
+        self._gauge_group(model_data)
+        self._particles(model_data)
+        self._fields(model_data)
+        self._interactions(model_data)
+
+        self.check_list()
+        
+
+    #########################################################
+    # Write FeynRules file
+    #########################################################
     def write_info(self, file):
         file.write(f"(* ************************** *)\n")
         file.write(f"(* *****  Information   ***** *)\n")
@@ -281,129 +172,135 @@ class model:
 
     def write_gauge(self, file):
         file.write(f"FeynmanGauge = {self.FeynmanGauge};\n")
-        file.write("\n")
-
-    def write_vev(self, file):
-        file.write(f"(* ************************** *)\n")
-        file.write(f"(* *****      vevs      ***** *)\n")
-        file.write(f"(* ************************** *)\n")
-        file.write(f"M$vevs = {{")
-        for _, h in self.higgs_gauge_sector.items():
-            file.write(f"{h.write_vev()}")
-        file.write(f"}}\n")
-        file.write(f"\n")
+        file.write("\n")    
         
-    def write_group(self, file):
+    def write_gauge_group(self, file):
         file.write(f"(* ************************** *)\n")
         file.write(f"(* *****  Gauge groups  ***** *)\n")
         file.write(f"(* ************************** *)\n")
-        file.write(f"M$gaugeGroup = {{\n")
-        for group in self.gauge_groups.values():
-            file.write(f"  {group.name} == {{\n")
-            file.write(f"    Abelian           -> {group.abelian},\n")
-            file.write(f"    CouplingConstant  -> {group.coupling_constant},\n")
-            file.write(f"    GaugeBoson        -> {group.boson},\n")
-            if group.abelian:
-                file.write(f"    Charge            -> {group.charge}\n")
-                file.write(f"  }},\n")
-            else:
-                file.write(f"    StructureConstant -> {group.structure_constants},\n")
-                file.write(f"    Representations   -> {group.rep_list},\n")
-                file.write(f"    SymmetricTensor   -> {group.sym_tensors}\n") if group.sym_tensors else None
-                file.write(f"    Definition        -> {group.definition}\n") if group.definition else None
-                file.write(f"  }},\n") 
-        file.write(f"}};\n")
-        file.write("\n" * 2)
+        file.write(f"M$GaugeGroups = {{\n")
         
-    def write_indices(self, file):
-        file.write(f"(* ************************** *)\n")
-        file.write(f"(* *****    Indices     ***** *)\n")
-        file.write(f"(* ************************** *)\n")
-        file.write("\n")
-        for idx in self.indices:
-            if idx[0] == "fold":
-                file.write(f"IndexRange[Index[{idx[1]}]] = Range[{idx[2]}],\n")
-            elif idx[0] == "Unfold":
-                file.write(f"IndexRange[Index[{idx[1]}]] = Unfold[Range[{idx[2]}]],\n")
-            elif idx[0] == "NoUnfold":
-                file.write(f"IndexRange[Index[{idx[1]}]] = NoUnfold[Range[{idx[2]}]],\n")
-        file.write("\n")
-        for i, idx in enumerate(self.indices):
-            file.write(f"IndexStyle[{idx[1]}, {naming.index_style(i)}];\n")
-        file.write("\n" * 2)
+        gauge_group_entries = []
+        for _, group in self.gauge_groups.items():
+            group_entry = f"  {group.name} == {{\n"
+            group_info = []
+            for key, value in group.gauge_group_info().items():
+                if value is not None:
+                    group_info.append(f"{key:20} -> {value}")
+            group_entry += "    " + ",\n    ".join(group_info) + "\n"
+            group_entry += "  }"
+            gauge_group_entries.append(group_entry)
+        file.write(",\n".join(gauge_group_entries) + "\n")
+        file.write(f"}}\n\n")
 
-    def write_interaction_orders(self, file):
-        file.write(f"(* ************************** *)\n")
-        file.write(f"(* *** Interaction orders *** *)\n")
-        file.write(f"(* ***  (as used by mg5)  *** *)\n")
-        file.write(f"(* ************************** *)\n")
+    def write_FeynArts(self, file):
+        from sm_setting import write_sm_gauge_parameters
+        write_sm_gauge_parameters(file)
+        
+    def write_Interaction_orders(self, file):
+        file.write("(* ************************** *)\n")
+        file.write("(* *** Interaction orders *** *)\n")
+        file.write("(* ***  (as used by mg5)  *** *)\n")
+        file.write("(* ************************** *)\n")
         file.write("\n")
-        file.write(f"M$InteractionOrderHierarchy = {{\n")
-        file.write(f"  {{QCD, 1}},\n")
-        file.write(f"  {{QED, 2}}\n")
-        file.write(f"}};\n")
-        file.write("\n" * 2)
-
-    def write_particle_classes(self, file):
-        file.write(f"(* ************************** *)\n")
-        file.write(f"(* **** Particle classes **** *)\n")
-        file.write(f"(* ************************** *)\n")
-        file.write(f"\n")
-        file.write(f"M$ClassesDescription = {{\n")
-        file.write("\n")
+        file.write("M$InteractionOrderHierarchy = {\n")
+        file.write("  {QCD, 1},\n")
+        file.write("  {QED, 2}\n")
+        file.write("};\n")
+        
+    def write_fermion(self, file):
         file.write("(* Fermions: physical fields *)\n")
-
-        for idx, multiplet in enumerate(self.phy_fermions.values()):
-            file.write(f"  F[{idx+1}] == {{\n")
-            file.write(f"    ClassName        -> {multiplet.name},\n")
-            file.write(f"    ClassMembers     -> {multiplet.write_ParticleName()},\n")
-            file.write(f"    Mass             -> {multiplet.write_Mass()},\n")
-            file.write(f"    Width            -> 0,\n")
-            file.write(f"    QuantumNumbers   -> {multiplet.write_QuantumNumbers()},\n")
-            file.write(f"    Indices          -> {multiplet.write_Indices()},\n")
-            file.write(f"    FlavorIndex      -> {multiplet.GenerationIndex},\n")
-            file.write(f"    PropagatorLabel  -> {multiplet.write_PropagatorLabel()},\n")
-            file.write(f"    PropagatorType   -> Straight,\n")
-            file.write(f"    PropagatorArrow  -> Forward,\n")
-            file.write(f"    SelfConjugate    -> {multiplet.self_conjugate},\n")
-            file.write(f"    PDG              -> {multiplet.write_PDGID()},\n")
-            file.write(f"    ParticleName     -> {multiplet.write_ParticleName()},\n")
-            file.write(f"    AntiParticleName -> {multiplet.write_AntiParticleName()},\n")
-            file.write(f"    FullName         -> {multiplet.write_FullName()}\n")
-            file.write(f"  }},\n")
-
+        for idx, field in enumerate(self.phy_fermion):
+            fermion_entry = f"  V[{idx+1}] == {{\n"
+            fermion_info = []
+            for key, value in field.items():
+                fermion_info.append(f"    {key:20} -> {value}")
+            fermion_entry += "    " + ",\n    ".join(fermion_info) + "\n"
+            fermion_entry += "  },\n"
+            file.write(fermion_entry)
+    
         file.write("\n")
         file.write("(* Fermions: unphysical fields *)\n")
+        for idx, field in enumerate(self.unphy_fermion):
+            fermion_entry = f"  V[{idx+1}] == {{\n"
+            fermion_info = []
+            for key, value in field.items():
+                fermion_info.append(f"    {key:20} -> {value}")
+            fermion_entry += "    " + ",\n    ".join(fermion_info) + "\n"
+            fermion_entry += "  },\n"
+            file.write(fermion_entry)
 
-        for idx, multiplet in enumerate(self.unphy_fermions.values()):
-            file.write(f"  F[1{idx+1}] == {{\n")
-            file.write(f"    ClassName        -> {multiplet.name}\n")
-            file.write(f"    Unphysical       -> True,\n")
-            file.write(f"    Indices          -> {multiplet.write_Indices()},\n")
-            file.write(f"    FlavorIndex      -> {multiplet.GenerationIndex},\n")
-            file.write(f"    SelfConjugate    -> {multiplet.self_conjugate},\n")
-            file.write(f"    QuantumNumbers   -> {multiplet.write_QuantumNumbers()},\n")
-            file.write(f"    Definitions      -> {multiplet.write_Definition()}\n")
-            file.write(f"  }},\n")
-        file.write("}\n")
-        file.write("\n" * 2)
+    def write_scalar(self, file):
+        from sm_setting import write_sm_higgs
+        write_sm_higgs(file)
 
-    def write_parameter(self, file):
+    def write_vector(self, file):
+        from sm_setting import write_sm_gauge_boson
+        write_sm_gauge_boson(file)
+
+    def write_all_fields(self, file):
         file.write(f"(* ************************** *)\n")
-        file.write(f"(* *****   Parameters   ***** *)\n")
-        file.write(f"(* ************************** *)\n")
-        file.write(f"\n")
-        file.write(f"M$Parameters = {{\n")
-        file.write("\n" * 2)
+        file.write(f"(* **** Particle classes **** *)\n")
+        file.write(f"(* ************************** *)\n\n")
+        file.write(f"M$ClassesDescription = {{\n\n")
+
+        self.write_vector(file)
+        self.write_fermion(file)
+        self.write_scalar(file)
+
+        file.write("};\n\n")
+
+    def write_ExtParams(self, file):
+        for itr in self.interactions.values():
+            for param in itr.ExtParams:
+                file.write(param.to_fr())
+
+    def write_IntParams(self, file):
+        for itr in self.interactions.values():
+            for param in itr.IntParams:
+                file.write(param.to_fr())
+
+    def write_parameters(self, file):
+        from sm_setting import write_sm_higgs_parameters_external, write_sm_higgs_parameters_internal
+        file.write("(* ************************** *)\n")
+        file.write("(* *****   Parameters   ***** *)\n")
+        file.write("(* ************************** *)\n")
+        file.write("M$Parameters = {\n")
+        write_sm_higgs_parameters_external(file)
+        write_sm_higgs_parameters_internal(file)
+        self.write_ExtParams(file)
+        self.write_IntParams(file)
+        file.write("};\n")
+    
+    def write_yukawa(self, file):
+        terms = []
+        dummy_idx = []
+        for itr in self.interactions.values():
+            terms.append(itr.to_fr())
+            dummy_idx.extend(itr.dummy_idx)
+        dummy_idx = list(set(dummy_idx))
+        dummy_idx = ", ".join(dummy_idx)
+
+        file.write(f"LYukawa := Block[{{sp, {dummy_idx}, yuk, feynmangaugerules}},\n")
+        file.write("  feynmangaugerules = If[Not[FeynmanGauge], {G0|GP|GPbar ->0}, {}];\n")
+        file.write("\n")
+        file.write("  yuk = ExpandIndices[\n")
+        file.write("\n".join(terms))
+        file.write("\n  ];\n")
+        file.write("  yuk + HC[yuk]/. feynmangaugerules\n")
+        file.write("];\n")
 
     def write_lagrangian(self, file):
-        file.write(f"(* ************************** *)\n")
-        file.write(f"(* *****   Lagrangian   ***** *)\n")
-        file.write(f"(* ************************** *)\n")
-        file.write(f"\n")
-        
-    def write_model(self, OUTPUT_PATH):
+        from sm_setting import write_sm_lagrangian
+        file.write("(* ************************** *)\n")
+        file.write("(* *****   Lagrangian   ***** *)\n")
+        file.write("(* ************************** *)\n")
+        file.write("\n")
+        self.write_yukawa(file)
+        write_sm_lagrangian(file)
 
+    def write_feynrules_file(self, OUTPUT_PATH):
+        import os
         if not os.path.exists(OUTPUT_PATH):
             os.makedirs(OUTPUT_PATH)
 
@@ -420,9 +317,8 @@ class model:
             os.remove(parameter_file)
         if os.path.exists(lagrangian_file):
             os.remove(lagrangian_file)
-
+        
         with open(model_file, "w") as f:
-
             f.write("(******************************************************************************************************************)\n")
             f.write("(****** " + f"This is the FeynRules mod-file for {self.model_name}" + " " * (65 - len(self.model_name) ) + " ******)\n")
             f.write("(****** " + " " * 100                                                                                    + " ******)\n")
@@ -437,29 +333,28 @@ class model:
 
             self.write_info(f)
             self.write_gauge(f)
-            self.write_vev(f)
-            self.write_group(f)
-            self.write_indices(f)
-            self.write_interaction_orders(f)
+            self.write_gauge_group(f)
+            self.write_Interaction_orders(f)
             f.write("\n")
-            f.write(f"Get[\"{self.model_name}_particles.fr\"];\n\n")
-            f.write(f"Get[\"{self.model_name}_parameters.fr\"];\n\n")
-            f.write(f"Get[\"{self.model_name}_lagrangian.fr\"];\n\n")
+            f.write(f"Get[\"{self.model_name}_particles.fr\"];\n")
+            f.write(f"Get[\"{self.model_name}_parameters.fr\"];\n")
+            f.write(f"Get[\"{self.model_name}_lagrangian.fr\"];\n")
 
-        with open(particle_file, "w") as f:
-            self.write_particle_classes(f)
+            with open(particle_file, "w") as f: 
+                self.write_all_fields(f)
+                self.write_FeynArts(f)
 
-        with open(parameter_file, "w") as f:
-            self.write_parameter(f)
+            with open(parameter_file, "w") as f:
+                self.write_parameters(f)
 
-        with open(lagrangian_file, "w") as f:
-            self.write_lagrangian(f)
-
-        #print(f"Model {self.model_name} is successfully written to {OUTPUT_PATH}!")
-    
+            with open(lagrangian_file, "w") as f:
+                self.write_lagrangian(f)
 
 if __name__ == "__main__":
-    JSON_PATH = 'model/sm.json'
-    MODEL_PATH = 'model'
-    a = model('SM', 'Bohr Network', JSON_PATH)
-    a.write_model(MODEL_PATH)
+    JSON_PATH = 'sm.json'
+    MODEL_PATH = 'SM'
+
+    model = Model("SM", "Bohr Network", JSON_PATH)
+    model.write_feynrules_file(MODEL_PATH)
+
+    

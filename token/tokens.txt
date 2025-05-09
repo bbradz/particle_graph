@@ -2,53 +2,65 @@
     - type (U, SU)
     - N (int)
 
-[GuageGroup]
+[GaugeGroup]
     - name (str)
-    - label (str)
     - group (Group)
+    - boson (str)
 
+[VEV]
+    - config (matrix)
+    - reps (list of int)
+    - value (float)
+
+[Higgs]
+    - vev (VEV)
+    - Scalar Multiplets (Multiplet)
+    
 [Q Numbers]
     - dict
 
-[Higgs]
-    - vev (list of floats)
-    - Scalar Multiplets (Multiplet)
-    
 [Multiplet]
-    - label (str)
-    - name (str) id (int)
+    - id (int)
+    - name (str)
     - dimension (int)
     - generation (int)
     - reps (list of int)
-    - gauge groups (list of GuageGroup)
     - particles (list of ids)
+    - QuantumNumbers (dict)
     
 [Particle]
     - id (int)
     - type (fermion, scalar, gauge)
     - name (str)
-    - label (str)
     - mass (float)
     - self-conjugate (bool)
-    - quantum number (dict)
+    - QuantumNumbers (dict)
     
 [Interaction]
     - id (int)
-    - type (DC, Yukawa, PhiMass, Phi4, FmnFmn, FmnF~mn...)
+    - type (DC, Yukawa, PhiMass ...)
     - particles (list of ids)
 
 # ================================ #
 # =          Modules             = #
 # ================================ #
 
+GaugeGroup Module
+[GG] -> [name] -> [G]
+
 Group Module
 [G] -> [type] -> [N]
 
+SSB Module
+[SSB] -> [list of GG] -> [Higgs] -> [VEV]
+
 Particle Module
-[P] -> [type] -> [name] -> [label] -> [mass] -> [self-conjugate] -> [quantum number]
+[P] -> [type] -> [name] -> [mass] -> [self-conjugate] -> [quantum number]
 
 Multiplet Module
-[M] -> [label] -> [name] -> [id] -> [dimension] -> [generation] -> [reps] -> [gauge groups] -> [P-id]
+[M] -> [label] -> [name] -> [id] -> [dimension] -> [generation] -> [reps] -> [P-id]
 
 Interaction Module
 [I] -> [id] -> [type] -> [M-id]
+
+

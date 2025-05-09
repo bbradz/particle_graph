@@ -16,7 +16,7 @@ M$ModelName = "SM";
 
 M$Information = { 
   Authors      -> Bohr Network, 
-  Date         -> "2025-04-17", 
+  Date         -> "2025-04-23", 
 };
 
 FeynmanGauge = True;
@@ -60,12 +60,12 @@ M$gaugeGroup = {
 (* ************************** *)
 
 IndexRange[Index[ThreeGen]] = Range[3],
-IndexRange[Index[Colour]] = NoUnfold[Range[3]],
 IndexRange[Index[SU2D]] = Unfold[Range[2]],
+IndexRange[Index[Colour]] = NoUnfold[Range[3]],
 
 IndexStyle[ThreeGen, i];
-IndexStyle[Colour, j];
-IndexStyle[SU2D, k];
+IndexStyle[SU2D, j];
+IndexStyle[Colour, k];
 
 
 (* ************************** *)
