@@ -1,0 +1,51 @@
+{
+    "GaugeGroup": {
+        "GGROUP": "<INIT>",
+        "id": "AUTO",
+        "name": "AUTO",
+        "charge": "AUTO",
+        "Group_type": "str (SU/U/SO/O)",
+        "Group_N": "int",
+        "coupling": "AUTO",
+        "boson": "AUTO"
+    },
+    "vev": {
+        "VEV": "<INIT>",
+        "id": "AUTO",
+        "name": "AUTO",
+        "vacuum": "list of int",
+        "value": "int (order of magnitude)"
+    },
+    "particle": {
+        "PTCL": "<INIT>",
+        "type": "str (complex/real/fermion/vector)",
+        "mass": "int (order of magnitude)",
+        "charge": "int"
+    },
+    "field": {
+        "FIELD": "<INIT>",
+        "id": "AUTO",
+        "name": "AUTO",
+        "type": "str (complex/real/fermion/vector)",
+        "dim": "int > 0",
+        "gen": "int > 0",
+        "particles": "list of PTCL ids",
+        "self_conjugate": "boolean",
+        "chirality": "str (left/right/NA)",
+        "reps": {
+            "SU3C": "str (singlet/fnd/adj)",
+            "SU2L": "str (singlet/fnd/adj)",
+            "U1Y": "int"
+        },
+        "QN": {
+            "LeptonNumber": "int",
+            "BaryonNumber": "int"
+        }
+    },
+    "interaction": {
+        "ITRACT": "<INIT>",
+        "id": "AUTO",
+        "type": "str (DC/yukawa/vlf/phi4/FF/FFdual)",
+        "fields": "list of FIELD ids"
+    }
+}
