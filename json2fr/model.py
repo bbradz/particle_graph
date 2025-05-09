@@ -351,8 +351,8 @@ class Model:
                 self.write_lagrangian(f)
 
 if __name__ == "__main__":
-    JSON_PATH = 'sm.json'
-    MODEL_PATH = 'SM'
+    JSON_PATH = 'particle_graph/SM.json'
+    MODEL_PATH = 'particle_graph/SM'
 
     model = Model("SM", "Bohr Network", JSON_PATH)
     model.write_feynrules_file(MODEL_PATH)

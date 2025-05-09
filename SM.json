@@ -182,7 +182,7 @@
                 "self_conjugate": false,
                 "reps": {"g1": 4, "g2": "singlet", "g3": "fnd"},
                 "QuantumNumber": {"LeptonNumber": 0, "BaryonNumber": 2},
-                "particles": ["f9", "f11"]
+                "particles": ["f7", "f9", "f11"]
             },
             {
                 "id": "m5",

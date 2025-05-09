@@ -1,0 +1,64 @@
+(******************************************************************************************************************)
+(****** This is the FeynRules mod-file for SM                                                                ******)
+(******                                                                                                      ******)
+(****** Author: Bohr Network                                                                                 ******)
+(******                                                                                                      ******)
+(****** Choose whether Feynman gauge is desired.                                                             ******)
+(****** If set to False, unitary gauge is assumed.                                                           ******)
+(****** Feynman gauge is especially useful for CalcHEP/CompHEP where the calculation is 10-100 times faster. ******)
+(****** Feynman gauge is not supported in MadGraph and Sherpa.                                               ******)
+(******************************************************************************************************************)
+
+(* ************************** *)
+(* *****  Information   ***** *)
+(* ************************** *)
+M$ModelName = "SM";
+
+M$Information = { 
+  Authors      -> Bohr Network, 
+  Date         -> "2025-05-09", 
+};
+
+FeynmanGauge = True;
+
+(* ************************** *)
+(* *****  Gauge groups  ***** *)
+(* ************************** *)
+M$GaugeGroups = {
+  U1Y == {
+    Abelian              -> True,
+    CouplingConstant     -> g1,
+    GaugeBoson           -> B,
+    Charge               -> Y
+  },
+  SU2L == {
+    Abelian              -> False,
+    CouplingConstant     -> gw,
+    GaugeBoson           -> W,
+    StructureConstants   -> Eps,
+    Representations      -> {Ta, SU2D},
+    Definition           -> {Ta[a_,b_,c_]->PauliSigma[a,b,c]/2, FSU2L[i_,j_,k_]:> I Eps[i,j,k]}
+  },
+  SU3C == {
+    Abelian              -> False,
+    CouplingConstant     -> gs,
+    GaugeBoson           -> G,
+    StructureConstants   -> f,
+    Representations      -> {T, Colour},
+    SymmetryTensors      -> dSUN
+  }
+}
+
+(* ************************** *)
+(* *** Interaction orders *** *)
+(* ***  (as used by mg5)  *** *)
+(* ************************** *)
+
+M$InteractionOrderHierarchy = {
+  {QCD, 1},
+  {QED, 2}
+};
+
+Get["SM_particles.fr"];
+Get["SM_parameters.fr"];
+Get["SM_lagrangian.fr"];
