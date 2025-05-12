@@ -201,8 +201,6 @@ class VectorBoson(Particle):
 
 
 
-
-
 if __name__ == "__main__":
     from utility import random_inputs
 

@@ -1,5 +1,7 @@
-import sympy as sp
 
+### ============================ ###
+###       External Parameter     ###
+### ============================ ###
 class ExtParam:
     def __init__(self, name, BLOCKNAME, OrderBlock, Value, Description):
         self.name = name
@@ -28,7 +30,11 @@ class ExtParam:
         param_entry += "    " + ",\n    ".join(param_info) + "\n"
         param_entry += "  },\n"
         return param_entry
-    
+
+
+### ============================= ###
+###       Internal Parameter      ###
+### ============================= ###
 class IntParam:
     def __init__(self, name, indices, definition, value, InteractionOrder, ParameterName, TeX, Description):
         self.name = name

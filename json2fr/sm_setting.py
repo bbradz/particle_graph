@@ -385,3 +385,17 @@ def write_sm_gauge_parameters(file):
   GaugeXi[ U[32] ] = GaugeXi[W];
   GaugeXi[ U[4]  ] = GaugeXi[G];
     """)
+
+def write_sm_interaction_orders(file):
+    """
+    Write the SM interaction orders to a file
+    """
+    file.write("(* ************************** *)\n")
+    file.write("(* *** Interaction orders *** *)\n")
+    file.write("(* ***  (as used by mg5)  *** *)\n")
+    file.write("(* ************************** *)\n")
+    file.write("\n")
+    file.write("M$InteractionOrderHierarchy = {\n")
+    file.write("  {QCD, 1},\n")
+    file.write("  {QED, 2}\n")
+    file.write("};\n")

@@ -1,4 +1,14 @@
+### =============================== ###
+###          Index Classes          ###
+### =============================== ###
 class Index:
+    """
+    Index class for indices of fields.
+    name: str
+    dim: int
+    fold: str
+    color: bool
+    """
     def __init__(self, name, dim, fold, color = False):
         self.name = name
         self.dim = dim
@@ -6,7 +16,7 @@ class Index:
         self.color = color
 
     def __str__(self):
-        return f"{self.name}"
+        return self.name
 
     def __repr__(self):
         return f"Index[{self.name}]"

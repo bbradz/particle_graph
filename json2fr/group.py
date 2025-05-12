@@ -1,15 +1,12 @@
 ### =============================== ###
 ###          Group Classes          ###
 ### =============================== ###
-
-import numpy as np
-
 class Group:
     """
     Base class for groups
     """
     def __init__(self, name, dim):
-        self.name = name
+        self.name = str(name)
         self.dim = dim
         self.__check__()
 
@@ -160,7 +157,7 @@ class GaugeGroup:
     """
     def __init__(self, id, name, charge, group, coupling, boson):
         self.id = id
-        self.name = name
+        self.name = str(name)
         self.charge = charge
         self.group = group
         self.coupling = coupling
@@ -309,6 +306,6 @@ if __name__ == "__main__":
     print(random_values)
     g = GaugeGroup(random_values[0], random_values[1], random_values[2], random_values[3], random_values[4], random_values[5])
     print(g)
-    print(g.score())
+    print(g.score)
 
     

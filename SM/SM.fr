@@ -1,7 +1,7 @@
 (******************************************************************************************************************)
 (****** This is the FeynRules mod-file for SM                                                                ******)
 (******                                                                                                      ******)
-(****** Author: Bohr Network                                                                                 ******)
+(****** Author: Cooper                                                                                       ******)
 (******                                                                                                      ******)
 (****** Choose whether Feynman gauge is desired.                                                             ******)
 (****** If set to False, unitary gauge is assumed.                                                           ******)
@@ -15,8 +15,8 @@
 M$ModelName = "SM";
 
 M$Information = { 
-  Authors      -> Bohr Network, 
-  Date         -> "2025-05-09", 
+  Authors      -> Cooper, 
+  Date         -> "2025-05-12", 
 };
 
 FeynmanGauge = True;

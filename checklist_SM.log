@@ -1,0 +1,263 @@
+(* Gauge Groups *)
+(* U1Y (9/9) *)
+id                             -> True
+name                           -> True
+charge                         -> True
+group                          -> True
+group_type                     -> True
+N                              -> True
+coupling                       -> True
+boson                          -> True
+dim                            -> True
+
+(* SU2L (9/9) *)
+id                             -> True
+name                           -> True
+charge                         -> True
+group                          -> True
+group_type                     -> True
+N                              -> True
+coupling                       -> True
+boson                          -> True
+dim                            -> True
+
+(* SU3C (9/9) *)
+id                             -> True
+name                           -> True
+charge                         -> True
+group                          -> True
+group_type                     -> True
+N                              -> True
+coupling                       -> True
+boson                          -> True
+dim                            -> True
+
+
+(* Fields *)
+(* Phi (24/24) *)
+id                             -> True
+name                           -> True
+type                           -> True
+dim                            -> True
+gen                            -> True
+reps_dict                      -> True
+reps                           -> True
+reps_len                       -> True
+groups_dict                    -> True
+groups                         -> True
+ptcl_list_check                -> True
+ptcl_check                     -> True
+ptcl_num                       -> True
+ptcl_type                      -> True
+ptcl_self_conjugate            -> True
+self_conjugate                 -> True
+QuantumNumber_dict_check       -> True
+QuantumNumber_value_check      -> True
+subtype_check                  -> True
+_generation_index              -> True
+_gen_type_consistency          -> True
+_full_reps                     -> True
+_dim_consistency               -> True
+_check_vev_potential           -> True
+
+(* LL (30/30) *)
+id                             -> True
+name                           -> True
+type                           -> True
+dim                            -> True
+gen                            -> True
+reps_dict                      -> True
+reps                           -> True
+reps_len                       -> True
+groups_dict                    -> True
+groups                         -> True
+ptcl_list_check                -> True
+ptcl_check                     -> True
+ptcl_num                       -> True
+ptcl_type                      -> True
+ptcl_self_conjugate            -> True
+self_conjugate                 -> True
+QuantumNumber_dict_check       -> True
+QuantumNumber_value_check      -> True
+chirality                      -> True
+_generation_index              -> True
+_gen_type_consistency          -> True
+_full_reps                     -> True
+_dim_consistency               -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_ptcl_pass_all_checks          -> True
+_check_mass_type               -> True
+
+(* lR (30/30) *)
+id                             -> True
+name                           -> True
+type                           -> True
+dim                            -> True
+gen                            -> True
+reps_dict                      -> True
+reps                           -> True
+reps_len                       -> True
+groups_dict                    -> True
+groups                         -> True
+ptcl_list_check                -> True
+ptcl_check                     -> True
+ptcl_num                       -> True
+ptcl_type                      -> True
+ptcl_self_conjugate            -> True
+self_conjugate                 -> True
+QuantumNumber_dict_check       -> True
+QuantumNumber_value_check      -> True
+chirality                      -> True
+_generation_index              -> True
+_gen_type_consistency          -> True
+_full_reps                     -> True
+_dim_consistency               -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_ptcl_pass_all_checks          -> True
+_check_mass_type               -> True
+
+(* QL (30/30) *)
+id                             -> True
+name                           -> True
+type                           -> True
+dim                            -> True
+gen                            -> True
+reps_dict                      -> True
+reps                           -> True
+reps_len                       -> True
+groups_dict                    -> True
+groups                         -> True
+ptcl_list_check                -> True
+ptcl_check                     -> True
+ptcl_num                       -> True
+ptcl_type                      -> True
+ptcl_self_conjugate            -> True
+self_conjugate                 -> True
+QuantumNumber_dict_check       -> True
+QuantumNumber_value_check      -> True
+chirality                      -> True
+_generation_index              -> True
+_gen_type_consistency          -> True
+_full_reps                     -> True
+_dim_consistency               -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_ptcl_pass_all_checks          -> True
+_check_mass_type               -> True
+
+(* uR (30/30) *)
+id                             -> True
+name                           -> True
+type                           -> True
+dim                            -> True
+gen                            -> True
+reps_dict                      -> True
+reps                           -> True
+reps_len                       -> True
+groups_dict                    -> True
+groups                         -> True
+ptcl_list_check                -> True
+ptcl_check                     -> True
+ptcl_num                       -> True
+ptcl_type                      -> True
+ptcl_self_conjugate            -> True
+self_conjugate                 -> True
+QuantumNumber_dict_check       -> True
+QuantumNumber_value_check      -> True
+chirality                      -> True
+_generation_index              -> True
+_gen_type_consistency          -> True
+_full_reps                     -> True
+_dim_consistency               -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_ptcl_pass_all_checks          -> True
+_check_mass_type               -> True
+
+(* dR (30/30) *)
+id                             -> True
+name                           -> True
+type                           -> True
+dim                            -> True
+gen                            -> True
+reps_dict                      -> True
+reps                           -> True
+reps_len                       -> True
+groups_dict                    -> True
+groups                         -> True
+ptcl_list_check                -> True
+ptcl_check                     -> True
+ptcl_num                       -> True
+ptcl_type                      -> True
+ptcl_self_conjugate            -> True
+self_conjugate                 -> True
+QuantumNumber_dict_check       -> True
+QuantumNumber_value_check      -> True
+chirality                      -> True
+_generation_index              -> True
+_gen_type_consistency          -> True
+_full_reps                     -> True
+_dim_consistency               -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_ptcl_pass_all_checks          -> True
+_check_mass_type               -> True
+
+
+(* Interactions *)
+(* i1 (11/11) *)
+id_check                       -> True
+field_length_check             -> True
+field_type_check               -> True
+field_check                    -> True
+field_check_pass               -> True
+sort_field_check               -> True
+gen_check                      -> True
+dim_check                      -> True
+mass_type_check                -> True
+_yukawa_mass                   -> True
+_yukawa_matrix                 -> True
+
+(* i2 (11/11) *)
+id_check                       -> True
+field_length_check             -> True
+field_type_check               -> True
+field_check                    -> True
+field_check_pass               -> True
+sort_field_check               -> True
+gen_check                      -> True
+dim_check                      -> True
+mass_type_check                -> True
+_yukawa_mass                   -> True
+_yukawa_matrix                 -> True
+
+(* i3 (11/11) *)
+id_check                       -> True
+field_length_check             -> True
+field_type_check               -> True
+field_check                    -> True
+field_check_pass               -> True
+sort_field_check               -> True
+gen_check                      -> True
+dim_check                      -> True
+mass_type_check                -> True
+_yukawa_mass                   -> True
+_yukawa_matrix                 -> True
+

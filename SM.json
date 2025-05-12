@@ -223,7 +223,7 @@
             {
                 "id": "i3",
                 "type": "yukawa",
-                "fields": ["m3", "m5", "m6"]
+                "fields": ["m3", "m4", "m6"]
             }
         ]
     },

@@ -149,26 +149,26 @@ M$Parameters = {
     Value                -> 172.44,
     Description          -> "Yukawa mass for t-quark"
   },
-  ymd == {
+  ymu == {
     ParameterType        -> External,
     BLOCKNAME            -> YUKAWA,
-    OrderBlock           -> 1,
-    Value                -> 0.0047,
-    Description          -> "Yukawa mass for d-quark"
+    OrderBlock           -> 2,
+    Value                -> 0.0023,
+    Description          -> "Yukawa mass for u-quark"
   },
-  yms == {
+  ymc == {
     ParameterType        -> External,
     BLOCKNAME            -> YUKAWA,
-    OrderBlock           -> 3,
-    Value                -> 0.095,
-    Description          -> "Yukawa mass for s-quark"
+    OrderBlock           -> 4,
+    Value                -> 1.27,
+    Description          -> "Yukawa mass for c-quark"
   },
-  ymb == {
+  ymt == {
     ParameterType        -> External,
     BLOCKNAME            -> YUKAWA,
-    OrderBlock           -> 5,
-    Value                -> 4.18,
-    Description          -> "Yukawa mass for b-quark"
+    OrderBlock           -> 6,
+    Value                -> 172.44,
+    Description          -> "Yukawa mass for t-quark"
   },
   yLLlR == {
     ParameterType        -> Internal,
@@ -190,14 +190,14 @@ M$Parameters = {
     TeX                  -> Superscript[y, QLuR],
     Description          -> "Yukawa coupling for QL and uR"
   },
-  yQLdR == {
+  yQLuR == {
     ParameterType        -> Internal,
     Indices              -> {Index[ThreeGen], Index[ThreeGen]},
-    Definition           -> {yQLdR[i_?NumericQ, j_?NumericQ] :> 0  /; (i =!= j)},
-    Value                -> {yQLdR[1,1] -> Sqrt[2] ymd/vev, yQLdR[2,2] -> Sqrt[2] yms/vev, yQLdR[3,3] -> Sqrt[2] ymb/vev},
+    Definition           -> {yQLuR[i_?NumericQ, j_?NumericQ] :> 0  /; (i =!= j)},
+    Value                -> {yQLuR[1,1] -> Sqrt[2] ymu/vev, yQLuR[2,2] -> Sqrt[2] ymc/vev, yQLuR[3,3] -> Sqrt[2] ymt/vev},
     InteractionOrder     -> {QED, 1},
-    ParameterName        -> {yQLdR[1,1] -> ymd, yQLdR[2,2] -> yms, yQLdR[3,3] -> ymb},
-    TeX                  -> Superscript[y, QLdR],
-    Description          -> "Yukawa coupling for QL and dR"
+    ParameterName        -> {yQLuR[1,1] -> ymu, yQLuR[2,2] -> ymc, yQLuR[3,3] -> ymt},
+    TeX                  -> Superscript[y, QLuR],
+    Description          -> "Yukawa coupling for QL and uR"
   },
 };

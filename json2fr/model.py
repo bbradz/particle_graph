@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Model:
     """
     Particle Physics Model Class: read JSON file and write FR model file
@@ -13,30 +15,32 @@ class Model:
         self.ai = True if author == 'Bohr Network' else False
         self.FeynmanGauge = True
         self.JSON_PATH = JSON_PATH
-
-        from datetime import datetime
         self.current_time = datetime.now().strftime("%Y-%m-%d")
-
         self.checklist = {}
         self._initialize_model()
 
+    # read Gauge Groups
     def _gauge_group(self, model_data):
         from group import GaugeGroup
         self.gauge_groups = {}
         for g in model_data['nodes']['GaugeGroups']:
             self.gauge_groups[g["id"]] = GaugeGroup(**g)
 
+    # read Vacuum Expectation Value (VEV)
     def _vev(self, model_data):
         from vev import vev
         self.vevs = {}
         for v in model_data["nodes"]['vevs']:
             self.vevs[v["id"]] = vev(**v)
 
+    # read particles
     def _particles(self, model_data):
-        from particle import Fermion, RealScalar, ComplexScalar #, VectorBoson
+        from particle import Fermion, RealScalar, ComplexScalar
+
         self.scalar_particles = {}
         self.fermion_particles = {}
         self.vector_particles = {}
+        
         for p in model_data['nodes']['particles']:
             if p["type"] == "fermion":
                 p.pop("type")
@@ -51,6 +55,7 @@ class Model:
                 type = p["type"]
                 print(f"invalid field type {type}")
     
+    # read scalar fields
     def _scalar_fields(self, model_data):
         from field import ScalarField
         self.scalar_fields = {}
@@ -66,8 +71,8 @@ class Model:
                 sf["groups"] = self.gauge_groups
                 sf["particles"] = scalar_list
                 new_scalar_field = ScalarField(**sf)
-                self.scalar_fields[sf["id"]] = new_scalar_field
                 new_scalar_field.__validate__()
+                self.scalar_fields[sf["id"]] = new_scalar_field
 
     def _vector_fields(self, model_data):
         from field import VectorField
@@ -93,14 +98,18 @@ class Model:
                 f["particles"] = cf_list
                 f.pop('type')
                 new_fermion_field = FermionField(**f)
+                new_fermion_field.__validate__()    
                 self.fermion_fields[f["id"]] = new_fermion_field
-                new_fermion_field.__validate__()
-                self.unphy_fermion = []
-        self.phy_fermion = []
 
-        for f in self.fermion_fields.values():
-            self.phy_fermion.extend(f._phy_field_info())
-            self.unphy_fermion.append(f._unphy_field_info())
+        try:        
+            self.phy_fermion = []
+            self.unphy_fermion = []
+            for f in self.fermion_fields.values():
+                self.phy_fermion.extend(f._phy_field_info())
+                self.unphy_fermion.append(f._unphy_field_info())
+        except:
+            pass
+
         # remove duplicate physical fermionic fields based on PDG
         seen = []
         unique_fermion = []
@@ -116,9 +125,6 @@ class Model:
         self._vector_fields(model_data)
         self.all_fields = {**self.scalar_fields, **self.fermion_fields, **self.vector_fields}
 
-    def _symmetry_breakings(self):
-        pass
-
     def _interactions(self, model_data):
         from interaction import Yukawa
         
@@ -127,21 +133,39 @@ class Model:
             fields = [self.all_fields[id] for id in itr["fields"]]
             itr.pop("type")
             itr["fields"] = fields
-            self.interactions[itr["id"]] = Yukawa(**itr)
+            new_interaction = Yukawa(**itr)
+            new_interaction.__validate__()
+            self.interactions[itr["id"]] = new_interaction
 
-    def check_list(self):
-        for g in self.gauge_groups.values():
-            print(g.name, g.score)
-            for key, check in g.checklist.items():
-                print(f"{key:30} -> {check}")
-        for f in self.all_fields.values():
-            print(f.name, f.score) 
-            for key, check in f.checklist.items():
-                print(f"{key:30} -> {check}")
-        for itr in self.interactions.values():
-            print(itr.id, itr.score)
-            for key, check in itr.checklist.items():
-                print(f"{key:30} -> {check}")
+    def _check_list(self):
+        log_file = f"checklist_{self.model_name}.log"
+        with open(log_file, "w") as file:
+            file.write("(* Gauge Groups *)\n")
+            for g in self.gauge_groups.values(): 
+                file.write(f"(* {g.name} ({g.score}) *)\n")
+                for value, check in g.checklist.items():
+                    self.checklist[g.name + "~" + value] = check
+                    file.write(f"{value:30} -> {check}\n")
+                file.write("\n")
+            file.write("\n")
+            file.write("(* Fields *)\n")
+            for f in self.all_fields.values():
+                file.write(f"(* {f.name} ({f.score}) *)\n")
+                for value, check in f.checklist.items():
+                    self.checklist[f.name + "~" + value] = check
+                    file.write(f"{value:30} -> {check}\n")
+                file.write("\n")
+            file.write("\n")
+            file.write("(* Interactions *)\n")
+            for itr in self.interactions.values():
+                file.write(f"(* {itr.id} ({itr.score}) *)\n")
+                for value, check in itr.checklist.items():
+                    self.checklist[itr.id + "~" + value] = check
+                    file.write(f"{value:30} -> {check}\n")
+                file.write("\n")
+
+    def pass_all_checks(self):
+        return len(self.checklist) == sum(1 for value in self.checklist.values() if value is True)
 
     def _initialize_model(self):
         from utility import read_json
@@ -151,13 +175,13 @@ class Model:
         self._particles(model_data)
         self._fields(model_data)
         self._interactions(model_data)
+        self._check_list()
 
-        self.check_list()
-        
 
-    #########################################################
-    # Write FeynRules file
-    #########################################################
+    ###==============================###
+    ###     Write FeynRules file     ###
+    ###==============================###
+
     def write_info(self, file):
         file.write(f"(* ************************** *)\n")
         file.write(f"(* *****  Information   ***** *)\n")
@@ -198,15 +222,8 @@ class Model:
         write_sm_gauge_parameters(file)
         
     def write_Interaction_orders(self, file):
-        file.write("(* ************************** *)\n")
-        file.write("(* *** Interaction orders *** *)\n")
-        file.write("(* ***  (as used by mg5)  *** *)\n")
-        file.write("(* ************************** *)\n")
-        file.write("\n")
-        file.write("M$InteractionOrderHierarchy = {\n")
-        file.write("  {QCD, 1},\n")
-        file.write("  {QED, 2}\n")
-        file.write("};\n")
+        from sm_setting import write_sm_interaction_orders
+        write_sm_interaction_orders(file)
         
     def write_fermion(self, file):
         file.write("(* Fermions: physical fields *)\n")
@@ -299,7 +316,7 @@ class Model:
         self.write_yukawa(file)
         write_sm_lagrangian(file)
 
-    def write_feynrules_file(self, OUTPUT_PATH):
+    def _write_feynrules_file(self, OUTPUT_PATH):
         import os
         if not os.path.exists(OUTPUT_PATH):
             os.makedirs(OUTPUT_PATH)
@@ -350,12 +367,21 @@ class Model:
             with open(lagrangian_file, "w") as f:
                 self.write_lagrangian(f)
 
-if __name__ == "__main__":
-    import os
-    JSON_PATH = os.path.join(os.getcwd(), 'SM.json')
-    MODEL_PATH = os.path.join(os.getcwd(), 'SM')
+    def to_fr(self, OUTPUT_PATH):
+        if self.pass_all_checks():
+            self._write_feynrules_file(OUTPUT_PATH)
+            print(f"{self.model_name} passed all checks!")
+            print(f"FeynRules file is written to {OUTPUT_PATH}")
 
-    model = Model("SM", "Bohr Network", JSON_PATH)
-    model.write_feynrules_file(MODEL_PATH)
+        else:
+            print(f"{self.model_name} failed to pass all checks")
+            print(f"Please check the checklist.txt file for more details")
+
+if __name__ == "__main__":
+    JSON_PATH = '/Users/cooperniu/Documents/codes/particle_game/pygame/particle_graph/SM.json'
+    MODEL_PATH = '/Users/cooperniu/Documents/codes/particle_game/pygame/particle_graph/SM'
+
+    model = Model("SM", "Cooper", JSON_PATH)
+    model.to_fr(MODEL_PATH)
 
     
