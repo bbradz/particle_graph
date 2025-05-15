@@ -1,0 +1,215 @@
+(* Gauge Groups *)
+(* U1Y (9/9) *)
+id                             -> True
+name                           -> True
+charge                         -> True
+group                          -> True
+group_type                     -> True
+N                              -> True
+coupling                       -> True
+boson                          -> True
+dim                            -> True
+
+(* SU2L (9/9) *)
+id                             -> True
+name                           -> True
+charge                         -> True
+group                          -> True
+group_type                     -> True
+N                              -> True
+coupling                       -> True
+boson                          -> True
+dim                            -> True
+
+(* SU3C (9/9) *)
+id                             -> True
+name                           -> True
+charge                         -> True
+group                          -> True
+group_type                     -> True
+N                              -> True
+coupling                       -> True
+boson                          -> True
+dim                            -> True
+
+
+(* Fields *)
+(* Phi (16/16) *)
+_id_check                      -> True
+_name_check                    -> True
+_type_check                    -> True
+_groups_check                  -> True
+_reps_check                    -> True
+_dim_check                     -> True
+_gen_check                     -> True
+_particles_check               -> True
+_self_conjugate_check          -> True
+_QuantumNumber_check           -> True
+_ptcl_check                    -> True
+_create_generation_index       -> True
+_check_gen_type_consistency    -> True
+_create_full_reps              -> True
+_check_dim_reps_consistency    -> True
+_check_vev_potential           -> True
+
+(* LL (22/22) *)
+_id_check                      -> True
+_name_check                    -> True
+_type_check                    -> True
+_groups_check                  -> True
+_reps_check                    -> True
+_dim_check                     -> True
+_gen_check                     -> True
+_particles_check               -> True
+_self_conjugate_check          -> True
+_QuantumNumber_check           -> True
+_ptcl_check                    -> True
+_chirality_check               -> True
+_create_generation_index       -> True
+_check_gen_type_consistency    -> True
+_create_full_reps              -> True
+_check_dim_reps_consistency    -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_check_mass_type               -> True
+
+(* lR (22/22) *)
+_id_check                      -> True
+_name_check                    -> True
+_type_check                    -> True
+_groups_check                  -> True
+_reps_check                    -> True
+_dim_check                     -> True
+_gen_check                     -> True
+_particles_check               -> True
+_self_conjugate_check          -> True
+_QuantumNumber_check           -> True
+_ptcl_check                    -> True
+_chirality_check               -> True
+_create_generation_index       -> True
+_check_gen_type_consistency    -> True
+_create_full_reps              -> True
+_check_dim_reps_consistency    -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_check_mass_type               -> True
+
+(* QL (22/22) *)
+_id_check                      -> True
+_name_check                    -> True
+_type_check                    -> True
+_groups_check                  -> True
+_reps_check                    -> True
+_dim_check                     -> True
+_gen_check                     -> True
+_particles_check               -> True
+_self_conjugate_check          -> True
+_QuantumNumber_check           -> True
+_ptcl_check                    -> True
+_chirality_check               -> True
+_create_generation_index       -> True
+_check_gen_type_consistency    -> True
+_create_full_reps              -> True
+_check_dim_reps_consistency    -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_check_mass_type               -> True
+
+(* uR (22/22) *)
+_id_check                      -> True
+_name_check                    -> True
+_type_check                    -> True
+_groups_check                  -> True
+_reps_check                    -> True
+_dim_check                     -> True
+_gen_check                     -> True
+_particles_check               -> True
+_self_conjugate_check          -> True
+_QuantumNumber_check           -> True
+_ptcl_check                    -> True
+_chirality_check               -> True
+_create_generation_index       -> True
+_check_gen_type_consistency    -> True
+_create_full_reps              -> True
+_check_dim_reps_consistency    -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_check_mass_type               -> True
+
+(* dR (22/22) *)
+_id_check                      -> True
+_name_check                    -> True
+_type_check                    -> True
+_groups_check                  -> True
+_reps_check                    -> True
+_dim_check                     -> True
+_gen_check                     -> True
+_particles_check               -> True
+_self_conjugate_check          -> True
+_QuantumNumber_check           -> True
+_ptcl_check                    -> True
+_chirality_check               -> True
+_create_generation_index       -> True
+_check_gen_type_consistency    -> True
+_create_full_reps              -> True
+_check_dim_reps_consistency    -> True
+_assign_colors                 -> True
+_sort_unphy_fields             -> True
+_sort_phy_fields               -> True
+_assign_flavors                -> True
+_check_charge_consistency      -> True
+_check_mass_type               -> True
+
+
+(* Interactions *)
+(* i1 (11/11) *)
+_id_check                      -> True
+_field_length_check            -> True
+_field_type_check              -> True
+_field_check                   -> True
+_all_field_pass_checks         -> True
+_sort_field                    -> True
+_gen_check                     -> True
+_dim_check                     -> True
+_assign_mass_type              -> True
+_yukawa_mass                   -> True
+_yukawa_matrix                 -> True
+
+(* i2 (11/11) *)
+_id_check                      -> True
+_field_length_check            -> True
+_field_type_check              -> True
+_field_check                   -> True
+_all_field_pass_checks         -> True
+_sort_field                    -> True
+_gen_check                     -> True
+_dim_check                     -> True
+_assign_mass_type              -> True
+_yukawa_mass                   -> True
+_yukawa_matrix                 -> True
+
+(* i3 (11/11) *)
+_id_check                      -> True
+_field_length_check            -> True
+_field_type_check              -> True
+_field_check                   -> True
+_all_field_pass_checks         -> True
+_sort_field                    -> True
+_gen_check                     -> True
+_dim_check                     -> True
+_assign_mass_type              -> True
+_yukawa_mass                   -> True
+_yukawa_matrix                 -> True
+

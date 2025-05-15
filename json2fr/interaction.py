@@ -1,6 +1,16 @@
 from field import Field
 from param import IntParam, ExtParam
 
+def run_checks(all_checks, checklist):
+    for check in all_checks:
+        try:
+            check()
+            checklist[check.__name__] = True
+        except Exception as e:
+            checklist[check.__name__] = e
+
+
+
 ### =========================== ###
 ###       Interaction Class     ###
 ### =========================== ###
@@ -20,6 +30,7 @@ class Interaction:
         self.__check__()
         self.ExtParams = []
         self.IntParams = []
+        self.sorted_fields = {}
 
     def __str__(self):
         return f"{self.type} ({self.id})"
@@ -27,25 +38,51 @@ class Interaction:
     def __repr__(self):
         return f"{self.type} ({self.id})"
 
+    @property
+    def all_checks(self):
+        def _id_check():
+            assert isinstance(self.id, str), f"AssertionError: {self.id} is not a string"
+
+        def _field_length_check():
+            assert len(self.fields) == len(self.requirements), \
+                f"AssertionError: {self.id} has {len(self.fields)} fields but {len(self.requirements)} requirements"
+
+        def _field_type_check():
+            assert all(field_type in self.requirements for field_type in self.requirements), \
+                f"AssertionError: {self.id} has invalid field types"
+
+        def _field_check():
+            for f in self.fields:
+                assert isinstance(f, Field), \
+                    f"AssertionError: {f} is not a Field"
+
+        def _all_field_pass_checks():
+            for f in self.fields:
+                assert f.pass_all_checks(), \
+                    f"AssertionError: {f} has failed checks"
+
+        def _sort_field():
+            
+            self.sorted_fields = {}
+            for pos, reqs in self.requirements.items():
+                candidate = self.fields
+                for key, value in reqs.items():
+                    candidate = [f for f in candidate if f.__dict__()[key] == value or f.__dict__()[key] in value]
+                assert len(candidate) == 1, \
+                    f"AssertionError: Multiple fields with \"{key} = {value}\" found for {self.id}: {candidate}"
+                self.sorted_fields[pos] = candidate[0]
+
+        return [_id_check, 
+                _field_length_check, 
+                _field_type_check, 
+                _field_check, 
+                _all_field_pass_checks,
+                _sort_field
+                ]
+    
     def __check__(self):
-        id_check = isinstance(self.id, str)
-        field_length_check = len(self.fields) == len(self.requirements)
-        field_type_check = all(field_type in self.requirements for field_type in self.requirements)
-        field_check = all([isinstance(f, Field) for f in self.fields])
-        field_check_pass = all([f.pass_all_checks() for f in self.fields])
-
-        try:
-            self.sort_field()
-            sort_field_check = True
-        except Exception as e:
-            sort_field_check = e
-
-        self.checklist = {"id_check": id_check,
-                          "field_length_check": field_length_check,
-                          "field_type_check": field_type_check,
-                          "field_check": field_check,
-                          "field_check_pass": field_check_pass,
-                          "sort_field_check": sort_field_check}
+        self.checklist = {}
+        run_checks(self.all_checks, self.checklist)
 
     # Validate the field
     def __validate__(self):
@@ -69,23 +106,9 @@ class Interaction:
     def pass_all_checks(self):
         return all(self.checklist.values()) 
 
-    def sort_field(self):
-        self.sorted_fields = {}
-        for pos, reqs in self.requirements.items():
-            candidate = self.fields
-            for key, value in reqs.items():
-                candidate = [f for f in candidate if f.__dict__()[key] == value]
-            if len(candidate) == 1:
-                self.sorted_fields[pos] = candidate[0]
-            elif len(candidate) > 1:
-                raise Exception(f"Multiple fields with \"{key} = {value}\" found for {self.id}: {candidate}")
-            else:
-                raise Exception(f"No field with \"{key} = {value}\" found for {self.id}")
-
 ### =========================== ###
 ###       Yukawa Interaction    ###
 ### =========================== ###
-
 class Yukawa(Interaction):
     """
     Yukawa interaction class.
@@ -94,38 +117,31 @@ class Yukawa(Interaction):
               "chirality": "left"}
     field2 = {"type": "fermion", 
               "chirality": "right"}
-    field3 = {"type": "scalar"}
+    field3 = {"type": ["complex", "real", "scalar"]}
 
     field_types = {0: field1, 1: field2, 2: field3}
 
     def __init__(self, id, fields):
         super().__init__(id, "Yukawa", self.field_types, fields)
+        self.__check__()
         self.dummy_idx = []
         self.higgs_loc = None
 
     def __check__(self):
         super().__check__()
 
-        try:
-            gen_check = self.sorted_fields[0].gen == self.sorted_fields[1].gen
-        except Exception as e:
-            gen_check = e
+        def _gen_check():
+            assert self.sorted_fields[0].gen == self.sorted_fields[1].gen, f"AssertionError: {self.sorted_fields[0].gen} != {self.sorted_fields[1].gen}"
 
-        try:
-            dim_check = (self.sorted_fields[0].dim == self.sorted_fields[2].dim) or (self.sorted_fields[1].dim == self.sorted_fields[2].dim)
-        except Exception as e:
-            dim_check = e
+        def _dim_check():
+            assert (self.sorted_fields[0].dim == self.sorted_fields[2].dim) or (self.sorted_fields[1].dim == self.sorted_fields[2].dim), f"AssertionError: {self.sorted_fields[0].dim} != {self.sorted_fields[2].dim} and {self.sorted_fields[1].dim} != {self.sorted_fields[2].dim}"
         
-        try:
+        def _assign_mass_type():
             self.sorted_fields[0].mass_type = "Yukawa"
             self.sorted_fields[1].mass_type = "Yukawa"
-            mass_type_check = True
-        except Exception as e:
-            mass_type_check = e
 
-        self.checklist.update({"gen_check": gen_check, 
-                               "dim_check": dim_check,
-                               "mass_type_check": mass_type_check})
+        checks = [_gen_check, _dim_check, _assign_mass_type]
+        run_checks(checks, self.checklist)
 
     def _yukawa_mass(self):
         from sympy import Matrix, sympify
@@ -162,10 +178,11 @@ class Yukawa(Interaction):
         mass_name = [p.name for p in self.ExtParams]
         Value = f"{{{name}[1,1] -> Sqrt[2] {mass_name[0]}/vev, {name}[2,2] -> Sqrt[2] {mass_name[1]}/vev, {name}[3,3] -> Sqrt[2] {mass_name[2]}/vev}}"
         InteractionOrder = "{QED, 1}"
+        
         ParameterName = f"{{{name}[1,1] -> {mass_name[0]}, {name}[2,2] -> {mass_name[1]}, {name}[3,3] -> {mass_name[2]}}}"
         Tex = f"Superscript[y, {suffix}]"
         Description = f"\"Yukawa coupling for {self.sorted_fields[0].name} and {self.sorted_fields[1].name}\""
-
+        
         self.yukawa_matrix = IntParam(name, 
                                        Indices, 
                                        Definitions, 
@@ -179,18 +196,11 @@ class Yukawa(Interaction):
 
     def __validate__(self):
         super().__validate__()
-        all_checks = [self._yukawa_mass, 
-                      self._yukawa_matrix]
-        
-        for check in all_checks:
-            if any(isinstance(value, Exception) or value == False for value in self.checklist.values()):
-                self.checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
-            else:
-                try:
-                    check()
-                    self.checklist[check.__name__] = True
-                except Exception as e:
-                    self.checklist[check.__name__] = e
+        all_checks = [
+            self._yukawa_mass, 
+            self._yukawa_matrix
+            ]
+        run_checks(all_checks, self.checklist)
 
     def to_fr(self):
         assert self.pass_all_checks(), f"Assertion failed: {self.id} has failed checks"

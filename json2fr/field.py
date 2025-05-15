@@ -10,6 +10,15 @@ from fractions import Fraction
 from index import Index
 import name
 
+def run_checks(all_checks, checklist):
+    for check in all_checks:
+        try:
+            check()
+            checklist[check.__name__] = True
+        except Exception as e:
+            checklist[check.__name__] = e
+ 
+
 ### ======================= ###
 ###          Field          ###
 ### ======================= ###
@@ -18,7 +27,7 @@ class Field:
     Base class for fields.
     id: str 
     name: str
-    type: str ["fermion", "scalar", "vector"]
+    type: str ["complex", "real", "fermion", "vector"]
     reps: dict of str (non-abelian group reps) or int (abelian group charge)
     groups: dict of group
     dim: int > 0
@@ -27,23 +36,23 @@ class Field:
     self_conjugate: bool
     QuantumNumber: dict
     """
-    def __init__(self, id, name, type, reps, groups, dim, gen, particles, self_conjugate, QuantumNumber):
+    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate, QuantumNumber):
         self.id = id
         self.name = name
         self.type = type
-        self.reps = reps
         self.groups = groups
+        self.reps = reps
         self.dim = dim
         self.gen = gen
         self.particles = particles
         self.self_conjugate = self_conjugate
         self.QuantumNumber = QuantumNumber
+
         self.__check__()
-        self.is_massive = None
         self.indices = []
         self.full_reps = {}
         self.abelian_charges = {}
-
+        
     def __str__(self):
         return self.name
 
@@ -66,91 +75,113 @@ class Field:
     
     def __check__(self):
         """
-        Input validation for the field class.
+        Input checks for the field class.
         """
-        id_check = isinstance(self.id, str)
-        name_check = isinstance(self.name, str)
-        type_check = isinstance(self.type, str) and self.type in ["fermion", "scalar", "vector"]
-        reps_dict_check = isinstance(self.reps, dict) 
-        reps_check = all(isinstance(x, int) or isinstance(x, str) for x in self.reps.values())
-        reps_len_check = len(self.reps) == len(self.groups)
-        groups_dict_check = isinstance(self.groups, dict)
-        groups_check = all(isinstance(g, str) for g in self.groups)
-        dim_check = isinstance(self.dim, int) and self.dim > 0
-        gen_check = isinstance(self.gen, int) and self.gen > 0
-        ptcl_list_check = isinstance(self.particles, list) 
-        ptcl_check = all(isinstance(p, Particle) for p in self.particles)
-        self_conjugate_check = isinstance(self.self_conjugate, bool)
-        QuantumNumber_dict_check = isinstance(self.QuantumNumber, dict)
-        QuantumNumber_value_check = all(isinstance(x, int) for x in self.QuantumNumber.values())
+
+        def _id_check():
+            assert isinstance(self.id, str), \
+                f"Error: 'id' must be a string."
         
-        try:
-            # check if the number of particles is consistent with the dimension and generation
-            ptcl_num = (len(self.particles) == self.dim * self.gen)
-        except:
-            ptcl_num = False
-        try:
-            # check if the type of the particles is consistent with the type of the field
-            ptcl_type = all(p.type == self.type for p in self.particles)
-        except:
-            ptcl_type = False
-        try:
-            # check if the particles are self-conjugate
-            ptcl_self_conjugate = all(p.charge == 0 for p in self.particles) or not self.self_conjugate
-        except:
-            ptcl_self_conjugate = False
+        def _name_check():
+            assert isinstance(self.name, str), \
+                f"Error: 'name' must be a string."
+        
+        def _type_check():
+            assert isinstance(self.type, str), \
+                f"Error: 'type' must be a string."
+            assert self.type in ["complex", "real", "fermion", "vector"], \
+                f"Error: 'type' must be one of complex/real/fermion/vector."
+        
+        def _groups_check():
+            assert isinstance(self.groups, dict), \
+                f"Error: 'groups' must be a dictionary."
+            assert all(isinstance(g, str) for g in self.groups), \
+                f"Error: 'groups' must be a dictionary of strings."
 
-        try:
-            # check if the particles are massive
-            self.is_massive = all(p.fermion.mass == 0 for p in self.particles)
-        except:
-            pass
+        def _reps_check():
+            assert isinstance(self.reps, dict), \
+                f"Error: 'reps' must be a dict."
+            assert all(isinstance(x, int) or isinstance(x, str) for x in self.reps.values()), \
+                f"Error: 'reps' must be a dict of int or str."
+            assert len(self.reps) == len(self.groups), \
+                f"Error: 'reps' and 'groups' must be the same length."
+        
+        def _dim_check():
+            assert isinstance(self.dim, int) and self.dim > 0, \
+                f"Error: 'dim' must be a positive integer."
+        
+        def _gen_check():
+            assert isinstance(self.gen, int) and self.gen > 0, \
+                f"Error: 'gen' must be a positive integer."
+        
+        def _particles_check():
+            assert isinstance(self.particles, list), \
+                f"Error: 'particles' must be a list."
+            if self.type == "fermion":
+                assert all(isinstance(p, WeylSpinor) for p in self.particles), \
+                    f"Error: 'particles' for fermion fields must be a list of WeylSpinor."
+            else:
+                assert all(isinstance(p, Particle) for p in self.particles), \
+                    f"Error: 'particles' for non-fermion fields must be a list of Particle."
+            
+        def _self_conjugate_check():
+            assert isinstance(self.self_conjugate, bool), \
+                f"Error: 'self_conjugate' must be a bool."
+        
+        def _QuantumNumber_check():
+            assert isinstance(self.QuantumNumber, dict), \
+                f"Error: 'QuantumNumber' must be a dict."
+            assert all(isinstance(x, int) for x in self.QuantumNumber.values()), \
+                f"Error: 'QuantumNumber' must be a dict of int."
+        
+        def _ptcl_check():
+            assert len(self.particles) == self.dim * self.gen, \
+                f"Error: there must be (dim * gen) number of particles"
+            for p in self.particles:
+                assert p.type == self.type, \
+                f"Error: this field is a {self.type} field, but the particle is a {p.type} particle."
+            assert all(p.charge == 0 for p in self.particles) or not self.self_conjugate, \
+                f"Error: this field is self-conjugate, but the particles have non-zero charges."
+            for p in self.particles:
+                if p.type == "fermion":     
+                    assert p.fermion.pass_all_checks(), \
+                        f"Error: {p.fermion} does NOT pass ALL checks with a score of {p.fermion.score}."
+                else:
+                    assert p.pass_all_checks(), \
+                        f"Error: {p} does NOT pass ALL checks with a score of {p.score}."
+        
+        self.all_checks = [
+            _id_check,
+            _name_check,
+            _type_check,
+            _groups_check,
+            _reps_check,
+            _dim_check,
+            _gen_check,
+            _particles_check,
+            _self_conjugate_check,
+            _QuantumNumber_check,
+            _ptcl_check
+        ]
 
-        self.checklist = {"id": id_check, 
-                          "name": name_check, 
-                          "type": type_check,
-                          "dim": dim_check, 
-                          "gen": gen_check,
-                          "reps_dict": reps_dict_check,
-                          "reps": reps_check,
-                          "reps_len": reps_len_check,
-                          "groups_dict": groups_dict_check,
-                          "groups": groups_check,
-                          # particle checks
-                          "ptcl_list_check": ptcl_list_check,
-                          "ptcl_check": ptcl_check,
-                          "ptcl_num": ptcl_num,
-                          "ptcl_type": ptcl_type,
-                          "ptcl_self_conjugate": ptcl_self_conjugate,
-                          # field checks
-                          "self_conjugate": self_conjugate_check, 
-                          "QuantumNumber_dict_check": QuantumNumber_dict_check,
-                          "QuantumNumber_value_check": QuantumNumber_value_check, 
-                          }
+        self.checklist = {}
+        run_checks(self.all_checks, self.checklist)
     
     # after checking all the inputs, the rest of the checks are done in the sequence
     # if a pre-requisite is not met, the rest of the checks will not be performed and automatically fail
-    # this is to save time and avoid errors
-    # In unphyField, the checks are:
-    # 0. pass all the input checks
-    # 1. Can one write the reps under the groups in the form of a dictionary?
-    # 2. Is the dimension of the field consistent with the dimension of the corresponding representation?
 
     # Generation Index 
-    def _generation_index(self):
+    def _create_generation_index(self):
         if self.gen > 1:
             gen_idx_name = name.num2words(self.gen).capitalize() + "Gen"
             self.gen_idx = Index(gen_idx_name, self.gen, "Fold")
             self.indices.append(self.gen_idx)
-        else:
-            pass
     
     # Generation Type Consistency
-    def _gen_type_consistency(self):
+    def _check_gen_type_consistency(self):
         if self.type != "fermion":
-            assert self.gen == 1, f"AssertionError: Non-fermion fields can have only one generation"
-        else:
-            pass
+            assert self.gen == 1, \
+                f"Error: Non-fermion fields can have only one generation"
 
     @staticmethod
     def _index(group, dim):
@@ -165,7 +196,7 @@ class Field:
             return Index(idx_name, int(dim), "Fold", color = False)
         
     # Assign reps to the groups
-    def _full_reps(self):
+    def _create_full_reps(self):
         for key, group in self.groups.items():
             rep_dict = {}
             if group.abelian:
@@ -181,18 +212,14 @@ class Field:
                 rep_dict["group"] = group
                 rep_dict["isColor"] = group.isSU3C
                 rep_dict["abelian"] = False
-
                 rep_idx = self._index(group, rep_dict["dim"])
                 if rep_idx is not None:
                     group.reps.append(str(rep_idx))
                     self.indices.append(rep_idx)
-                else:
-                    pass
-
             self.full_reps[group.id] = rep_dict
 
     # Representation-Dimension Consistency
-    def _dim_consistency(self):
+    def _check_dim_reps_consistency(self):
         for _, rep_dict in self.full_reps.items():
             if rep_dict["abelian"]:
                 pass
@@ -201,22 +228,18 @@ class Field:
             elif rep_dict["reps"] == "singlet":
                 pass
             else:
-                assert rep_dict["dim"] == self.dim, f"AssertionError: {self.name} with dim-{self.dim} is inconsistent with \"{rep_dict['reps']}\" ({rep_dict['dim']}) in {rep_dict['group']}"
+                assert rep_dict["dim"] == self.dim, \
+                    f"Error: {self.name} with dim-{self.dim} is inconsistent with \"{rep_dict['reps']}\" ({rep_dict['dim']}) in {rep_dict['group']}"
 
     # Validate the field
     def __validate__(self):
-        all_checks = [self._generation_index, self._gen_type_consistency, 
-                      self._full_reps, self._dim_consistency]
-        
-        for check in all_checks:
-            if any(isinstance(value, Exception) or value == False for value in self.checklist.values()):
-                self.checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
-            else:
-                try:
-                    check()
-                    self.checklist[check.__name__] = True
-                except Exception as e:
-                    self.checklist[check.__name__] = e
+        self.all_validations = [
+            self._create_generation_index, 
+            self._check_gen_type_consistency, 
+            self._create_full_reps, 
+            self._check_dim_reps_consistency
+            ]
+        run_checks(self.all_validations, self.checklist)
 
     @property
     def score(self):
@@ -235,13 +258,19 @@ class Field:
 class FermionField(Field):
     """
     Class for fermion fields.
-    reps: list of int
     groups: list of str
+    reps: list of int
+    dim: int > 0
+    gen: int > 0
+    particles: list of Particle
+    self_conjugate: bool
+    QuantumNumber: dict
     chirality: str
     """
-    def __init__(self, id, name, reps, groups, dim, gen, particles, self_conjugate, QuantumNumber, chirality):
+    def __init__(self, id, name, groups, reps, dim, gen, particles, self_conjugate, QuantumNumber, chirality):
         self.chirality = chirality
-        super().__init__(id, name, "fermion", reps, groups, dim, gen, particles, self_conjugate, QuantumNumber)
+        super().__init__(id, name, "fermion", groups, reps, dim, gen, particles, self_conjugate, QuantumNumber)
+        
         self.__check__()
         self.color = 1
         self.mass_type = None
@@ -257,23 +286,21 @@ class FermionField(Field):
             "groups": self.groups,
             "dim": self.dim,
             "gen": self.gen,
-            "chirality": self.chirality,
             "particles": self.particles,
             "self_conjugate": self.self_conjugate,
-            "QuantumNumber": self.QuantumNumber
+            "QuantumNumber": self.QuantumNumber,
+            "chirality": self.chirality
         }
 
     def __check__(self):
         super().__check__()
-        chirality_check = self.chirality in ["left", "right"]
-        # Override the ptcl_check from ParticleClass to WeylSpinorClass
-        ptcl_check = all(isinstance(p, WeylSpinor) for p in self.particles)
 
-        self.checklist.update(
-            {"chirality": chirality_check,
-             "ptcl_check": ptcl_check
-             }
-        )
+        def _chirality_check():
+            assert self.chirality in ["left", "right"], \
+                f"Error: {self.chirality} is not a valid chirality"
+
+        self.all_checks.append(_chirality_check)
+        run_checks(self.all_checks, self.checklist)
 
     # Assign colors to the particles
     def _assign_colors(self):
@@ -306,38 +333,131 @@ class FermionField(Field):
     # Check if the charges of the particles are consistent
     def _check_charge_consistency(self):
         for idx, gen in enumerate(self._phy_fields):
-            assert all(cf.charge == gen[0].charge for cf in gen), f"AssertionError: {self.name} has inconsistent charges in generation {idx+1}"
+            assert all(cf.charge == gen[0].charge for cf in gen), \
+                f"Error: {self.name} has inconsistent charges in generation {idx+1}"
 
-    # Check if all the particles pass all the checks
-    def _ptcl_pass_all_checks(self):
-        for p in self.particles:
-            if not p.fermion.pass_all_checks():
-                return False
-        return True
+    # massive particle must acquire mass from interactions
+    def _check_mass_type(self):
+        self.is_massive = all(p.fermion.mass == 0 for p in self.particles)
+        if self.is_massive:
+            assert self.mass_type is not None, \
+                f"Error: {self.name} is massive but has no mass type"
 
     def __validate__(self):
         super().__validate__()
-        all_checks = [self._assign_colors, self._sort_unphy_fields, 
-                      self._sort_phy_fields, self._assign_flavors, 
-                      self._check_charge_consistency, self._ptcl_pass_all_checks,
-                      self._check_mass_type]
-        
-        for check in all_checks:
-            if any(isinstance(value, Exception) or value == False for value in self.checklist.values()):
-                self.checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
-            else:
-                try:
-                    check()
-                    self.checklist[check.__name__] = True
-                except Exception as e:
-                    self.checklist[check.__name__] = e
+        all_checks = [
+            self._assign_colors, 
+            self._sort_unphy_fields, 
+            self._sort_phy_fields, 
+            self._assign_flavors, 
+            self._check_charge_consistency, 
+            self._check_mass_type
+            ]   
+        run_checks(all_checks, self.checklist)
 
     def to_matrix(self):
         return np.array([[p.id for p in gen] for gen in self._unphy_fields])
     
+    # ================================ #
+    #         Write FeynRules          #
+    # ================================ #
+    @property
+    def phy_field_info(self):
+        assert self.pass_all_checks(), \
+            f"Error: {self.name} has failed the checks"
+
+        # Format propagator label for FeynRules PropagatorLabel
+        def write_propagator_label(class_name, member_name):
+            prop_label_str = [class_name] + member_name
+            return str(prop_label_str).replace("[", "{").replace("]", "}")
+
+        # Format particle masses for FeynRules Mass
+        def write_Mass(class_name, particle_list):
+            if all(particle.fermion.mass == 0 for particle in particle_list):
+                return 0
+            else:
+                Mass = ["M"+str(class_name).upper()]
+                for particle in particle_list:
+                    mass_name = "M" + particle.fermion.name.upper()
+                    Mass.append((mass_name, particle.fermion.mass))
+                Mass = str(Mass).translate(str.maketrans({"'": "", "[": "{", "]": "}", "(": "{", ")": "}"}))
+                return Mass
+
+        # Format particle widths for FeynRules Width
+        def write_Width(class_name, particle_list):
+            if all(particle.fermion.width == 0 for particle in particle_list):
+                return 0
+            else:
+                Width = ["W"+str(class_name).upper()]
+                for particle in particle_list:
+                    width_name = "W" + particle.fermion.name.upper()
+                    Width.append((width_name, particle.fermion.width))
+                Width = str(Width).translate(str.maketrans({"'": "", "[": "{", "]": "}", "(": "{", ")": "}"}))
+                return Width
+
+        phy_fields = []
+        for i in range(self.dim):
+            class_name = name.fermion_field_name(self._phy_fields[i][0].charge, self.color)
+            particle_name_list = [p.fermion.name for p in self._phy_fields[i]]
+            particle_fullname_list = [p.fermion.full_name for p in self._phy_fields[i]]
+            indices = [self.gen_idx] + [i for i in self.indices if i.color == True]
+            qnumber = self.QuantumNumber.copy()
+            qnumber.update({"Q": self._phy_fields[i][0].charge})
+            phy_field = {
+                "ClassName": f"{class_name[0]}",
+                "ClassMembers": self.rewrite_list(particle_name_list),
+                "Indices": self.rewrite_Indices(indices),
+                "FlavorIndex": self.gen_idx, #  GenIdx and ColorIdx
+                "Mass": write_Mass(class_name[0], self._phy_fields[i]), 
+                "Width": write_Width(class_name[0], self._phy_fields[i]), 
+                "QuantumNumber": self.rewrite_QuantumNumber(qnumber), 
+                "PropagatorLabel": write_propagator_label(class_name[0], particle_name_list), 
+                "PropagatorType": "Straight", 
+                "PropagatorArrow": "Forward", 
+                "PDG": [p.fermion.pdg_id for p in self._phy_fields[i]], 
+                "ParticleName": particle_name_list, 
+                "AntiParticleName": [p.fermion.name + "~" for p in self._phy_fields[i]], 
+                "FullName": particle_fullname_list
+            }
+            phy_fields.append(phy_field)
+        return phy_fields
+
+    @property
+    def unphy_field_info(self):
+        assert self.pass_all_checks(), \
+            f"Error: {self.name} has failed the checks"
+
+        def write_Definition():
+            definition = []
+            proj_matrix = "ProjM" if self.chirality == "left" else "ProjP"
+            if self.color > 1:
+                if self.dim > 1:
+                    for i in range(self.dim):
+                        class_name = name.fermion_field_name(self._phy_fields[i][0].charge, self.color)[0]
+                        definition.append(f"{self.name}[sp1_, {i+1}, ff_, cc_] :> Module[{{sp2}}, {proj_matrix}[sp1, sp2] {class_name}[sp2, ff, cc]]")
+                else:
+                    class_name = name.fermion_field_name(self._phy_fields[0][0].charge, self.color)[0]
+                    definition.append(f"{self.name}[sp1_, ff_, cc_] :> Module[{{sp2}}, {proj_matrix}[sp1, sp2] {class_name}[sp2, ff, cc]]")
+            else:
+                for i in range(self.dim):
+                    class_name = name.fermion_field_name(self._phy_fields[i][0].charge, self.color)[0]
+                    definition.append(f"{self.name}[sp1_, {i+1}, ff_] :> Module[{{sp2}}, {proj_matrix}[sp1, sp2] {class_name}[sp2, ff]]")
+            return "{ " + (",\n" + " "*34).join(definition) + " }"
+
+        unphy_field = {
+            "ClassName": self.name,
+            "Unphysical": True, 
+            "Indices": self.rewrite_Indices(self.indices), # GenIdx and ColorIdx and RepIdx 
+            "FlavorIndex": self.gen_idx, # non-color RepIdx
+            "SelfConjugate": self.self_conjugate,
+            "QuantumNumber": self.rewrite_QuantumNumber(self.abelian_charges),
+            "Definition": write_Definition()    
+        }
+        return unphy_field
+
     @staticmethod
     def rewrite_list(list):
-        return str(list).replace("[", "{").replace("]", "}").replace("'", "")
+        return str(list).translate(str.maketrans({"'": "", "[": "{", "]": "}"}))
 
     @staticmethod
     def rewrite_QuantumNumber(QuantumNumber):
@@ -350,122 +470,13 @@ class FermionField(Field):
         indices_str = "{" + ", ".join(indices) + "}"
         return indices_str
 
-    @staticmethod
-    def _propagator_label(class_name, member_name):
-        prop_label_str = [class_name] + member_name
-        return str(prop_label_str).replace("[", "{").replace("]", "}")
-
-    @staticmethod
-    def write_Mass(class_name, particle_list):
-        """Format particle masses for FeynRules Mass."""
-        if all(particle.fermion.mass == 0 for particle in particle_list):
-            return 0
-        else:
-            Mass = ["M"+str(class_name).upper()]
-            for particle in particle_list:
-                mass_name = "M" + particle.fermion.name.upper()
-                Mass.append((mass_name, particle.fermion.mass))
-            Mass = str(Mass).replace("'", "")
-            Mass = Mass.replace("[", "{").replace("]", "}")
-            Mass = Mass.replace("(", "{").replace(")", "}")
-            return Mass
-
-    @staticmethod
-    def write_Width(class_name, particle_list):
-        """Format particle widths for FeynRules Width."""
-        if all(particle.fermion.width == 0 for particle in particle_list):
-            return 0
-        else:
-            Width = ["W"+str(class_name).upper()]
-            for particle in particle_list:
-                width_name = "W" + particle.fermion.name.upper()
-                Width.append((width_name, particle.fermion.width))
-            Width = str(Width).replace("'", "")
-            Width = Width.replace("[", "{").replace("]", "}")
-            Width = Width.replace("(", "{").replace(")", "}")
-            return Width
-
-    def write_Definition(self):
-        """Write FeynRules definition for the multiplet."""
-        definition = []
-        proj_matrix = "ProjM" if self.chirality == "left" else "ProjP"
-        if self.color > 1:
-            if self.dim > 1:
-                for i in range(self.dim):
-                    class_name = name.fermion_field_name(self._phy_fields[i][0].charge, self.color)[0]
-                    definition.append(f"{self.name}[sp1_, {i+1}, ff_, cc_] :> Module[{{sp2}}, {proj_matrix}[sp1, sp2] {class_name}[sp2, ff, cc]]")
-            else:
-                class_name = name.fermion_field_name(self._phy_fields[0][0].charge, self.color)[0]
-                definition.append(f"{self.name}[sp1_, ff_, cc_] :> Module[{{sp2}}, {proj_matrix}[sp1, sp2] {class_name}[sp2, ff, cc]]")
-        else:
-            for i in range(self.dim):
-                class_name = name.fermion_field_name(self._phy_fields[i][0].charge, self.color)[0]
-                definition.append(f"{self.name}[sp1_, {i+1}, ff_] :> Module[{{sp2}}, {proj_matrix}[sp1, sp2] {class_name}[sp2, ff]]")
-
-        return "{ " + (",\n" + " "*34).join(definition) + " }"
-
-
-    def _phy_field_info(self):
-        assert self.pass_all_checks(), f"AssertionError: {self.name} has failed the checks"
-        phy_fields = []
-        for i in range(self.dim):
-            class_name = name.fermion_field_name(self._phy_fields[i][0].charge, self.color)
-            particle_name_list = [p.fermion.name for p in self._phy_fields[i]]
-            particle_fullname_list = [p.fermion.full_name for p in self._phy_fields[i]]
-            indices = [self.gen_idx] + [i for i in self.indices if i.color == True]
-            qnumber = self.QuantumNumber.copy()
-            qnumber.update({"Q": self._phy_fields[i][0].charge})
-            
-            phy_field = {
-                "ClassName": f"{class_name[0]}",
-                "ClassMembers": self.rewrite_list(particle_name_list),
-                "Indices": self.rewrite_Indices(indices),
-                "FlavorIndex": self.gen_idx, #  GenIdx and ColorIdx
-                "Mass": self.write_Mass(class_name[0], self._phy_fields[i]), 
-                "Width": self.write_Width(class_name[0], self._phy_fields[i]), 
-                "QuantumNumber": self.rewrite_QuantumNumber(qnumber), 
-                "PropagatorLabel": self._propagator_label(class_name[0], particle_name_list), 
-                "PropagatorType": "Straight", 
-                "PropagatorArrow": "Forward", 
-                "PDG": [p.fermion.pdg_id for p in self._phy_fields[i]], 
-                "ParticleName": particle_name_list, 
-                "AntiParticleName": [p.fermion.name + "~" for p in self._phy_fields[i]], 
-                "FullName": particle_fullname_list
-            }
-            phy_fields.append(phy_field)
-        return phy_fields
-
-    def _unphy_field_info(self):
-        assert self.pass_all_checks(), f"AssertionError: {self.name} has failed the checks"
-        unphy_field = {
-            "ClassName": self.name,
-            "Unphysical": True, 
-            "Indices": self.rewrite_Indices(self.indices), # GenIdx and ColorIdx and RepIdx 
-            "FlavorIndex": self.gen_idx, # non-color RepIdx
-            "SelfConjugate": self.self_conjugate,
-            "QuantumNumber": self.rewrite_QuantumNumber(self.abelian_charges),
-            "Definition": self.write_Definition()    
-        }
-        return unphy_field
-
-    # massive particle must acquire mass from interactions
-    def _check_mass_type(self):
-        if self.is_massive:
-            assert self.mass_type is not None, f"AssertionError: {self.name} is massive but has no mass type"
-        else:
-            pass
-
-    # def covariant_derivative(self):
-    #     return f"{self.name}bar.Ga[mu].DC[{self.name}, mu]"
-    
 
 ### ======================== ###
 ###       Scalar Field       ###
 ### ======================== ###
 class ScalarField(Field):
-    def __init__(self, id, name, type, reps, groups, dim, gen, particles, self_conjugate, QuantumNumber):
-        self.subtype = type
-        super().__init__(id, name, "scalar", reps, groups, dim, gen, particles, self_conjugate, QuantumNumber)
+    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate, QuantumNumber):
+        super().__init__(id, name, type, groups, reps, dim, gen, particles, self_conjugate, QuantumNumber)
         self.__check__()
         self.potential = None
         self.vev = None
@@ -473,54 +484,35 @@ class ScalarField(Field):
 
     def __check__(self):
         super().__check__()
-        subtype_check = self.subtype in ["real", "complex", "scalar"]
-
-        self.checklist.update({"subtype_check": subtype_check})
-        
-        # Override the ptcl_type from Field to ScalarField's subtype
-        try:
-            ptcl_type = all(p.type == self.subtype for p in self.particles)
-        except:
-            ptcl_type = False
-        self.checklist["ptcl_type"] = ptcl_type
+        # TO-DO: Override the ptcl_type from Field to ScalarField's subtype
 
     def _check_vev_potential(self):
         """ Check the potential allowed the vev """
-        assert True, f"{self.vev} does not minimize {self.name}'s potential"
+        assert True, \
+            f"{self.vev} does not minimize {self.name}'s potential"
 
     def acquire_vev(self, vev):
         """ ScalarField Promotion to Higgs (similar to Pawn Promotion in Chess)"""
-        assert isinstance(vev, list), f"AssertionError: {self.name}'s vev must be a list"
-        assert self.dim == len(vev), f"AssertionError: {self.name} has dim-{self.dim} inconsistent with vev-{vev}"
-        assert all(isinstance(v, (int, float)) for v in vev), f"AssertionError: {self.name}'s vev must be a list of numbers"
-        self.get_vev = True
-        self.vev = vev
+        pass
 
     def __validate__(self):
         super().__validate__()
         all_checks = [self._check_vev_potential]
-        for check in all_checks:
-            try:
-                check()
-                self.checklist[check.__name__] = True
-            except Exception as e:
-                self.checklist[check.__name__] = e
+        run_checks(all_checks, self.checklist)
 
-    def _phy_field_info(self):
+
+    def phy_field_info(self):
         pass
 
-    def _unphy_field_info(self):
+    def unphy_field_info(self):
         pass
-
-    def covariant_derivative(self):
-        return f"DC[{self.name}bar, mu] DC[{self.name}, mu]"
 
 ### ============================ ###
 ###        Vector Field          ###
 ### ============================ ###
 class VectorField(Field):
-    def __init__(self, id, name, reps, groups, dim, gen, particles, self_conjugate, QuantumNumber):
-        super().__init__(id, name, "vector", reps, groups, dim, gen, particles, self_conjugate, QuantumNumber)
+    def __init__(self, id, name, groups, reps, dim, gen, particles, self_conjugate, QuantumNumber):
+        super().__init__(id, name, "vector", groups, reps, dim, gen, particles, self_conjugate, QuantumNumber)
         self.__check__()
 
     def __check__(self):
