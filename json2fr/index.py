@@ -23,17 +23,17 @@ class Index:
     
     def IndexRange(self):
         if self.fold != "Fold":
-            idx_range = f"IndexRange[Index[{self.name:8}]] = {self.fold}[Range[{self.dim}]];"
+            idx_range = f"IndexRange[Index[{self.name:8}]] = {self.fold}[Range[{self.dim}]]"
         else:
-            idx_range = f"IndexRange[Index[{self.name:8}]] = Range[{self.dim}];"
+            idx_range = f"IndexRange[Index[{self.name:8}]] = Range[{self.dim}]"
         return idx_range
     
     def IndexStyle(self, style):
-        return f"IndexStyle[{self.name:8}, {style}]"
+        name = self.name + ','
+        return f"IndexStyle[{name:10} {style}]"
 
     
 if __name__ == "__main__":
-    i = Index("ThreeGen", 3, "3")
-    print(i.Index())
+    i = Index("ThreeGen", 3, "Unfold")
     print(i.IndexRange())
     print(i.IndexStyle("i"))

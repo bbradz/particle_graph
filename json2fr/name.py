@@ -8,6 +8,19 @@ def generate_id():
 def generate_dummy_idx():
     return f"{num2iii(generate_dummy_idx.call_count)}"
 
+@count_calls
+def generate_ijk():
+    return f"{num2ijk(generate_ijk.call_count)}"
+
+def num2ijk(num):
+    if num <= 0:
+        return ""
+    num = num + 9
+    letter = chr(ord('a') + (num - 1) % 26)
+    repeat = (num - 1) // 26 + 1
+    
+    return letter * repeat
+
 def num2iii(num):
     """
     Convert a number to a sequence of letters where:
@@ -15,10 +28,7 @@ def num2iii(num):
     if num <= 0:
         return ""
     num = num + 26
-    # Get the letter (a-z) for the current position
     letter = chr(ord('a') + (num - 1) % 26)
-    
-    # Calculate how many times to repeat the letter
     repeat = (num - 1) // 26 + 1
     
     return letter * repeat

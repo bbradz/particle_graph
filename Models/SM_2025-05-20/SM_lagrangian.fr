@@ -2,7 +2,7 @@
 (* *****   Lagrangian   ***** *)
 (* ************************** *)
 
-LYukawa := Block[{sp, aa1, bb1, jj, cc2, bb2, cc, ii, aa2, cc1, yuk, feynmangaugerules},
+LYukawa := Block[{sp, aa1, jj, bb1, aa2, cc2, bb2, cc1, cc, ii, yuk, feynmangaugerules},
   feynmangaugerules = If[Not[FeynmanGauge], {G0|GP|GPbar ->0}, {}];
 
   yuk = ExpandIndices[
@@ -41,5 +41,7 @@ LGhost := Block[{LGh1,LGhw,LGhs,LGhphi,mu, generators,gh,ghbar,Vectorize,phi1,ph
   LGhphi=Plus@@Flatten[Table[-ghbar[[kkk]].gh[[lll]] Vectorize[generators[[kkk]].doublet0].Vectorize[generators[[lll]].(doublet+doublet0)],{kkk,4},{lll,4}]] /.togoldstones;
 
 ExpandIndices[ LGhs + If[FeynmanGauge, LGh1 + LGhw + LGhphi,0], FlavorExpand->SU2W]];
+               
+LSM:= LGauge + LFermions + LHiggs + LYukawa + LGhost;
 
     

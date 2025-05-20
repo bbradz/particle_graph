@@ -1,8 +1,16 @@
+import sys
+import os
 from wolframclient.evaluation import WolframLanguageSession
 from wolframclient.language import wl, wlexpr
 
+# Add the parent directory to sys.path to allow imports from sibling packages
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Now you can import from json2fr
+from json2fr.model import Model
+
 FeynRulesPath = "/Users/cooperniu/Documents/codes/feynrules"
-ModelPath = "/Users/cooperniu/Documents/codes/particle_graph/particle_graph/SM"
+ModelPath = "/Users/cooperniu/Documents/codes/particle_graph/particle_graph/Models"
 
 def run_fr(model_name):
     session = WolframLanguageSession()
@@ -31,4 +39,8 @@ def CheckKineticTermNormalisation(session, Lagrangian):
 
 
 if __name__ == "__main__":
+    # Example of using the Model class
+    # model = Model("SM")
+    # print(model)
+    
     run_fr("SM")

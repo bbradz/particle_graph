@@ -13,11 +13,33 @@ class Group:
     def __str__(self):
         return self.name
     
+    def _all_checks(self):
+        self.all_checks = []
+
+    @staticmethod
+    def run_checks(all_checks, checklist, skip_check = False):
+        for check in all_checks:
+            fail_previous_check = any(isinstance(value, Exception) or value == False for value in checklist.values())
+            if skip_check and fail_previous_check:
+                checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
+            else:
+                try:
+                    check()
+                    checklist[check.__name__] = True
+                except Exception as e:
+                    checklist[check.__name__] = e
+
     def __check__(self):
-        pass
+        self.checklist = {}
+        self._all_checks()
+        self.run_checks(self.all_checks, self.checklist)
+
+    def _all_validations(self):
+        self.all_validations = []
 
     def __validate__(self):
-        pass
+        self._all_validations()
+        self.run_checks(self.all_validations, self.checklist, skip_check = True)
     
     def reps(self):
         pass
@@ -39,9 +61,14 @@ class U(Group):
         self.abelian = True
         self.__check__()
 
-    def __check__(self):
-        dim_check = self.dim == 1
-        self.checklist = {"dim": dim_check}
+    def _all_checks(self):
+        super()._all_checks()
+
+        def _dim_check():
+            assert isinstance(self.dim, int) and self.dim == 1, \
+                f"Error: Dimension must be 1"
+
+        self.all_checks.append(_dim_check)
 
     @property
     def fnd_rep(self):
@@ -67,9 +94,14 @@ class SU(Group):
         self.abelian = False
         self.__check__()
 
-    def __check__(self):
-        dim_check = isinstance(self.dim, int) and self.dim > 1 and self.dim <= 3
-        self.checklist = {"dim": dim_check}
+    def _all_checks(self):
+        super()._all_checks()
+
+        def _dim_check():
+            assert isinstance(self.dim, int) and self.dim > 1 and self.dim <= 3, \
+                f"Error: Dimension must be an integer between 2 and 3"
+
+        self.all_checks.append(_dim_check)
 
     @property
     def fnd_rep(self):
@@ -94,62 +126,19 @@ class SU(Group):
         else:
             return None
         
-
-class O(Group):
-    """
-    Orthogonal Group (only for O(N))
-    """
-    def __init__(self, dim):
-        super().__init__(f"O({dim})", dim)
-        self.type = "O"
-        self.abelian = False
-        self.__check__()
-
-    def __check__(self):
-        dim_check = isinstance(self.dim, int) and self.dim > 1 and self.dim <= 3
-        self.checklist = {"dim": dim_check}
-
     @property
-    def fnd_rep(self):
-        return self.dim
-    
+    def definition(self):
+        if self.dim == 2:
+            return "{Ta[a_,b_,c_]->PauliSigma[a,b,c]/2, FSU2L[i_,j_,k_]:> I Eps[i,j,k]}"
+        else:
+            return None
+        
     @property
-    def adj_rep(self):
-        return self.dim * (self.dim - 1) / 2
-    
-    @property
-    def rep_list(self):
-        return {"singlet": 1,
-                "fnd": self.fnd_rep, 
-                "adj": self.adj_rep}
-    
-class SO(Group):
-    """
-    Special Orthogonal Group (only for SO(N))
-    """
-    def __init__(self, dim):
-        super().__init__(f"SO({dim})", dim)
-        self.type = "SO"
-        self.abelian = False
-        self.__check__()
-
-    def __check__(self):
-        dim_check = isinstance(self.dim, int) and self.dim > 1 and self.dim <= 3
-        self.checklist = {"dim": dim_check}
-
-    @property
-    def fnd_rep(self):
-        return self.dim
-    
-    @property
-    def adj_rep(self):
-        return self.dim * (self.dim - 1) / 2
-    
-    @property
-    def rep_list(self):
-        return {"singlet": 1,
-                "fnd": self.fnd_rep, 
-                "adj": self.adj_rep}
+    def sym_tensors(self):
+        if self.dim == 3:
+            return "dSUN"
+        else:
+            return None
     
 class GaugeGroup:
     """
@@ -181,7 +170,6 @@ class GaugeGroup:
         self._check_in_SM()
         self.define_group()
         self.checklist.update(self.group.checklist)
-
         
         try:
             self.abelian = self.group.abelian
@@ -212,7 +200,10 @@ class GaugeGroup:
         return self.name
     
     def __repr__(self):
-        return f"[GROUP] {self.name:4} | {self.charge:1} | {self.boson:1} | {self.group}"
+        return self.name 
+
+    def _all_checks(self):
+        self.all_checks = []
 
     def _check_in_SM(self):
         if self.name == "SU3C" and self.group == "SU_3" and self.boson == "G":
@@ -240,10 +231,6 @@ class GaugeGroup:
             self.group = U(N)
         elif type == "SU":
             self.group = SU(N)
-        elif type == "O":
-            self.group = O(N)
-        elif type == "SO":
-            self.group = SO(N)
         else:
             self.group = U(-1)
 
@@ -293,10 +280,10 @@ class GaugeGroup:
         if self.abelian:
             gg_info["Charge"] = self.charge
         else:
-            gg_info["StructureConstants"] = self.structure_constants
+            gg_info["StructureConstant"] = self.structure_constants
             gg_info["Representations"] = self.write_reps(self.reps)
-            gg_info["SymmetryTensors"] = self.sym_tensors
-            gg_info["Definition"] = self.definition
+            gg_info["SymmetricTensor"] = self.sym_tensors
+            gg_info["Definitions"] = self.definition
         return gg_info
 
 if __name__ == "__main__":

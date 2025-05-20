@@ -146,7 +146,7 @@ def write_sm_gauge_boson(file):
     Indices       -> {Index[SU2W]},
     FlavorIndex   -> SU2W,
     Definitions   -> { ghWi[1] -> (ghWp+ghWm)/Sqrt[2], ghWi[2] -> (ghWm-ghWp)/(I*Sqrt[2]), ghWi[3] -> cw ghZ+sw ghA}
-  } ,\n
+  },\n
 """)
     
 def write_sm_higgs(file):
@@ -358,7 +358,9 @@ LGhost := Block[{LGh1,LGhw,LGhs,LGhphi,mu, generators,gh,ghbar,Vectorize,phi1,ph
   togoldstones := {phi1 -> (GP + GPbar)/Sqrt[2], phi2 -> (-GP + GPbar)/(I Sqrt[2])};
   LGhphi=Plus@@Flatten[Table[-ghbar[[kkk]].gh[[lll]] Vectorize[generators[[kkk]].doublet0].Vectorize[generators[[lll]].(doublet+doublet0)],{kkk,4},{lll,4}]] /.togoldstones;
 
-ExpandIndices[ LGhs + If[FeynmanGauge, LGh1 + LGhw + LGhphi,0], FlavorExpand->SU2W]];\n
+ExpandIndices[ LGhs + If[FeynmanGauge, LGh1 + LGhw + LGhphi,0], FlavorExpand->SU2W]];
+               
+LSM:= LGauge + LFermions + LHiggs + LYukawa + LGhost;\n
     """)
 
 def write_sm_gauge_parameters(file):
@@ -366,24 +368,24 @@ def write_sm_gauge_parameters(file):
     Write the SM gauge parameters to a file
     """
     file.write("""
-  (* ************************** *)
-  (* *****     Gauge      ***** *)
-  (* *****   Parameters   ***** *)
-  (* *****   (FeynArts)   ***** *)
-  (* ************************** *)
-  (* *)
-  GaugeXi[ V[1]  ] = GaugeXi[A];
-  GaugeXi[ V[2]  ] = GaugeXi[Z];
-  GaugeXi[ V[3]  ] = GaugeXi[W];
-  GaugeXi[ V[4]  ] = GaugeXi[G];
-  GaugeXi[ S[1]  ] = 1;
-  GaugeXi[ S[2]  ] = GaugeXi[Z];  
-  GaugeXi[ S[3]  ] = GaugeXi[W];
-  GaugeXi[ U[1]  ] = GaugeXi[A];
-  GaugeXi[ U[2]  ] = GaugeXi[Z];
-  GaugeXi[ U[31] ] = GaugeXi[W];
-  GaugeXi[ U[32] ] = GaugeXi[W];
-  GaugeXi[ U[4]  ] = GaugeXi[G];
+(* ************************** *)
+(* *****     Gauge      ***** *)
+(* *****   Parameters   ***** *)
+(* *****   (FeynArts)   ***** *)
+(* ************************** *)
+(* *)
+GaugeXi[ V[1]  ] = GaugeXi[A];
+GaugeXi[ V[2]  ] = GaugeXi[Z];
+GaugeXi[ V[3]  ] = GaugeXi[W];
+GaugeXi[ V[4]  ] = GaugeXi[G];
+GaugeXi[ S[1]  ] = 1;
+GaugeXi[ S[2]  ] = GaugeXi[Z];  
+GaugeXi[ S[3]  ] = GaugeXi[W];
+GaugeXi[ U[1]  ] = GaugeXi[A];
+GaugeXi[ U[2]  ] = GaugeXi[Z];
+GaugeXi[ U[31] ] = GaugeXi[W];
+GaugeXi[ U[32] ] = GaugeXi[W];
+GaugeXi[ U[4]  ] = GaugeXi[G];
     """)
 
 def write_sm_interaction_orders(file):

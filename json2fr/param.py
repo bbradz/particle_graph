@@ -67,5 +67,5 @@ class IntParam:
         for key, value in self.__dict__().items():
             param_info.append(f"{key:20} -> {value}")
         param_entry += "    " + ",\n    ".join(param_info) + "\n"
-        param_entry += "  },\n"
+        param_entry += "  }"
         return param_entry

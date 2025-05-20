@@ -199,5 +199,5 @@ M$Parameters = {
     ParameterName        -> {yQLuR[1,1] -> ymu, yQLuR[2,2] -> ymc, yQLuR[3,3] -> ymt},
     TeX                  -> Superscript[y, QLuR],
     Description          -> "Yukawa coupling for QL and uR"
-  },
+  }
 };

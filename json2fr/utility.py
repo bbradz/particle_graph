@@ -77,5 +77,17 @@ def count_calls(func):
     wrapper.call_count = 0
     return wrapper
 
+def run_checks(all_checks, checklist, skip_check = False):
+        for check in all_checks:
+            fail_previous_check = any(isinstance(value, Exception) or value == False for value in checklist.values())
+            if skip_check and fail_previous_check:
+                checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
+            else:
+                try:
+                    check()
+                    checklist[check.__name__] = True
+                except Exception as e:
+                    checklist[check.__name__] = e
+
 if __name__ == "__main__":
     print(random_inputs())

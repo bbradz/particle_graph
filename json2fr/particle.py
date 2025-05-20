@@ -6,9 +6,9 @@
 
 allowed_particle_types = ["scalar", "real", "pseudo", "complex", "fermion", "vector"]
 
-### ======================= ###
-###         Particle        ###
-### ======================= ###
+# ====================================================================
+#                              Particle
+# ====================================================================
 class Particle:
     """
     Base class for particles
@@ -35,21 +35,56 @@ class Particle:
         return self.name
     
     def __repr__(self):
-        return f"{self.__class__.__name__}(id={self.id}, type={self.type}, name={self.name}, mass={self.mass}, charge={self.charge}, color={self.color}, flavor={self.flavor})"
+        return self.name
  
+    def _all_checks(self):
+        """ All checks for the initial INPUTs of the 'Particle' class. """
+        self.all_checks = []
+        
+        def _type_check():
+            assert self.type in allowed_particle_types, \
+                f"Error: Type must be one of {allowed_particle_types}"
+
+        def _id_check():
+            assert isinstance(self.id, str), \
+                f"Error: ID must be a string"
+
+        def _name_check():
+            assert isinstance(self.name, str), \
+                f"Error: Name must be a string"
+
+        def _mass_check():
+            assert (isinstance(self.mass, float) or isinstance(self.mass, int)) and self.mass >= 0, \
+                f"Error: Mass must be a number and non-negative"
+
+        def _charge_check():
+            assert isinstance(self.charge, int), \
+                f"Error: Charge must be an integer"
+    
+        self.all_checks = [_type_check, 
+                           _id_check, 
+                           _name_check, 
+                           _mass_check, 
+                           _charge_check]
+    @staticmethod
+    def run_checks(all_checks, checklist, skip_check = False):
+        for check in all_checks:
+            fail_previous_check = any(isinstance(value, Exception) or value == False for value in checklist.values())
+            if skip_check and fail_previous_check:
+                checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
+            else:
+                try:
+                    check()
+                    checklist[check.__name__] = True
+                except Exception as e:
+                    checklist[check.__name__] = e
+
     def __check__(self):
-        type_check = self.type in allowed_particle_types
-        id_check = isinstance(self.id, str)
-        name_check = isinstance(self.name, str)
-        mass_check = (isinstance(self.mass, float) or isinstance(self.mass, int)) and self.mass >= 0
-        charge_check = isinstance(self.charge, int)
-    
-        self.checklist = {"id": id_check, 
-                          "type": type_check, 
-                          "name": name_check, 
-                          "mass": mass_check, 
-                          "charge": charge_check}
-    
+        """ Input checks for the particle class. """
+        self.checklist = {}
+        self._all_checks()
+        self.run_checks(self.all_checks, self.checklist)
+
     @property
     def spin(self):
         if self.type in ["scalar", "real", "pseudo", "complex"]:
@@ -87,9 +122,11 @@ class Particle:
             return BSM_id(self.mass, self.charge, self.color, self.spin * 2, self.flavor)
 
     def _check_color(self):
-        assert self.color in [1, 3, 8], f"AssertionError: Color must be 1, 3, or 8"  
+        assert self.color in [1, 3, 8], \
+            f"Error: Color must be 1, 3, or 8"  
 
     def __validate__(self):
+
         all_checks = [self._check_color]
 
         for check in all_checks:
@@ -111,7 +148,9 @@ class Particle:
     def pass_all_checks(self):
         return len(self.checklist) == sum(1 for value in self.checklist.values() if value is True)
 
-### WeylSpinor ###
+# ====================================================================
+#                              WeylSpinor
+# ====================================================================
 class WeylSpinor:
     """
     Each Fermion can be decomposed into two Weyl spinors, left and right.
@@ -131,41 +170,38 @@ class WeylSpinor:
     def __str__(self):
         return f"{self.name}"
 
-### ======================== ###
-###         Fermion          ###
-### ======================== ###
+# ====================================================================
+#                              Fermion
+# ====================================================================
 class Fermion(Particle):
     def __init__(self, id, name, mass, charge):
         super().__init__(id, name, "fermion", mass, charge)
-        self.__check__()
         
-    def __check__(self):
-        super().__check__()
-        
-        try:
-            self._WeylSpinor()
-            check_WeylSpinor = True
-        except Exception as e:
-            check_WeylSpinor = e
+    def _all_checks(self):
+        super()._all_checks()
 
-        self.checklist["WeylSpinor"] = check_WeylSpinor
+        def _WeylSpinor():
+            assert self.type == "fermion", \
+                f"Error: Only fermions can be Weyl spinors"
+            self.left = WeylSpinor(self, "left")
+            self.right = WeylSpinor(self, "right")
 
-    def _WeylSpinor(self):
-        assert self.type == "fermion", f"AssertionError: Only fermions can be Weyl spinors"
-        self.left = WeylSpinor(self, "left")
-        self.right = WeylSpinor(self, "right")
+        self.all_checks.append(_WeylSpinor)
 
 
-### ========================== ###
-###         Real Scalar        ###
-### ========================== ###
+
+# ====================================================================
+#                            Real Scalar
+# ====================================================================
 class RealScalar(Particle):
     def __init__(self, id, name, mass, charge):
         super().__init__(id, "real", name, mass, charge)
 
-### ============================ ###
-###         Complex Scalar       ###
-### ============================ ###
+
+
+# ====================================================================
+#                           Complex Scalar
+# ====================================================================
 class ComplexScalar(Particle):
     def __init__(self, id, name, mass, charge):
         super().__init__(id, name, "complex", mass, charge)
@@ -192,15 +228,15 @@ class ComplexScalar(Particle):
 
 
 
-### ============================ ###
-###         Vector Boson         ###
-### ============================ ###
+# ====================================================================
+#                           Vector Boson
+# ====================================================================
 class VectorBoson(Particle):
     def __init__(self, id, name, mass, charge):
         super().__init__(id, "vector", name, mass, charge)
 
 
-
+# ------------------------------------------------------------------
 if __name__ == "__main__":
     from utility import random_inputs
 

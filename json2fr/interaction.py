@@ -1,19 +1,9 @@
 from field import Field
 from param import IntParam, ExtParam
 
-def run_checks(all_checks, checklist):
-    for check in all_checks:
-        try:
-            check()
-            checklist[check.__name__] = True
-        except Exception as e:
-            checklist[check.__name__] = e
-
-
-
-### =========================== ###
-###       Interaction Class     ###
-### =========================== ###
+# ====================================================================
+#                              Interaction
+# ====================================================================
 class Interaction:
     """
     Interaction class for interactions.
@@ -38,8 +28,10 @@ class Interaction:
     def __repr__(self):
         return f"{self.type} ({self.id})"
 
-    @property
-    def all_checks(self):
+    def _all_checks(self):
+        """ All checks for the initial INPUTs of the 'Interaction' class. """
+        self.all_checks = []
+
         def _id_check():
             assert isinstance(self.id, str), f"AssertionError: {self.id} is not a string"
 
@@ -62,7 +54,6 @@ class Interaction:
                     f"AssertionError: {f} has failed checks"
 
         def _sort_field():
-            
             self.sorted_fields = {}
             for pos, reqs in self.requirements.items():
                 candidate = self.fields
@@ -72,30 +63,38 @@ class Interaction:
                     f"AssertionError: Multiple fields with \"{key} = {value}\" found for {self.id}: {candidate}"
                 self.sorted_fields[pos] = candidate[0]
 
-        return [_id_check, 
-                _field_length_check, 
-                _field_type_check, 
-                _field_check, 
-                _all_field_pass_checks,
-                _sort_field
-                ]
+        self.all_checks.extend([_id_check, 
+                                _field_length_check, 
+                                _field_type_check, 
+                                _field_check, 
+                                _all_field_pass_checks, 
+                                _sort_field])
     
-    def __check__(self):
-        self.checklist = {}
-        run_checks(self.all_checks, self.checklist)
-
-    # Validate the field
-    def __validate__(self):
-        all_checks = []
+    @staticmethod
+    def run_checks(all_checks, checklist, skip_check = False):
         for check in all_checks:
-            if any(isinstance(value, Exception) or value == False for value in self.checklist.values()):
-                self.checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
+            fail_previous_check = any(isinstance(value, Exception) or value == False for value in checklist.values())
+            if skip_check and fail_previous_check:
+                checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
             else:
                 try:
                     check()
-                    self.checklist[check.__name__] = True
+                    checklist[check.__name__] = True
                 except Exception as e:
-                    self.checklist[check.__name__] = e
+                    checklist[check.__name__] = e
+
+    def __check__(self):
+        self.checklist = {}
+        self._all_checks()
+        self.run_checks(self.all_checks, self.checklist)
+
+    def _all_validations(self):
+        """ All validations for the 'Interaction' class. """
+        self.all_validations = []
+
+    def __validate__(self):
+        self._all_validations()
+        self.run_checks(self.all_validations, self.checklist, skip_check = True)
 
     @property
     def score(self):
@@ -106,13 +105,16 @@ class Interaction:
     def pass_all_checks(self):
         return all(self.checklist.values()) 
 
-### =========================== ###
-###       Yukawa Interaction    ###
-### =========================== ###
+
+
+# ====================================================================
+#                              Yukawa
+# ====================================================================
 class Yukawa(Interaction):
     """
     Yukawa interaction class.
     """
+
     field1 = {"type": "fermion", 
               "chirality": "left"}
     field2 = {"type": "fermion", 
@@ -123,45 +125,48 @@ class Yukawa(Interaction):
 
     def __init__(self, id, fields):
         super().__init__(id, "Yukawa", self.field_types, fields)
-        self.__check__()
         self.dummy_idx = []
         self.higgs_loc = None
 
-    def __check__(self):
-        super().__check__()
+    def _all_checks(self):
+        super()._all_checks()
+
+        def _rename_sorted_fields():
+            self.fermion_left = self.sorted_fields[0]
+            self.fermion_right = self.sorted_fields[1]
+            self.scalar = self.sorted_fields[2]
 
         def _gen_check():
-            assert self.sorted_fields[0].gen == self.sorted_fields[1].gen, f"AssertionError: {self.sorted_fields[0].gen} != {self.sorted_fields[1].gen}"
+            assert self.fermion_left.gen == self.fermion_right.gen, f"AssertionError: {self.fermion_left.gen} != {self.fermion_right.gen}"
 
         def _dim_check():
-            assert (self.sorted_fields[0].dim == self.sorted_fields[2].dim) or (self.sorted_fields[1].dim == self.sorted_fields[2].dim), f"AssertionError: {self.sorted_fields[0].dim} != {self.sorted_fields[2].dim} and {self.sorted_fields[1].dim} != {self.sorted_fields[2].dim}"
+            assert (self.fermion_left.dim == self.scalar.dim) or (self.fermion_right.dim == self.scalar.dim), f"AssertionError: {self.fermion_left.dim} != {self.scalar.dim} and {self.fermion_right.dim} != {self.scalar.dim}"
         
         def _assign_mass_type():
-            self.sorted_fields[0].mass_type = "Yukawa"
-            self.sorted_fields[1].mass_type = "Yukawa"
+            self.fermion_left.mass_type = "Yukawa"
+            self.fermion_right.mass_type = "Yukawa"
 
-        checks = [_gen_check, _dim_check, _assign_mass_type]
-        run_checks(checks, self.checklist)
+        self.all_checks.extend([_rename_sorted_fields, _gen_check, _dim_check, _assign_mass_type])
 
     def _yukawa_mass(self):
         from sympy import Matrix, sympify
 
-        left = self.sorted_fields[0].to_matrix().transpose()
-        right = self.sorted_fields[1].to_matrix()
+        left = self.fermion_left.to_matrix().transpose()
+        right = self.fermion_right.to_matrix()
         self.fermion_bilinear = Matrix(left) * Matrix(right)        
 
-        for i in range(self.sorted_fields[2].dim):
+        for i in range(self.scalar.dim):
             terms = str(self.fermion_bilinear[i]).replace(" ", "").replace("_L", "").replace("_R", "")
             terms = sympify(terms)
             count = str(terms).count("**2")
-            if count == self.sorted_fields[0].gen:
+            if count == self.fermion_left.gen:
                 ids = str(terms).replace("**2", "").replace(" ", "").split("+")
                 self.higgs_loc = i
 
         ids = list(set(ids))
-        assert len(ids) == self.sorted_fields[0].gen, f"Assertion failed: {self.id} has incompatible dimensions"
+        assert len(ids) == self.fermion_left.gen, f"Assertion failed: {self.id} has incompatible dimensions"
 
-        all_particles = [f.fermion for f in self.sorted_fields[1].particles if f.fermion.id in ids]
+        all_particles = [f.fermion for f in self.fermion_right.particles if f.fermion.id in ids]
         for particle in all_particles:
             mass_param = ExtParam(name = "ym" + particle.name, 
                                   BLOCKNAME = "YUKAWA", 
@@ -171,9 +176,9 @@ class Yukawa(Interaction):
             self.ExtParams.append(mass_param)
 
     def _yukawa_matrix(self):
-        suffix = self.sorted_fields[0].name + self.sorted_fields[1].name
+        suffix = self.fermion_left.name + self.fermion_right.name
         name = "y" + suffix
-        Indices = f"{{{repr(self.sorted_fields[0].gen_idx)}, {repr(self.sorted_fields[1].gen_idx)}}}"
+        Indices = f"{{{repr(self.fermion_left.gen_idx)}, {repr(self.fermion_right.gen_idx)}}}"
         Definitions = f"{{{name}[i_?NumericQ, j_?NumericQ] :> 0  /; (i =!= j)}}"
         mass_name = [p.name for p in self.ExtParams]
         Value = f"{{{name}[1,1] -> Sqrt[2] {mass_name[0]}/vev, {name}[2,2] -> Sqrt[2] {mass_name[1]}/vev, {name}[3,3] -> Sqrt[2] {mass_name[2]}/vev}}"
@@ -181,7 +186,7 @@ class Yukawa(Interaction):
         
         ParameterName = f"{{{name}[1,1] -> {mass_name[0]}, {name}[2,2] -> {mass_name[1]}, {name}[3,3] -> {mass_name[2]}}}"
         Tex = f"Superscript[y, {suffix}]"
-        Description = f"\"Yukawa coupling for {self.sorted_fields[0].name} and {self.sorted_fields[1].name}\""
+        Description = f"\"Yukawa coupling for {self.fermion_left.name} and {self.fermion_right.name}\""
         
         self.yukawa_matrix = IntParam(name, 
                                        Indices, 
@@ -194,23 +199,18 @@ class Yukawa(Interaction):
         
         self.IntParams.append(self.yukawa_matrix)
 
-    def __validate__(self):
-        super().__validate__()
-        all_checks = [
-            self._yukawa_mass, 
-            self._yukawa_matrix
-            ]
-        run_checks(all_checks, self.checklist)
+    def _all_validations(self):
+        super()._all_validations()
+        self.all_validations.extend([self._yukawa_mass, 
+                                     self._yukawa_matrix])
 
-    def to_fr(self):
-        assert self.pass_all_checks(), f"Assertion failed: {self.id} has failed checks"
-        
+    def to_fr(self):        
         from name import generate_dummy_idx
-        suffix = self.sorted_fields[0].name + self.sorted_fields[1].name
+        suffix = self.fermion_left.name + self.fermion_right.name
         ym = "y" + suffix
         ff = generate_dummy_idx()
         self.dummy_idx.extend([f"{ff}1", f"{ff}2"])
-        color_idx = ", cc" if self.sorted_fields[0].color > 1 and self.sorted_fields[1].color > 1 else ""
+        color_idx = ", cc" if self.fermion_left.color > 1 and self.fermion_right.color > 1 else ""
         if self.higgs_loc == 0:
             self.dummy_idx.extend(["ii", "cc"])
             return f"    - {ym}[{ff}1, {ff}2] QLbar[sp, ii, {ff}1{color_idx}].uR [sp, {ff}2{color_idx}] Phi[ii]"

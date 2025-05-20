@@ -16,10 +16,15 @@ M$ModelName = "SM";
 
 M$Information = { 
   Authors      -> Cooper, 
-  Date         -> "2025-05-14", 
+  Date         -> "2025-05-20" 
 };
 
 FeynmanGauge = True;
+
+(* ************************** *)
+(* *****      vevs      ***** *)
+(* ************************** *)
+M$vevs = { {Phi[2],vev} };
 
 (* ************************** *)
 (* *****  Gauge groups  ***** *)
@@ -34,20 +39,36 @@ M$GaugeGroups = {
   SU2L == {
     Abelian              -> False,
     CouplingConstant     -> gw,
-    GaugeBoson           -> W,
-    StructureConstants   -> Eps,
+    GaugeBoson           -> Wi,
+    StructureConstant    -> Eps,
     Representations      -> {Ta, SU2D},
-    Definition           -> {Ta[a_,b_,c_]->PauliSigma[a,b,c]/2, FSU2L[i_,j_,k_]:> I Eps[i,j,k]}
+    Definitions          -> {Ta[a_,b_,c_]->PauliSigma[a,b,c]/2, FSU2L[i_,j_,k_]:> I Eps[i,j,k]}
   },
   SU3C == {
     Abelian              -> False,
     CouplingConstant     -> gs,
     GaugeBoson           -> G,
-    StructureConstants   -> f,
+    StructureConstant    -> f,
     Representations      -> {T, Colour},
-    SymmetryTensors      -> dSUN
+    SymmetricTensor      -> dSUN
   }
-}
+};
+
+(* ************************** *)
+(* *****    Indices     ***** *)
+(* ************************** *)
+
+IndexRange[Index[SU2D    ]] = Unfold[Range[2]];
+IndexRange[Index[ThreeGen]] = Range[3];
+IndexRange[Index[Colour  ]] = NoUnfold[Range[3]];
+IndexRange[Index[SU2W    ]] = Unfold[Range[3]];
+IndexRange[Index[Gluon   ]] = NoUnfold[Range[8]];
+
+IndexStyle[SU2D,      j];
+IndexStyle[ThreeGen,  k];
+IndexStyle[Colour,    l];
+IndexStyle[SU2W,      m];
+IndexStyle[Gluon,     n];
 
 (* ************************** *)
 (* *** Interaction orders *** *)
