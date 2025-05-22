@@ -4,11 +4,15 @@
 ###                                                                            ###
 ### ========================================================================== ###
 
-from datetime import datetime
+# Standard library imports
 import os
+from datetime import datetime
 from fractions import Fraction
-from index import Index
-import name
+
+# Local imports
+from .index import Index
+from . import name
+
 # ====================================================================
 #                            Model
 # ====================================================================
@@ -18,6 +22,7 @@ class Model:
     """
     def __init__(self, model_name, author, JSON_PATH, OUTPUT_PATH = None):
         self.model_name = model_name
+        self.model_symbol = ''.join(word[0].upper() for word in self.model_name.split() if word)
         self.author = author
         self.ai = True if author == 'Bohr Network' else False
         self.FeynmanGauge = True
@@ -29,28 +34,48 @@ class Model:
         self.indices = {}
         self._read_model()
 
+
+
+    def __str__(self):
+        return f"{self.model_name}"
+
+    def __repr__(self):
+        repr = "# ------------------------------------\n"
+        repr += f"# {self.model_name}\n"
+        repr += f"# by {self.author} at {self.current_time}\n"
+        repr += f"# -----------------------------------\n\n"
+        repr += f"# Gauge Groups ({len(self.gauge_groups)})\n"
+        repr += f"{self.gauge_groups}\n\n"
+        repr += f"# Particles ({len(self.particles)})\n"
+        repr += f"{self.particles}\n\n"
+        repr += f"# Fields ({len(self.fields)})\n"
+        repr += f"{self.fields}\n\n"
+        repr += f"# Interactions ({len(self.interactions)})\n"
+        repr += f"{self.interactions}\n"
+        return repr
+    
     # ------------------------------------------------------------------
     #                           Read Model
     # ------------------------------------------------------------------
     def _read_gauge_group(self, model_data):
-        from group import GaugeGroup
+        from .group import GaugeGroup
         self.gauge_groups = {}
-        for g in model_data['nodes']['GaugeGroups']:
+        for g in model_data['GaugeGroups']:
             self.gauge_groups[g["id"]] = GaugeGroup(**g)
 
     def _read_vev(self, model_data):
-        from vev import vev
+        from .vev import vev
         self.vevs = {}
-        for v in model_data["nodes"]['vevs']:
+        for v in model_data['vevs']:
             self.vevs[v["id"]] = vev(**v)
 
     def _read_particles(self, model_data):
-        from particle import Fermion, RealScalar, ComplexScalar
+        from .particle import Fermion, RealScalar, ComplexScalar
         self.scalar_particles = {}
         self.fermion_particles = {}
         self.vector_particles = {}
         
-        for p in model_data['nodes']['particles']:
+        for p in model_data['particles']:
             if p["type"] == "fermion":
                 p.pop("type")
                 self.fermion_particles[p["id"]] = Fermion(**p)
@@ -63,12 +88,13 @@ class Model:
             else:
                 type = p["type"]
                 print(f"invalid field type {type}")
-    
+        self.particles = {**self.scalar_particles, **self.fermion_particles, **self.vector_particles}
+
     def _read_scalar_fields(self, model_data):
-        from field import ScalarField
+        from .field import ScalarField
         self.scalar_fields = {}
         scalar_particles = self.scalar_particles.copy()
-        for sf in model_data["nodes"]["fields"]: # sf stands for "scalar field"
+        for sf in model_data["fields"]: # sf stands for "scalar field"
             if sf["type"] in ["real", "complex", "scalar"]:
                 try:
                     scalar_list = [self.scalar_particles[id] for id in sf["particles"]]
@@ -88,20 +114,21 @@ class Model:
                         self.indices[idx.name] = idx
 
     def _read_vector_fields(self, model_data):
-        from field import VectorField
+        from .field import VectorField
         self.vector_fields = {}
 
         self.indices["SU2W"] = Index("SU2W", 3, "Unfold")
         self.indices["Gluon"] = Index("Gluon", 8, "NoUnfold", color=True)
         
     def _read_fermion_fields(self, model_data):
-        from field import FermionField
+        from .field import FermionField
         self.fermion_fields = {}
+
         # we separate all fermion particles into left and right chiral fermions
         chiral_fermions = {**{f"{id}_left": ptcl.left for id, ptcl in self.fermion_particles.items()},
                           **{f"{id}_right": ptcl.right for id, ptcl in self.fermion_particles.items()}}
         
-        for f in model_data["nodes"]["fields"]:
+        for f in model_data["fields"]:
             if f["type"] == "fermion":
                 try:
                     cf_list = [chiral_fermions[f"{p}_left"] if f["chirality"] == "left" else chiral_fermions[f"{p}_right"] for p in f["particles"]]
@@ -145,9 +172,9 @@ class Model:
         self.fields = {**self.scalar_fields, **self.fermion_fields, **self.vector_fields}
 
     def _read_interactions(self, model_data):
-        from interaction import Yukawa
+        from .interaction import Yukawa
         self.interactions = {}
-        for itr in model_data["nodes"]["interactions"]:
+        for itr in model_data["interactions"]:
             try:
                 fields = [self.fields[id] for id in itr["fields"]]
             except:
@@ -169,13 +196,14 @@ class Model:
                 score, max_val = map(int, item.score.split("/"))
                 model_score += score
                 max_score += max_val
-        self.score = f"{Fraction(model_score, max_score)}"
+        self.score = f"{model_score}/{max_score}"
 
     def pass_all_checks(self):
-        return self.score == "1"
+        score, max_score = map(int, self.score.split("/"))
+        return score == max_score
 
     def _read_model(self):
-        from utility import read_json
+        from .utility import read_json
         model_data = read_json(self.JSON_PATH)
         self._read_gauge_group(model_data)
         self._read_particles(model_data)
@@ -228,7 +256,7 @@ class Model:
         file.write(f"}};\n\n")
 
     def write_FeynArts(self, file):
-        from sm_setting import write_sm_gauge_parameters
+        from .sm_setting import write_sm_gauge_parameters
         write_sm_gauge_parameters(file)
         
     def write_Indices(self, file):
@@ -245,7 +273,7 @@ class Model:
         file.write("\n")
 
     def write_Interaction_orders(self, file):
-        from sm_setting import write_sm_interaction_orders
+        from .sm_setting import write_sm_interaction_orders
         write_sm_interaction_orders(file)
         
     def write_fermion(self, file):
@@ -271,11 +299,11 @@ class Model:
             file.write(fermion_entry)
 
     def write_scalar(self, file):
-        from sm_setting import write_sm_higgs
+        from .sm_setting import write_sm_higgs
         write_sm_higgs(file)
 
     def write_vector(self, file):
-        from sm_setting import write_sm_gauge_boson
+        from .sm_setting import write_sm_gauge_boson
         write_sm_gauge_boson(file)
 
     def write_fields(self, file):
@@ -302,7 +330,7 @@ class Model:
         file.write(param_str)
 
     def write_parameters(self, file):
-        from sm_setting import write_sm_higgs_parameters_external, write_sm_higgs_parameters_internal
+        from .sm_setting import write_sm_higgs_parameters_external, write_sm_higgs_parameters_internal
         file.write("(* ************************** *)\n")
         file.write("(* *****   Parameters   ***** *)\n")
         file.write("(* ************************** *)\n")
@@ -332,7 +360,7 @@ class Model:
         file.write("];\n")
 
     def write_lagrangian(self, file):
-        from sm_setting import write_sm_lagrangian
+        from .sm_setting import write_sm_lagrangian
         file.write("(* ************************** *)\n")
         file.write("(* *****   Lagrangian   ***** *)\n")
         file.write("(* ************************** *)\n")
@@ -342,18 +370,19 @@ class Model:
 
     def _write_feynrules_file(self, OUTPUT_PATH):
         os.makedirs(OUTPUT_PATH, exist_ok=True)
-        model_dir_name = self.model_name + "_" + self.current_time  
+        model_dir_name = self.model_symbol + "_" + self.current_time  
         Output_dir = os.path.join(OUTPUT_PATH, model_dir_name)
         os.makedirs(Output_dir, exist_ok=True)
         
-        model_file = os.path.join(Output_dir, f"{self.model_name}.fr")
-        particle_file = os.path.join(Output_dir, f"{self.model_name}_particles.fr")
-        parameter_file = os.path.join(Output_dir, f"{self.model_name}_parameters.fr")
-        lagrangian_file = os.path.join(Output_dir, f"{self.model_name}_lagrangian.fr")
+        model_file = os.path.join(Output_dir, f"{self.model_symbol}.fr")
+        particle_file = os.path.join(Output_dir, f"{self.model_symbol}_particles.fr")
+        parameter_file = os.path.join(Output_dir, f"{self.model_symbol}_parameters.fr")
+        lagrangian_file = os.path.join(Output_dir, f"{self.model_symbol}_lagrangian.fr")
 
         fr_files = [model_file, particle_file, parameter_file, lagrangian_file]
 
         for file in fr_files:
+
             if os.path.exists(file):
                 os.remove(file)
         
@@ -377,9 +406,9 @@ class Model:
             self.write_Indices(f)
             self.write_Interaction_orders(f)
             f.write("\n")
-            f.write(f"Get[\"{self.model_name}_particles.fr\"];\n")
-            f.write(f"Get[\"{self.model_name}_parameters.fr\"];\n")
-            f.write(f"Get[\"{self.model_name}_lagrangian.fr\"];\n")
+            f.write(f"Get[\"{self.model_symbol}_particles.fr\"];\n")
+            f.write(f"Get[\"{self.model_symbol}_parameters.fr\"];\n")
+            f.write(f"Get[\"{self.model_symbol}_lagrangian.fr\"];\n")
 
             with open(particle_file, "w") as f: 
                 self.write_fields(f)
@@ -401,20 +430,15 @@ class Model:
     def to_fr(self, OUTPUT_PATH):
         if self.pass_all_checks():
             self._write_feynrules_file(OUTPUT_PATH)
-            print(f"{self.model_name} get score {self.score}.")
-            print(f"{self.model_name} passed all checks!")
+            print(f"{self.model_name} ({self.model_symbol}) get score {self.score}.")
+            print(f"{self.model_name} ({self.model_symbol}) passed all checks!")
             print(f"FeynRules file is written to {OUTPUT_PATH}")
         else:
-            print(f"{self.model_name} get score {self.score}.")
+            print(f"{self.model_name} ({self.model_symbol}) get score {self.score}.")
             print(f"Please check the checklist.log for more details.")
 
         self.write_checklist(OUTPUT_PATH)
     
 if __name__ == "__main__":
-    JSON_PATH = '/Users/cooperniu/Documents/codes/particle_game/pygame/particle_graph/SM.json'
-    MODEL_PATH = '/Users/cooperniu/Documents/codes/particle_game/pygame/particle_graph/Models'
-
-    model = Model("SM", "Cooper", JSON_PATH)
-    model.to_fr(MODEL_PATH)
-
+    pass
     

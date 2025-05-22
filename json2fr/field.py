@@ -5,10 +5,11 @@
 ### ========================================================================== ###
 
 import numpy as np
-from particle import Particle, WeylSpinor
 from fractions import Fraction
-from index import Index
-import name
+from .index import Index
+from . import name
+from .particle import Particle, WeylSpinor
+from .utility import run_checks
 
 # ====================================================================
 #                              Field
@@ -157,7 +158,6 @@ class Field:
 
     def __check__(self):
         """ Input checks for the field class. """
-        from utility import run_checks
         self.checklist = {}
         self._all_checks()
         run_checks(self.all_checks, self.checklist)
@@ -240,7 +240,6 @@ class Field:
             ]
 
     def __validate__(self):
-        from utility import run_checks
         self._all_validations()
         run_checks(self.all_validations, self.checklist, skip_check = True)
 

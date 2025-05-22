@@ -1,4 +1,4 @@
-from utility import count_calls
+from .utility import count_calls
 
 @count_calls
 def generate_id():

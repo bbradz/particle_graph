@@ -1,0 +1,85 @@
+(******************************************************************************************************************)
+(****** This is the FeynRules mod-file for SM                                                                ******)
+(******                                                                                                      ******)
+(****** Author: Cooper                                                                                       ******)
+(******                                                                                                      ******)
+(****** Choose whether Feynman gauge is desired.                                                             ******)
+(****** If set to False, unitary gauge is assumed.                                                           ******)
+(****** Feynman gauge is especially useful for CalcHEP/CompHEP where the calculation is 10-100 times faster. ******)
+(****** Feynman gauge is not supported in MadGraph and Sherpa.                                               ******)
+(******************************************************************************************************************)
+
+(* ************************** *)
+(* *****  Information   ***** *)
+(* ************************** *)
+M$ModelName = "SM";
+
+M$Information = { 
+  Authors      -> Cooper, 
+  Date         -> "2025-05-21" 
+};
+
+FeynmanGauge = True;
+
+(* ************************** *)
+(* *****      vevs      ***** *)
+(* ************************** *)
+M$vevs = { {Phi[2],vev} };
+
+(* ************************** *)
+(* *****  Gauge groups  ***** *)
+(* ************************** *)
+M$GaugeGroups = {
+  U1Y == {
+    Abelian              -> True,
+    CouplingConstant     -> g1,
+    GaugeBoson           -> B,
+    Charge               -> Y
+  },
+  SU2L == {
+    Abelian              -> False,
+    CouplingConstant     -> gw,
+    GaugeBoson           -> Wi,
+    StructureConstant    -> Eps,
+    Representations      -> {Ta, SU2D},
+    Definitions          -> {Ta[a_,b_,c_]->PauliSigma[a,b,c]/2, FSU2L[i_,j_,k_]:> I Eps[i,j,k]}
+  },
+  SU3C == {
+    Abelian              -> False,
+    CouplingConstant     -> gs,
+    GaugeBoson           -> G,
+    StructureConstant    -> f,
+    Representations      -> {T, Colour},
+    SymmetricTensor      -> dSUN
+  }
+};
+
+(* ************************** *)
+(* *****    Indices     ***** *)
+(* ************************** *)
+
+IndexRange[Index[SU2D    ]] = Unfold[Range[2]];
+IndexRange[Index[ThreeGen]] = Range[3];
+IndexRange[Index[Colour  ]] = NoUnfold[Range[3]];
+IndexRange[Index[SU2W    ]] = Unfold[Range[3]];
+IndexRange[Index[Gluon   ]] = NoUnfold[Range[8]];
+
+IndexStyle[SU2D,      j];
+IndexStyle[ThreeGen,  k];
+IndexStyle[Colour,    l];
+IndexStyle[SU2W,      m];
+IndexStyle[Gluon,     n];
+
+(* ************************** *)
+(* *** Interaction orders *** *)
+(* ***  (as used by mg5)  *** *)
+(* ************************** *)
+
+M$InteractionOrderHierarchy = {
+  {QCD, 1},
+  {QED, 2}
+};
+
+Get["SM_particles.fr"];
+Get["SM_parameters.fr"];
+Get["SM_lagrangian.fr"];

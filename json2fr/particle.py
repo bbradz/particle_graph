@@ -98,7 +98,7 @@ class Particle:
     
     @property
     def pdg_info(self):
-        from utility import get_pdg
+        from .utility import get_pdg
         return get_pdg(mass=self.mass, charge=self.charge, color=self.color, spin=self.spin * 2, flavor=self.flavor)
 
     @property
@@ -115,7 +115,7 @@ class Particle:
         
     @property
     def pdg_id(self):
-        from utility import BSM_id
+        from .utility import BSM_id
         if self.pdg_info is not None:
             return self.pdg_info['pdgid']
         else:
@@ -236,16 +236,8 @@ class VectorBoson(Particle):
         super().__init__(id, "vector", name, mass, charge)
 
 
+
+
 # ------------------------------------------------------------------
 if __name__ == "__main__":
-    from utility import random_inputs
-
-    random_values = random_inputs()
-    particle = ComplexScalar(random_values[0],random_values[1],random_values[2],random_values[3])
-    
-    print(f"ParticleName: {particle}")
-    print(f"Particle: {repr(particle)}")
-    print(f"ParticleScore: {particle.score}")
-
-    for key, value in particle.checklist.items():
-        print(f"{key:20} -> {value}")
+    pass

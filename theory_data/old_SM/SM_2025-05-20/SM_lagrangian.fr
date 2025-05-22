@@ -2,7 +2,7 @@
 (* *****   Lagrangian   ***** *)
 (* ************************** *)
 
-LYukawa := Block[{sp, aa1, jj, bb1, aa2, cc2, bb2, cc1, cc, ii, yuk, feynmangaugerules},
+LYukawa := Block[{sp, cc, jj, aa1, bb1, cc1, aa2, bb2, ii, cc2, yuk, feynmangaugerules},
   feynmangaugerules = If[Not[FeynmanGauge], {G0|GP|GPbar ->0}, {}];
 
   yuk = ExpandIndices[

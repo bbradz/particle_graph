@@ -1,5 +1,5 @@
-from field import Field
-from param import IntParam, ExtParam
+from .field import Field
+from .param import IntParam, ExtParam
 
 # ====================================================================
 #                              Interaction
@@ -137,7 +137,8 @@ class Yukawa(Interaction):
             self.scalar = self.sorted_fields[2]
 
         def _gen_check():
-            assert self.fermion_left.gen == self.fermion_right.gen, f"AssertionError: {self.fermion_left.gen} != {self.fermion_right.gen}"
+            assert self.fermion_left.gen == self.fermion_right.gen,\
+                f"AssertionError: {self.fermion_left.gen} != {self.fermion_right.gen}"
 
         def _dim_check():
             assert (self.fermion_left.dim == self.scalar.dim) or (self.fermion_right.dim == self.scalar.dim), f"AssertionError: {self.fermion_left.dim} != {self.scalar.dim} and {self.fermion_right.dim} != {self.scalar.dim}"
@@ -164,7 +165,8 @@ class Yukawa(Interaction):
                 self.higgs_loc = i
 
         ids = list(set(ids))
-        assert len(ids) == self.fermion_left.gen, f"Assertion failed: {self.id} has incompatible dimensions"
+        assert len(ids) == self.fermion_left.gen, \
+            f"Assertion failed: {self.id} has incompatible dimensions"
 
         all_particles = [f.fermion for f in self.fermion_right.particles if f.fermion.id in ids]
         for particle in all_particles:
@@ -189,13 +191,13 @@ class Yukawa(Interaction):
         Description = f"\"Yukawa coupling for {self.fermion_left.name} and {self.fermion_right.name}\""
         
         self.yukawa_matrix = IntParam(name, 
-                                       Indices, 
-                                       Definitions, 
-                                       Value, 
-                                       InteractionOrder, 
-                                       ParameterName, 
-                                       Tex, 
-                                       Description)
+                                      Indices, 
+                                      Definitions, 
+                                      Value, 
+                                      InteractionOrder, 
+                                      ParameterName, 
+                                      Tex, 
+                                      Description)
         
         self.IntParams.append(self.yukawa_matrix)
 
@@ -205,7 +207,8 @@ class Yukawa(Interaction):
                                      self._yukawa_matrix])
 
     def to_fr(self):        
-        from name import generate_dummy_idx
+        from .name import generate_dummy_idx
+        
         suffix = self.fermion_left.name + self.fermion_right.name
         ym = "y" + suffix
         ff = generate_dummy_idx()
