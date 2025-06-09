@@ -1,0 +1,203 @@
+(* ************************** *)
+(* *****   Parameters   ***** *)
+(* ************************** *)
+M$Parameters = {
+
+  aEWM1 == { 
+    ParameterType    -> External, 
+    BlockName        -> SMINPUTS, 
+    OrderBlock       -> 1, 
+    Value            -> 127.9,
+    InteractionOrder -> {QED,-2},
+    Description      -> "Inverse of the EW coupling constant at the Z pole"
+  },
+  Gf == {
+    ParameterType    -> External,
+    BlockName        -> SMINPUTS,
+    OrderBlock       -> 2,
+    Value            -> 1.16637*^-5, 
+    InteractionOrder -> {QED,2},
+    TeX              -> Subscript[G,f],
+    Description      -> "Fermi constant"
+  },
+  aS    == { 
+    ParameterType    -> External,
+    BlockName        -> SMINPUTS,
+    OrderBlock       -> 3,
+    Value            -> 0.1184, 
+    InteractionOrder -> {QCD,2},
+    TeX              -> Subscript[\[Alpha],s],
+    Description      -> "Strong coupling constant at the Z pole"
+  },
+    
+  aEW == {
+    ParameterType    -> Internal,
+    Value            -> 1/aEWM1,
+    InteractionOrder -> {QED,2},
+    TeX              -> Subscript[\[Alpha], EW],
+    Description      -> "Electroweak coupling contant"
+  },
+  MW == { 
+    ParameterType -> Internal, 
+    Value         -> Sqrt[MZ^2/2+Sqrt[MZ^4/4-Pi/Sqrt[2]*aEW/Gf*MZ^2]], 
+    TeX           -> Subscript[M,W], 
+    Description   -> "W mass"
+  },
+  sw2 == { 
+    ParameterType -> Internal, 
+    Value         -> 1-(MW/MZ)^2, 
+    Description   -> "Squared Sin of the Weinberg angle"
+  },
+  ee == { 
+    ParameterType    -> Internal, 
+    Value            -> Sqrt[4 Pi aEW], 
+    InteractionOrder -> {QED,1}, 
+    TeX              -> e,  
+    Description      -> "Electric coupling constant"
+  },
+  cw == { 
+    ParameterType -> Internal, 
+    Value         -> Sqrt[1-sw2], 
+    TeX           -> Subscript[c,w], 
+    Description   -> "Cosine of the Weinberg angle"
+  },
+  sw == { 
+    ParameterType -> Internal, 
+    Value         -> Sqrt[sw2], 
+    TeX           -> Subscript[s,w], 
+    Description   -> "Sine of the Weinberg angle"
+  },
+  gw == { 
+    ParameterType    -> Internal, 
+    Definitions      -> {gw->ee/sw}, 
+    InteractionOrder -> {QED,1},  
+    TeX              -> Subscript[g,w], 
+    Description      -> "Weak coupling constant at the Z pole"
+  },
+  g1 == { 
+    ParameterType    -> Internal, 
+    Definitions      -> {g1->ee/cw}, 
+    InteractionOrder -> {QED,1},  
+    TeX              -> Subscript[g,1], 
+    Description      -> "U(1)Y coupling constant at the Z pole"
+  },
+  gs == { 
+    ParameterType    -> Internal, 
+    Value            -> Sqrt[4 Pi aS],
+    InteractionOrder -> {QCD,1},  
+    TeX              -> Subscript[g,s], 
+    ParameterName    -> G,
+    Description      -> "Strong coupling constant at the Z pole"
+  },
+  vev == {
+    ParameterType    -> Internal,
+    Value            -> 2*MW*sw/ee, 
+    InteractionOrder -> {QED,-1},
+    Description      -> "Higgs vacuum expectation value"
+  },
+  lam == {
+    ParameterType    -> Internal,
+    Value            -> MH^2/(2*vev^2),
+    InteractionOrder -> {QED, 2},
+    Description      -> "Higgs quartic coupling"
+  },
+  muH == {
+    ParameterType -> Internal,
+    Value         -> Sqrt[vev^2 lam],
+    TeX           -> \[Mu],
+    Description   -> "Coefficient of the quadratic piece of the Higgs potential"
+  },
+  yme == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 11,
+    Value                -> 0.000511,
+    Description          -> "Yukawa mass for Electron"
+  },
+  ymmu == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 13,
+    Value                -> 0.1056583745,
+    Description          -> "Yukawa mass for Muon"
+  },
+  ymta == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 15,
+    Value                -> 1.77686,
+    Description          -> "Yukawa mass for Tau"
+  },
+  ymu == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 2,
+    Value                -> 0.0023,
+    Description          -> "Yukawa mass for u-quark"
+  },
+  ymc == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 4,
+    Value                -> 1.27,
+    Description          -> "Yukawa mass for c-quark"
+  },
+  ymt == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 6,
+    Value                -> 172.44,
+    Description          -> "Yukawa mass for t-quark"
+  },
+  ymu == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 2,
+    Value                -> 0.0023,
+    Description          -> "Yukawa mass for u-quark"
+  },
+  ymc == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 4,
+    Value                -> 1.27,
+    Description          -> "Yukawa mass for c-quark"
+  },
+  ymt == {
+    ParameterType        -> External,
+    BLOCKNAME            -> YUKAWA,
+    OrderBlock           -> 6,
+    Value                -> 172.44,
+    Description          -> "Yukawa mass for t-quark"
+  },
+  yLLlR == {
+    ParameterType        -> Internal,
+    Indices              -> {Index[ThreeGen], Index[ThreeGen]},
+    Definition           -> {yLLlR[i_?NumericQ, j_?NumericQ] :> 0  /; (i =!= j)},
+    Value                -> {yLLlR[1,1] -> Sqrt[2] yme/vev, yLLlR[2,2] -> Sqrt[2] ymmu/vev, yLLlR[3,3] -> Sqrt[2] ymta/vev},
+    InteractionOrder     -> {QED, 1},
+    ParameterName        -> {yLLlR[1,1] -> yme, yLLlR[2,2] -> ymmu, yLLlR[3,3] -> ymta},
+    TeX                  -> Superscript[y, LLlR],
+    Description          -> "Yukawa coupling for LL and lR"
+  },
+  yQLuR == {
+    ParameterType        -> Internal,
+    Indices              -> {Index[ThreeGen], Index[ThreeGen]},
+    Definition           -> {yQLuR[i_?NumericQ, j_?NumericQ] :> 0  /; (i =!= j)},
+    Value                -> {yQLuR[1,1] -> Sqrt[2] ymu/vev, yQLuR[2,2] -> Sqrt[2] ymc/vev, yQLuR[3,3] -> Sqrt[2] ymt/vev},
+    InteractionOrder     -> {QED, 1},
+    ParameterName        -> {yQLuR[1,1] -> ymu, yQLuR[2,2] -> ymc, yQLuR[3,3] -> ymt},
+    TeX                  -> Superscript[y, QLuR],
+    Description          -> "Yukawa coupling for QL and uR"
+  },
+  yQLuR == {
+    ParameterType        -> Internal,
+    Indices              -> {Index[ThreeGen], Index[ThreeGen]},
+    Definition           -> {yQLuR[i_?NumericQ, j_?NumericQ] :> 0  /; (i =!= j)},
+    Value                -> {yQLuR[1,1] -> Sqrt[2] ymu/vev, yQLuR[2,2] -> Sqrt[2] ymc/vev, yQLuR[3,3] -> Sqrt[2] ymt/vev},
+    InteractionOrder     -> {QED, 1},
+    ParameterName        -> {yQLuR[1,1] -> ymu, yQLuR[2,2] -> ymc, yQLuR[3,3] -> ymt},
+    TeX                  -> Superscript[y, QLuR],
+    Description          -> "Yukawa coupling for QL and uR"
+  }
+};
