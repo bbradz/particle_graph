@@ -1,0 +1,4 @@
+e+ e- > t t~
+g g > h
+g g > h a
+p p > l+ l-

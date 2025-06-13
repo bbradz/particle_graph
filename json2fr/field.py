@@ -17,7 +17,7 @@ from .utility import run_checks
 class Field:
     """
     Base class for fields.
-    id: str 
+    id: str
     name: str
     type: str ["complex", "real", "fermion", "vector"]
     reps: dict of str (non-abelian group reps) or int (abelian group charge)
@@ -39,11 +39,11 @@ class Field:
         self.particles = particles
         self.self_conjugate = self_conjugate
         self.QuantumNumber = QuantumNumber
-
-        self.__check__()
         self.indices = []
         self.full_reps = {}
         self.abelian_charges = {}
+        self.__check__()
+        
         
     def __str__(self):
         return self.name
@@ -69,6 +69,7 @@ class Field:
         """ All checks for the initial INPUTs of the 'Field' class. """
         self.all_checks = []
 
+        # ------------------------------------------------------------------
         def _id_check():
             assert isinstance(self.id, str), \
                 f"Error: 'id' must be a string."
@@ -144,6 +145,63 @@ class Field:
                     assert p.pass_all_checks(), \
                         f"Error: {p} does NOT pass ALL checks with a score of {p.score}."
         
+        # ------------------------------------------------------------------
+        # Generation Index 
+        def _create_generation_index():
+            if self.gen > 1:
+                gen_idx_name = name.num2words(self.gen).capitalize() + "Gen"
+                self.gen_idx = Index(gen_idx_name, self.gen, "Fold")
+                self.indices.append(self.gen_idx)
+
+        # Generation Type Consistency
+        def _check_gen_type_consistency():
+            if self.type != "fermion":
+                assert self.gen == 1, \
+                    f"Error: Non-fermion fields can have only one generation"
+
+        # Assign reps to the groups
+        def _check_reps():
+            for key, group in self.groups.items():
+                rep_dict = {}
+                if group.abelian:
+                    rep_dict["reps"] = self.reps[key]
+                    rep_dict["dim"] = 1
+                    rep_dict["group"] = group
+                    rep_dict["isColor"] = False
+                    rep_dict["abelian"] = True
+                    self.abelian_charges[group.charge] = self.reps[key]
+                else:
+                    rep_dict["reps"] = self.reps[key]
+                    rep_dict["dim"] = group.rep_list[self.reps[key]]
+                    rep_dict["group"] = group
+                    rep_dict["isColor"] = group.isSU3C
+                    rep_dict["abelian"] = False
+                    rep_idx = self._index(group, rep_dict["dim"])
+                    if rep_idx is not None:
+                        group.reps.append(str(rep_idx))
+                        self.indices.append(rep_idx)
+                self.full_reps[group.id] = rep_dict
+
+            # Representation-Dimension Consistency
+            allow_dim = [1]
+            for _, rep_dict in self.full_reps.items():
+                if rep_dict["abelian"]:
+                    pass
+                elif rep_dict["isColor"]:
+                    self.color = rep_dict["group"].rep_list[rep_dict["reps"]]
+                else:
+                    allow_dim.append(rep_dict["dim"])
+            
+            allow_dim = list(set(allow_dim))
+            assert self.dim in allow_dim, \
+                f"Error: {self.name} with dim-{self.dim} is not in allowed dims: {allow_dim}"
+            
+            if self.dim != 1:
+                allow_dim.remove(self.dim)
+
+            assert len(allow_dim) == 1 and allow_dim[0] == 1, \
+                f"Error: {self.name} with dim-{self.dim} is not in allowed dims: {allow_dim}"
+
         self.all_checks = [_id_check, 
                            _name_check, 
                            _type_check, 
@@ -154,7 +212,11 @@ class Field:
                            _particles_check, 
                            _self_conjugate_check, 
                            _QuantumNumber_check, 
-                           _ptcl_check]
+                           _ptcl_check, 
+                           _create_generation_index, 
+                           _check_gen_type_consistency, 
+                           _check_reps, 
+                           ]
 
     def __check__(self):
         """ Input checks for the field class. """
@@ -162,19 +224,7 @@ class Field:
         self._all_checks()
         run_checks(self.all_checks, self.checklist)
 
-    # Generation Index 
-    def _create_generation_index(self):
-        if self.gen > 1:
-            gen_idx_name = name.num2words(self.gen).capitalize() + "Gen"
-            self.gen_idx = Index(gen_idx_name, self.gen, "Fold")
-            self.indices.append(self.gen_idx)
     
-    # Generation Type Consistency
-    def _check_gen_type_consistency(self):
-        if self.type != "fermion":
-            assert self.gen == 1, \
-                f"Error: Non-fermion fields can have only one generation"
-
     @staticmethod
     def _index(group, dim):
         if dim == 1:
@@ -187,61 +237,16 @@ class Field:
             idx_name = str(group.group).replace("(", "").replace(")", "") + name.num2tuple(int(dim))[0].upper()
             return Index(idx_name, int(dim), "Unfold", color = False)
         
-    # Assign reps to the groups
-    def _create_full_reps(self):
-        for key, group in self.groups.items():
-            rep_dict = {}
-            if group.abelian:
-                rep_dict["reps"] = self.reps[key]
-                rep_dict["dim"] = 1
-                rep_dict["group"] = group
-                rep_dict["isColor"] = False
-                rep_dict["abelian"] = True
-                self.abelian_charges[group.charge] = self.reps[key]
-            else:
-                rep_dict["reps"] = self.reps[key]
-                rep_dict["dim"] = group.rep_list[self.reps[key]]
-                rep_dict["group"] = group
-                rep_dict["isColor"] = group.isSU3C
-                rep_dict["abelian"] = False
-                rep_idx = self._index(group, rep_dict["dim"])
-                if rep_idx is not None:
-                    group.reps.append(str(rep_idx))
-                    self.indices.append(rep_idx)
-            self.full_reps[group.id] = rep_dict
+    # def _all_validations(self):
+    #     self.all_validations = [
+    #         self._create_generation_index, 
+    #         self._check_gen_type_consistency, 
+    #         self._check_reps, 
+    #         ]
 
-    # Representation-Dimension Consistency
-    def _check_dim_reps_consistency(self):
-        allow_dim = [1]
-        for _, rep_dict in self.full_reps.items():
-            if rep_dict["abelian"]:
-                pass
-            elif rep_dict["isColor"]:
-                self.color = rep_dict["group"].rep_list[rep_dict["reps"]]
-            else:
-                allow_dim.append(rep_dict["dim"])
-        
-        allow_dim = list(set(allow_dim))
-        assert self.dim in allow_dim, \
-            f"Error: {self.name} with dim-{self.dim} is not in allowed dims: {allow_dim}"
-        
-        if self.dim != 1:
-            allow_dim.remove(self.dim)
-
-        assert len(allow_dim) == 1 and allow_dim[0] == 1, \
-            f"Error: {self.name} with dim-{self.dim} is not in allowed dims: {allow_dim}"
-        
-    def _all_validations(self):
-        self.all_validations = [
-            self._create_generation_index, 
-            self._check_gen_type_consistency, 
-            self._create_full_reps, 
-            self._check_dim_reps_consistency
-            ]
-
-    def __validate__(self):
-        self._all_validations()
-        run_checks(self.all_validations, self.checklist, skip_check = True)
+    # def __validate__(self):
+    #     self._all_validations()
+    #     run_checks(self.all_validations, self.checklist, skip_check = True)
 
     @property
     def score(self):
@@ -271,11 +276,12 @@ class FermionField(Field):
     """
     def __init__(self, id, name, groups, reps, dim, gen, particles, self_conjugate, QuantumNumber, chirality):
         self.chirality = chirality
-        super().__init__(id, name, "fermion", groups, reps, dim, gen, particles, self_conjugate, QuantumNumber)
-        self.color = 1
-        self.mass_type = None
         self._unphy_fields = None
         self._phy_fields = None
+        self.color = 1
+        self.mass_type = None
+        super().__init__(id, name, "fermion", groups, reps, dim, gen, particles, self_conjugate, QuantumNumber)
+        
 
     def __dict__(self):
         return {
@@ -298,61 +304,49 @@ class FermionField(Field):
         def _chirality_check():
             assert self.chirality in ["left", "right"], \
                 f"Error: {self.chirality} is not a valid chirality"
+        
+        # ------------------------------------------------------------------
+        
+        # Assign colors to the particles
+        def _assign_colors():
+            for p in self.particles:
+                if self.color is None:
+                    pass
+                else:
+                    p.fermion.color = self.color
 
-        self.all_checks.append(_chirality_check)
+        # Sort the particles into generations and flavors
+        def _sort_unphy_fields():
+            self._unphy_fields = np.array(self.particles).reshape(self.gen, self.dim).tolist()
+            # Assign flavors to the particles
+            if self.QuantumNumber['LeptonNumber'] != 0:
+                for gen in self._unphy_fields:
+                    flavor = [p.fermion.name for p in gen if p.charge != 0]
+                    for p in gen:
+                        if len(flavor) == 1:
+                            p.fermion.flavor = flavor[0]
+                        else:
+                            p.fermion.flavor = None
 
-    # Assign colors to the particles
-    def _assign_colors(self):
-        for p in self.particles:
-            if self.color is None:
-                pass
-            else:                
-                p.fermion.color = self.color
-            
-    # Sort the particles into generations and flavors
-    def _sort_unphy_fields(self):
-        self._unphy_fields = np.array(self.particles).reshape(self.gen, self.dim).tolist()
+        # Sort the particles into generations and flavors
+        def _sort_phy_fields():
+            self._phy_fields = np.array(self._unphy_fields).transpose().tolist()
+            # Check if the charges of the particles are consistent
+            for idx, gen in enumerate(self._phy_fields):
+                assert all(cf.charge == gen[0].charge for cf in gen), \
+                    f"Error: {self.name} has inconsistent charges in generation {idx+1}"
+                
+        # massive particle must acquire mass from interactions
+        def _check_mass_type():
+            self.is_massive = all(p.fermion.mass == 0 for p in self.particles)
+            if self.is_massive:
+                assert self.mass_type is not None, \
+                    f"Error: {self.name} is massive but has no mass type"
 
-    # Sort the particles into generations and flavors
-    def _sort_phy_fields(self):
-        self._phy_fields = np.array(self._unphy_fields).transpose().tolist()
-
-    # Assign Flavors to the particles
-    # This is a hardcoded function that assigns flavors to the particles based on the QuantumNumber
-    def _assign_flavors(self):
-        if self.QuantumNumber['LeptonNumber'] != 0:
-            for gen in self._unphy_fields:
-                flavor = [p.fermion.name for p in gen if p.charge != 0]
-                for p in gen:
-                    if len(flavor) == 1:
-                        p.fermion.flavor = flavor[0]
-                    else:
-                        p.fermion.flavor = None
-
-    # Check if the charges of the particles are consistent
-    def _check_charge_consistency(self):
-        for idx, gen in enumerate(self._phy_fields):
-            assert all(cf.charge == gen[0].charge for cf in gen), \
-                f"Error: {self.name} has inconsistent charges in generation {idx+1}"
-
-    # massive particle must acquire mass from interactions
-    def _check_mass_type(self):
-        self.is_massive = all(p.fermion.mass == 0 for p in self.particles)
-        if self.is_massive:
-            assert self.mass_type is not None, \
-                f"Error: {self.name} is massive but has no mass type"
-
-    def _all_validations(self):
-        super()._all_validations()
-        self.all_validations.extend([self._assign_colors, 
-                                     self._sort_unphy_fields, 
-                                     self._sort_phy_fields, 
-                                     self._assign_flavors, 
-                                     self._check_charge_consistency, 
-                                     self._check_mass_type])
-
-    def to_matrix(self):
-        return np.array([[p.id for p in gen] for gen in self._unphy_fields])
+        self.all_checks.extend([_assign_colors, 
+                                _sort_unphy_fields, 
+                                _sort_phy_fields, 
+                                _check_mass_type])
     
     # ------------------------------------------------------------------
     #                        Write FeynRules

@@ -181,15 +181,3 @@ def fermion_field_name(charge, color):
         else:
             symbol = f"{num2words(charge)} quark"
             return f"{symbol[0]}q", symbol
-
-# Example usage
-if __name__ == "__main__":
-    # for i in range(1, 10):
-    #     print(f"{i} -> {num2words(i)}")
-    #     print(f"{i} -> {num2abc(i)}")
-    #     print(f"{i} -> {num2greek(i)}")
-    #     print(f"{i} -> {num2tuple(i)}")
-    #     print()
-
-    for i in range(100):
-        print(generate_dummy_idx())

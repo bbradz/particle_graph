@@ -7,7 +7,6 @@
 # Standard library imports
 import os
 from datetime import datetime
-from fractions import Fraction
 
 # Local imports
 from .index import Index
@@ -20,7 +19,7 @@ class Model:
     """
     Particle Physics Model Class: read JSON file and write FR model file
     """
-    def __init__(self, model_name, author, JSON_PATH, OUTPUT_PATH = None):
+    def __init__(self, model_name, author, JSON_PATH, OUTPUT_PATH):
         self.model_name = model_name
         self.model_symbol = ''.join(word[0].upper() for word in self.model_name.split() if word)
         self.author = author
@@ -29,12 +28,10 @@ class Model:
         
         self.JSON_PATH = JSON_PATH
         self.OUTPUT_PATH = OUTPUT_PATH
-        self.current_time = datetime.now().strftime("%Y-%m-%d")
+        self.current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         self.checklist = {}
         self.indices = {}
         self._read_model()
-
-
 
     def __str__(self):
         return f"{self.model_name}"
@@ -107,7 +104,7 @@ class Model:
                 sf["groups"] = self.gauge_groups
                 sf["particles"] = scalar_list
                 new_scalar_field = ScalarField(**sf)
-                new_scalar_field.__validate__()
+                #new_scalar_field.__validate__()
                 self.scalar_fields[sf["id"]] = new_scalar_field
                 for idx in new_scalar_field.indices:
                     if idx.name not in self.indices.keys():
@@ -126,7 +123,7 @@ class Model:
 
         # we separate all fermion particles into left and right chiral fermions
         chiral_fermions = {**{f"{id}_left": ptcl.left for id, ptcl in self.fermion_particles.items()},
-                          **{f"{id}_right": ptcl.right for id, ptcl in self.fermion_particles.items()}}
+                           **{f"{id}_right": ptcl.right for id, ptcl in self.fermion_particles.items()}}
         
         for f in model_data["fields"]:
             if f["type"] == "fermion":
@@ -142,7 +139,7 @@ class Model:
                 f["particles"] = cf_list
                 f.pop('type')
                 new_fermion_field = FermionField(**f)
-                new_fermion_field.__validate__()
+                #new_fermion_field.__validate__()
                 self.fermion_fields[f["id"]] = new_fermion_field
                 for idx in new_fermion_field.indices:
                     if idx.name not in self.indices.keys():
@@ -184,6 +181,7 @@ class Model:
             new_interaction = Yukawa(**itr)
             new_interaction.__validate__()
             self.interactions[itr["id"]] = new_interaction
+        pass 
 
     def _read_check_list(self):
         model_score = 0
@@ -368,16 +366,12 @@ class Model:
         self.write_yukawa(file)
         write_sm_lagrangian(file)
 
-    def _write_feynrules_file(self, OUTPUT_PATH):
-        os.makedirs(OUTPUT_PATH, exist_ok=True)
-        model_dir_name = self.model_symbol + "_" + self.current_time  
-        Output_dir = os.path.join(OUTPUT_PATH, model_dir_name)
-        os.makedirs(Output_dir, exist_ok=True)
+    def _write_feynrules_file(self, output_dir):
         
-        model_file = os.path.join(Output_dir, f"{self.model_symbol}.fr")
-        particle_file = os.path.join(Output_dir, f"{self.model_symbol}_particles.fr")
-        parameter_file = os.path.join(Output_dir, f"{self.model_symbol}_parameters.fr")
-        lagrangian_file = os.path.join(Output_dir, f"{self.model_symbol}_lagrangian.fr")
+        model_file = os.path.join(output_dir, f"{self.model_symbol}.fr")
+        particle_file = os.path.join(output_dir, f"{self.model_symbol}_particles.fr")
+        parameter_file = os.path.join(output_dir, f"{self.model_symbol}_parameters.fr")
+        lagrangian_file = os.path.join(output_dir, f"{self.model_symbol}_lagrangian.fr")
 
         fr_files = [model_file, particle_file, parameter_file, lagrangian_file]
 
@@ -409,36 +403,60 @@ class Model:
             f.write(f"Get[\"{self.model_symbol}_particles.fr\"];\n")
             f.write(f"Get[\"{self.model_symbol}_parameters.fr\"];\n")
             f.write(f"Get[\"{self.model_symbol}_lagrangian.fr\"];\n")
-
+            f.write("\n")
             with open(particle_file, "w") as f: 
                 self.write_fields(f)
                 self.write_FeynArts(f)
-
             with open(parameter_file, "w") as f:
                 self.write_parameters(f)
-
             with open(lagrangian_file, "w") as f:
                 self.write_lagrangian(f)
 
-    def write_checklist(self, OUTPUT_PATH):
-        with open(os.path.join(OUTPUT_PATH, "checklist.csv"), "w") as f:
+    def write_checklist(self, output_dir):
+        with open(os.path.join(output_dir, "checklist.csv"), "w") as f:
             f.write("id, check, result\n")
             for id, checklist in self.checklist.items():
                 for key, value in checklist.items():
                     f.write(f"{id}, {key}, {value}\n")
 
-    def to_fr(self, OUTPUT_PATH):
+    def to_fr(self):
+        # make output directory
+        os.makedirs(self.OUTPUT_PATH, exist_ok=True)
+        model_dir_name = self.model_symbol + "_" + self.current_time  
+        self.output_dir = os.path.join(self.OUTPUT_PATH, model_dir_name)
+        os.makedirs(self.output_dir, exist_ok=True)
+
+        # write checklist
+        self.write_checklist(self.output_dir)
+        
+        # write feynrules files
         if self.pass_all_checks():
-            self._write_feynrules_file(OUTPUT_PATH)
+            self._write_feynrules_file(self.output_dir)
+
             print(f"{self.model_name} ({self.model_symbol}) get score {self.score}.")
             print(f"{self.model_name} ({self.model_symbol}) passed all checks!")
-            print(f"FeynRules file is written to {OUTPUT_PATH}")
+            print(f"FeynRules file is written to {self.output_dir}")
         else:
             print(f"{self.model_name} ({self.model_symbol}) get score {self.score}.")
             print(f"Please check the checklist.log for more details.")
+            return None
 
-        self.write_checklist(OUTPUT_PATH)
-    
-if __name__ == "__main__":
-    pass
-    
+    def run_mathematica_checks(self):
+        import subprocess
+        if self.pass_all_checks():
+            return None 
+        if self.output_dir is None:
+            print("Please run to_fr() first to output a FeynRules file.")
+            return None
+
+        FEYNRULES_PATH = "/oscar/home/qniu3/physics/FeynRules"
+        load_process = subprocess.run(
+            ["/bin/bash", "-c", "module load mathematica"],
+            capture_output=True,
+            text=True
+        )
+        
+        if load_process.returncode != 0:
+            print("Failed to load Mathematica module:")
+            print(load_process.stderr)
+            return None

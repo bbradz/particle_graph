@@ -13,7 +13,7 @@ def read_json(JSON_PATH):
         print(f"Error: File {JSON_PATH} not found.")
         return None
 
-pdg = read_json(os.path.join(os.path.dirname(__file__), "pdg.json"))
+pdg = read_json(os.path.join(os.path.dirname(__file__), "_pdg.json"))
 def get_pdg(mass, charge, color, spin, flavor, PDG_DATA = pdg, mass_tol = 1e-2):
     """
     Get the particle from the PDG data

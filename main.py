@@ -8,7 +8,8 @@ if __name__ == "__main__":
     JSON_PATH = 'theory_data/SM.json'
     MODEL_PATH = 'theory_data'
 
-    model = Model("Standard Model", "Cooper Niu", JSON_PATH)
-    model.to_fr(MODEL_PATH)
+    model = Model("Standard Model", "Cooper Niu", JSON_PATH, MODEL_PATH)
+    model.to_fr()
+    print(model.score)
 
 
