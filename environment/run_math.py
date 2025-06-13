@@ -32,7 +32,9 @@ def run_math():
                      "<< FeynRules`",
                      f"$ModelPath = SetDirectory[\"{MODEL_PATH}\"];",
                      "LoadModel[\"SM.fr\"];",
-                     "LHiggs"]
+                     "CheckMassSpectrum[LSM];",
+                     "CheckHermiticity[LSM];",
+                     ]
     for command in open_feyrules:
         process.stdin.write(command + "\n")
     process.stdin.flush()
