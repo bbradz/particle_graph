@@ -1,6 +1,6 @@
 from .field import Field
 from .param import IntParam, ExtParam
-
+import numpy as np
 # ====================================================================
 #                              Interaction
 # ====================================================================
@@ -17,10 +17,10 @@ class Interaction:
         self.type = type
         self.requirements = requirements
         self.fields = fields
-        self.__check__()
         self.ExtParams = []
         self.IntParams = []
         self.sorted_fields = {}
+        self.__check__()
 
     def __str__(self):
         return f"{self.type} ({self.id})"
@@ -119,7 +119,7 @@ class Yukawa(Interaction):
               "chirality": "left"}
     field2 = {"type": "fermion", 
               "chirality": "right"}
-    field3 = {"type": ["complex", "real", "scalar"]}
+    field3 = {"type": ["complex", "real", "self.sorted_fields[2]"]}
 
     field_types = {0: field1, 1: field2, 2: field3}
 
@@ -131,44 +131,47 @@ class Yukawa(Interaction):
     def _all_checks(self):
         super()._all_checks()
 
-        def _rename_sorted_fields():
-            self.fermion_left = self.sorted_fields[0]
-            self.fermion_right = self.sorted_fields[1]
-            self.scalar = self.sorted_fields[2]
-
         def _gen_check():
-            assert self.fermion_left.gen == self.fermion_right.gen,\
-                f"AssertionError: {self.fermion_left.gen} != {self.fermion_right.gen}"
+            assert self.sorted_fields[0].gen == self.sorted_fields[1].gen,\
+                f"AssertionError: {self.sorted_fields[0].gen} != {self.sorted_fields[1].gen}"
 
         def _dim_check():
-            assert (self.fermion_left.dim == self.scalar.dim) or (self.fermion_right.dim == self.scalar.dim), f"AssertionError: {self.fermion_left.dim} != {self.scalar.dim} and {self.fermion_right.dim} != {self.scalar.dim}"
+            assert (self.sorted_fields[0].dim == self.sorted_fields[2].dim) or (self.sorted_fields[1].dim == self.sorted_fields[2].dim), f"AssertionError: {self.sorted_fields[0].dim} != {self.sorted_fields[2].dim} and {self.sorted_fields[1].dim} != {self.sorted_fields[2].dim}"
         
         def _assign_mass_type():
-            self.fermion_left.mass_type = "Yukawa"
-            self.fermion_right.mass_type = "Yukawa"
+            self.sorted_fields[0].mass_type = "Yukawa"
+            self.sorted_fields[1].mass_type = "Yukawa"
 
-        self.all_checks.extend([_rename_sorted_fields, _gen_check, _dim_check, _assign_mass_type])
+        self.all_checks.extend([_gen_check, 
+                                _dim_check, 
+                                _assign_mass_type])
 
     def _yukawa_mass(self):
-        from sympy import Matrix, sympify
+        left = np.array([[p.id for p in gen] for gen in self.sorted_fields[0]._unphy_fields]).transpose()
+        right = np.array([[p.id for p in gen] for gen in self.sorted_fields[1]._unphy_fields])
 
-        left = self.fermion_left.to_matrix().transpose()
-        right = self.fermion_right.to_matrix()
-        self.fermion_bilinear = Matrix(left) * Matrix(right)        
+        rows_left, cols_left = left.shape
+        rows_right, cols_right = right.shape
 
-        for i in range(self.scalar.dim):
-            terms = str(self.fermion_bilinear[i]).replace(" ", "").replace("_L", "").replace("_R", "")
-            terms = sympify(terms)
-            count = str(terms).count("**2")
-            if count == self.fermion_left.gen:
-                ids = str(terms).replace("**2", "").replace(" ", "").split("+")
-                self.higgs_loc = i
+        # Matrix Multiplication of the Left-Handed and Right-Handed Fermions
+        result = [[f"{left[i][k].replace('_L', '')}*{right[k][j].replace('_R', '')}" 
+                   for k in range(cols_left)] 
+                  for j in range(cols_right) 
+                 for i in range(rows_left)]
+        
+        particle_ids = []
+        for idx, row in enumerate(result):
+            correct_term = all([col.split("*")[0] == col.split("*")[1] for col in row])   
+            if correct_term: 
+                particle_ids = [col.split("*")[0] for col in row]
+                self.higgs_loc = idx
+                break
 
-        ids = list(set(ids))
-        assert len(ids) == self.fermion_left.gen, \
-            f"Assertion failed: {self.id} has incompatible dimensions"
+        particle_ids = list(set(particle_ids))
+        assert len(particle_ids) == self.sorted_fields[0].gen, \
+            f"AssertionError: {self.id} has incompatible dimensions"
 
-        all_particles = [f.fermion for f in self.fermion_right.particles if f.fermion.id in ids]
+        all_particles = [f.fermion for f in self.sorted_fields[1].particles if f.fermion.id in particle_ids]
         for particle in all_particles:
             mass_param = ExtParam(name = "ym" + particle.name, 
                                   BLOCKNAME = "YUKAWA", 
@@ -177,10 +180,10 @@ class Yukawa(Interaction):
                                   Description = f"\"Yukawa mass for {particle.full_name}\"")
             self.ExtParams.append(mass_param)
 
-    def _yukawa_matrix(self):
-        suffix = self.fermion_left.name + self.fermion_right.name
+        # Generate the Yukawa matrix
+        suffix = self.sorted_fields[0].name + self.sorted_fields[1].name
         name = "y" + suffix
-        Indices = f"{{{repr(self.fermion_left.gen_idx)}, {repr(self.fermion_right.gen_idx)}}}"
+        Indices = f"{{{repr(self.sorted_fields[0].gen_idx)}, {repr(self.sorted_fields[1].gen_idx)}}}"
         Definitions = f"{{{name}[i_?NumericQ, j_?NumericQ] :> 0  /; (i =!= j)}}"
         mass_name = [p.name for p in self.ExtParams]
         Value = f"{{{name}[1,1] -> Sqrt[2] {mass_name[0]}/vev, {name}[2,2] -> Sqrt[2] {mass_name[1]}/vev, {name}[3,3] -> Sqrt[2] {mass_name[2]}/vev}}"
@@ -188,7 +191,7 @@ class Yukawa(Interaction):
         
         ParameterName = f"{{{name}[1,1] -> {mass_name[0]}, {name}[2,2] -> {mass_name[1]}, {name}[3,3] -> {mass_name[2]}}}"
         Tex = f"Superscript[y, {suffix}]"
-        Description = f"\"Yukawa coupling for {self.fermion_left.name} and {self.fermion_right.name}\""
+        Description = f"\"Yukawa coupling for {self.sorted_fields[0].name} and {self.sorted_fields[1].name}\""
         
         self.yukawa_matrix = IntParam(name, 
                                       Indices, 
@@ -203,21 +206,20 @@ class Yukawa(Interaction):
 
     def _all_validations(self):
         super()._all_validations()
-        self.all_validations.extend([self._yukawa_mass, self._yukawa_matrix])
+        self.all_validations.extend([self._yukawa_mass])
 
     def to_fr(self):        
         from .name import generate_dummy_idx
         
-        suffix = self.fermion_left.name + self.fermion_right.name
+        suffix = self.sorted_fields[0].name + self.sorted_fields[1].name
         ym = "y" + suffix
         ff = generate_dummy_idx()
         self.dummy_idx.extend([f"{ff}1", f"{ff}2"])
-        color_idx = ", cc" if self.fermion_left.color > 1 and self.fermion_right.color > 1 else ""
-        if self.higgs_loc == 0:
+        color_idx = ", cc" if self.sorted_fields[0].color > 1 and self.sorted_fields[1].color > 1 else ""
+        if self.higgs_loc == 1:
             self.dummy_idx.extend(["ii", "cc"])
             return f"    - {ym}[{ff}1, {ff}2] QLbar[sp, ii, {ff}1{color_idx}].uR [sp, {ff}2{color_idx}] Phi[ii]"
-        elif self.higgs_loc == 1:
+        elif self.higgs_loc == 0:
             self.dummy_idx.extend(["ii", "jj", "cc"])
             return f"    - {ym}[{ff}1, {ff}2] QLbar[sp, ii, {ff}1{color_idx}].dR [sp, {ff}2{color_idx}] Phibar[jj] Eps[ii, jj]"
-
         

@@ -66,6 +66,7 @@ class Particle:
                            _name_check, 
                            _mass_check, 
                            _charge_check]
+        
     @staticmethod
     def run_checks(all_checks, checklist, skip_check = False):
         for check in all_checks:
@@ -119,24 +120,7 @@ class Particle:
         if self.pdg_info is not None:
             return self.pdg_info['pdgid']
         else:
-            return BSM_id(self.mass, self.charge, self.color, self.spin * 2, self.flavor)
-
-    def _check_color(self):
-        assert self.color in [1, 3, 8], \
-            f"Error: Color must be 1, 3, or 8"  
-
-    def __validate__(self):
-        all_checks = [self._check_color]
-
-        for check in all_checks:
-            if any(isinstance(value, Exception) or value == False for value in self.checklist.values()):
-                self.checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
-            else:
-                try:
-                    check()
-                    self.checklist[check.__name__] = True
-                except Exception as e:
-                    self.checklist[check.__name__] = e  # if the check fails, the error is stored in the checklist            
+            return BSM_id(self.mass, self.charge, self.color, self.spin * 2, self.flavor)    
 
     @property
     def score(self):
@@ -233,9 +217,6 @@ class ComplexScalar(Particle):
 class VectorBoson(Particle):
     def __init__(self, id, name, mass, charge):
         super().__init__(id, "vector", name, mass, charge)
-
-
-
 
 # ------------------------------------------------------------------
 if __name__ == "__main__":
