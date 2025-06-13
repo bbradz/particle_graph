@@ -119,7 +119,7 @@ class Yukawa(Interaction):
               "chirality": "left"}
     field2 = {"type": "fermion", 
               "chirality": "right"}
-    field3 = {"type": ["complex", "real", "self.sorted_fields[2]"]}
+    field3 = {"type": ["complex", "real", "scalar"]}
 
     field_types = {0: field1, 1: field2, 2: field3}
 
