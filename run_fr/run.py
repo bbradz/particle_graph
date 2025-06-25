@@ -26,6 +26,5 @@ def CheckKineticTermNormalisation(session, Lagrangian):
     result = session.evaluate(wlexpr(f'CheckKineticTermNormalisation[{Lagrangian}]'))
     return result
 
-
 if __name__ == "__main__":
     pass

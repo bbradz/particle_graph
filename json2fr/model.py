@@ -29,6 +29,9 @@ class Model:
         self.JSON_PATH = JSON_PATH
         self.OUTPUT_PATH = OUTPUT_PATH
         self.current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self.output_dir = os.path.join(OUTPUT_PATH, self.model_symbol + "_" + self.current_time)
+        os.makedirs(self.output_dir, exist_ok=True)
+        
         self.checklist = {}
         self.indices = {}
         self._read_model()
@@ -339,6 +342,16 @@ class Model:
         self.write_IntParams(file)
         file.write("};\n")
     
+    def write_fermion_kinetic_term(self, file):
+        all_fermion_kinetic_terms = []
+        for f in self.fermion_fields.values():
+            all_fermion_kinetic_terms.append(f.kinetic_term())
+        file.write("LFermions := Block[{mu}, \n")
+        file.write("  ExpandIndices[I*(\n")
+        file.write("    " + "+ \n    ".join(all_fermion_kinetic_terms) + "\n")
+        file.write("  ), FlavorExpand->{SU2W, SU2D}] \n")
+        file.write("];\n\n")
+
     def write_yukawa(self, file):
         terms = []
         dummy_idx = []
@@ -363,22 +376,15 @@ class Model:
         file.write("(* *****   Lagrangian   ***** *)\n")
         file.write("(* ************************** *)\n")
         file.write("\n")
+        self.write_fermion_kinetic_term(file)
         self.write_yukawa(file)
         write_sm_lagrangian(file)
 
-    def _write_feynrules_file(self, output_dir):
-        
-        model_file = os.path.join(output_dir, f"{self.model_symbol}.fr")
-        particle_file = os.path.join(output_dir, f"{self.model_symbol}_particles.fr")
-        parameter_file = os.path.join(output_dir, f"{self.model_symbol}_parameters.fr")
-        lagrangian_file = os.path.join(output_dir, f"{self.model_symbol}_lagrangian.fr")
+    def _write_feynrules_file(self):
+        model_file = os.path.join(self.output_dir, f"{self.model_symbol}.fr")
 
-        fr_files = [model_file, particle_file, parameter_file, lagrangian_file]
-
-        for file in fr_files:
-
-            if os.path.exists(file):
-                os.remove(file)
+        if os.path.exists(model_file):
+            os.remove(model_file)
         
         with open(model_file, "w") as f:
             f.write("(******************************************************************************************************************)\n")
@@ -400,38 +406,23 @@ class Model:
             self.write_Indices(f)
             self.write_Interaction_orders(f)
             f.write("\n")
-            f.write(f"Get[\"{self.model_symbol}_particles.fr\"];\n")
-            f.write(f"Get[\"{self.model_symbol}_parameters.fr\"];\n")
-            f.write(f"Get[\"{self.model_symbol}_lagrangian.fr\"];\n")
-            f.write("\n")
-            with open(particle_file, "w") as f: 
-                self.write_fields(f)
-                self.write_FeynArts(f)
-            with open(parameter_file, "w") as f:
-                self.write_parameters(f)
-            with open(lagrangian_file, "w") as f:
-                self.write_lagrangian(f)
+            self.write_fields(f)
+            self.write_FeynArts(f)
+            self.write_parameters(f)
+            self.write_lagrangian(f)
 
-    def write_checklist(self, output_dir):
-        with open(os.path.join(output_dir, "checklist.csv"), "w") as f:
+    def write_checklist(self):
+        with open(os.path.join(self.output_dir, "checklist.csv"), "w") as f:
             f.write("id, check, result\n")
             for id, checklist in self.checklist.items():
                 for key, value in checklist.items():
                     f.write(f"{id}, {key}, {value}\n")
 
     def to_fr(self):
-        # make output directory
-        os.makedirs(self.OUTPUT_PATH, exist_ok=True)
-        model_dir_name = self.model_symbol + "_" + self.current_time  
-        self.output_dir = os.path.join(self.OUTPUT_PATH, model_dir_name)
-        os.makedirs(self.output_dir, exist_ok=True)
-
-        # write checklist
-        self.write_checklist(self.output_dir)
+        self.write_checklist()
         
-        # write feynrules files
         if self.pass_all_checks():
-            self._write_feynrules_file(self.output_dir)
+            self._write_feynrules_file()
 
             print(f"{self.model_name} ({self.model_symbol}) get score {self.score}.")
             print(f"{self.model_name} ({self.model_symbol}) passed all checks!")
@@ -439,24 +430,4 @@ class Model:
         else:
             print(f"{self.model_name} ({self.model_symbol}) get score {self.score}.")
             print(f"Please check the checklist.log for more details.")
-            return None
-
-    def run_mathematica_checks(self):
-        import subprocess
-        if self.pass_all_checks():
-            return None 
-        if self.output_dir is None:
-            print("Please run to_fr() first to output a FeynRules file.")
-            return None
-
-        FEYNRULES_PATH = "/oscar/home/qniu3/physics/FeynRules"
-        load_process = subprocess.run(
-            ["/bin/bash", "-c", "module load mathematica"],
-            capture_output=True,
-            text=True
-        )
-        
-        if load_process.returncode != 0:
-            print("Failed to load Mathematica module:")
-            print(load_process.stderr)
             return None

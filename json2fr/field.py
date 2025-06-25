@@ -536,6 +536,9 @@ class FermionField(Field):
             list = str(list).replace("'", "")
         return list
     
+    def kinetic_term(self):
+        return f"{self.name}bar.Ga[mu].DC[{self.name}, mu]"
+    
 
 
 # ====================================================================

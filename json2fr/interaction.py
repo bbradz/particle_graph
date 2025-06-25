@@ -218,8 +218,8 @@ class Yukawa(Interaction):
         color_idx = ", cc" if self.sorted_fields[0].color > 1 and self.sorted_fields[1].color > 1 else ""
         if self.higgs_loc == 1:
             self.dummy_idx.extend(["ii", "cc"])
-            return f"    - {ym}[{ff}1, {ff}2] QLbar[sp, ii, {ff}1{color_idx}].uR [sp, {ff}2{color_idx}] Phi[ii]"
+            return f"    - {ym}[{ff}1, {ff}2] {self.sorted_fields[0]}bar[sp, ii, {ff}1{color_idx}].{self.sorted_fields[1].name} [sp, {ff}2{color_idx}] Phi[ii]"
         elif self.higgs_loc == 0:
             self.dummy_idx.extend(["ii", "jj", "cc"])
-            return f"    - {ym}[{ff}1, {ff}2] QLbar[sp, ii, {ff}1{color_idx}].dR [sp, {ff}2{color_idx}] Phibar[jj] Eps[ii, jj]"
+            return f"    - {ym}[{ff}1, {ff}2] {self.sorted_fields[0]}bar[sp, ii, {ff}1{color_idx}].{self.sorted_fields[1].name} [sp, {ff}2{color_idx}] Phibar[jj] Eps[ii, jj]"
         
