@@ -102,7 +102,7 @@ IndexStyle[SU2W,       j];
 IndexStyle[SU2D,       k];
 IndexStyle[Gluon,      a];
 IndexStyle[Colour,     m];
-IndexStyle[ThreeGen, f];
+IndexStyle[ThreeGen,   f];
 
 
 (* ************************** *)
@@ -345,7 +345,8 @@ M$ClassesDescription = {
     FlavorIndex    -> SU2D,
     SelfConjugate  -> False,
     QuantumNumbers -> {Y -> -1/2},
-    Definitions    -> { LL[sp1_,1,ff_] :> Module[{sp2}, ProjM[sp1,sp2] vl[sp2,ff]], LL[sp1_,2,ff_] :> Module[{sp2}, ProjM[sp1,sp2] l[sp2,ff]] }
+    Definitions    -> { LL[sp1_,1,ff_] :> Module[{sp2}, ProjM[sp1,sp2] vl[sp2,ff]], 
+                        LL[sp1_,2,ff_] :> Module[{sp2}, ProjM[sp1,sp2] l[sp2,ff]] }
   },
   F[12] == { 
     ClassName      -> lR, 
@@ -365,7 +366,7 @@ M$ClassesDescription = {
     QuantumNumbers -> {Y -> 1/6},
     Definitions    -> { 
       QL[sp1_,1,ff_,cc_] :> Module[{sp2}, ProjM[sp1,sp2] uq[sp2,ff,cc]], 
-      QL[sp1_,2,ff_,cc_] :> Module[{sp2,ff2}, CKM[ff,ff2] ProjM[sp1,sp2] dq[sp2,ff2,cc]] }
+      QL[sp1_,2,ff_,cc_] :> Module[{sp2,ff2}, ProjM[sp1,sp2] dq[sp2,ff2,cc]] }
   },
   F[14] == { 
     ClassName      -> uR, 
@@ -558,14 +559,6 @@ M$Parameters = {
     Value         -> 1.777,
     Description   -> "Tau Yukawa mass"
   },
-  cabi == {
-    ParameterType -> External,
-    BlockName     -> CKMBLOCK,
-    OrderBlock    -> 1,
-    Value         -> 0.227736,
-    TeX           -> Subscript[\[Theta], c],
-    Description   -> "Cabibbo angle"
-  },
 
   (* Internal Parameters *)
   aEW == {
@@ -674,17 +667,7 @@ M$Parameters = {
     ParameterName    -> {yd[1,1] -> ydo, yd[2,2] -> ys, yd[3,3] -> yb},
     TeX              -> Superscript[y, d],
     Description      -> "Down-type Yukawa couplings"
-  },
-(* N. B. : only Cabibbo mixing! *)
-  CKM == { 
-    ParameterType -> Internal,
-    Indices       -> {Index[ThreeGen], Index[ThreeGen]},
-    Unitary       -> True,
-    Value         -> {CKM[1,1] -> Cos[cabi],  CKM[1,2] -> Sin[cabi], CKM[1,3] -> 0,
-                      CKM[2,1] -> -Sin[cabi], CKM[2,2] -> Cos[cabi], CKM[2,3] -> 0,
-                      CKM[3,1] -> 0,          CKM[3,2] -> 0,         CKM[3,3] -> 1},
-    TeX         -> Superscript[V,CKM],
-    Description -> "CKM-Matrix"}
+  }
 };
 
 (* ************************** *)
@@ -696,8 +679,13 @@ LGauge := Block[{mu,nu,ii,aa},
 
 LFermions := Block[{mu}, 
   ExpandIndices[I*(
-    QLbar.Ga[mu].DC[QL, mu] + LLbar.Ga[mu].DC[LL, mu] + uRbar.Ga[mu].DC[uR, mu] + dRbar.Ga[mu].DC[dR, mu] + lRbar.Ga[mu].DC[lR, mu]), 
-  FlavorExpand->{SU2W,SU2D}]/.{CKM[a_,b_] Conjugate[CKM[a_,c_]]->IndexDelta[b,c], CKM[b_,a_] Conjugate[CKM[c_,a_]]->IndexDelta[b,c]}];
+    QLbar.Ga[mu].DC[QL, mu] + 
+    LLbar.Ga[mu].DC[LL, mu] + 
+    uRbar.Ga[mu].DC[uR, mu] + 
+    dRbar.Ga[mu].DC[dR, mu] + 
+    lRbar.Ga[mu].DC[lR, mu]
+  ), FlavorExpand->{SU2W,SU2D}]
+];
 
 LHiggs := Block[{ii,mu, feynmangaugerules},
   feynmangaugerules = If[Not[FeynmanGauge], {G0|GP|GPbar ->0}, {}];
@@ -705,14 +693,13 @@ LHiggs := Block[{ii,mu, feynmangaugerules},
   ExpandIndices[DC[Phibar[ii],mu] DC[Phi[ii],mu] + muH^2 Phibar[ii] Phi[ii] - lam Phibar[ii] Phi[ii] Phibar[jj] Phi[jj], FlavorExpand->{SU2D,SU2W}]/.feynmangaugerules
  ];
 
-LYukawa := Block[{sp,ii,jj,cc,ff1,ff2,ff3,yuk,feynmangaugerules},
+LYukawa := Block[{sp,bb2, ii, bb1, jj, cc, cc2, aa1, cc1, aa2,yuk,feynmangaugerules},
   feynmangaugerules = If[Not[FeynmanGauge], {G0|GP|GPbar ->0}, {}];
  
   yuk = ExpandIndices[
-   -yd[ff2, ff3] CKM[ff1, ff2] QLbar[sp, ii, ff1, cc].dR [sp, ff3, cc] Phi[ii] - 
-    yl[ff1, ff3] LLbar[sp, ii, ff1].lR [sp, ff3] Phi[ii] - 
-    yu[ff1, ff2] QLbar[sp, ii, ff1, cc].uR [sp, ff2, cc] Phibar[jj] Eps[ii, jj], FlavorExpand -> SU2D];
-  yuk = yuk /. { CKM[a_, b_] Conjugate[CKM[a_, c_]] -> IndexDelta[b, c], CKM[b_, a_] Conjugate[CKM[c_, a_]] -> IndexDelta[b, c]};
+    - yl[bb1, bb2] LLbar[sp, ii, bb1].lR [sp, bb2] Phi[ii] 
+    - yd[aa1, aa2] QLbar[sp, ii, aa1, cc].dR [sp, aa2, cc] Phi[ii] 
+    - yu[cc1, cc2] QLbar[sp, ii, cc1, cc].uR [sp, cc2, cc] Phibar[jj] Eps[ii, jj], FlavorExpand -> SU2D];
   yuk+HC[yuk]/.feynmangaugerules
  ];
 

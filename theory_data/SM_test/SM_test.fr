@@ -95,7 +95,7 @@ IndexStyle[SU2W,       j];
 IndexStyle[SU2D,       k];
 IndexStyle[Gluon,      a];
 IndexStyle[Colour,     m];
-IndexStyle[ThreeGen,   f];
+IndexStyle[ThreeGen, f];
 
 
 (* ************************** *)
@@ -339,7 +339,7 @@ M$ClassesDescription = {
     SelfConjugate  -> False,
     QuantumNumbers -> {Y -> -1/2},
     Definitions    -> { LL[sp1_,1,ff_] :> Module[{sp2}, ProjM[sp1,sp2] vl[sp2,ff]], 
-                        LL[sp1_,2,ff_] :> Module[{sp2}, ProjM[sp1,sp2] l[sp2,ff]] }
+    LL[sp1_,2,ff_] :> Module[{sp2}, ProjM[sp1,sp2] l[sp2,ff]] }
   },
   F[12] == { 
     ClassName      -> lR, 
@@ -359,7 +359,7 @@ M$ClassesDescription = {
     QuantumNumbers -> {Y -> 1/6},
     Definitions    -> { 
       QL[sp1_,1,ff_,cc_] :> Module[{sp2}, ProjM[sp1,sp2] uq[sp2,ff,cc]], 
-      QL[sp1_,2,ff_,cc_] :> Module[{sp2,ff2}, ProjM[sp1,sp2] dq[sp2,ff2,cc]] }
+      QL[sp1_,2,ff_,cc_] :> Module[{sp2}, ProjM[sp1,sp2] dq[sp2,ff,cc]] }
   },
   F[14] == { 
     ClassName      -> uR, 
@@ -552,7 +552,6 @@ M$Parameters = {
     Value         -> 1.777,
     Description   -> "Tau Yukawa mass"
   },
-
   (* Internal Parameters *)
   aEW == {
     ParameterType    -> Internal,
@@ -672,12 +671,8 @@ LGauge := Block[{mu,nu,ii,aa},
 
 LFermions := Block[{mu}, 
   ExpandIndices[I*(
-    QLbar.Ga[mu].DC[QL, mu] + 
-    LLbar.Ga[mu].DC[LL, mu] + 
-    uRbar.Ga[mu].DC[uR, mu] + 
-    dRbar.Ga[mu].DC[dR, mu] + 
-    lRbar.Ga[mu].DC[lR, mu]
-  ), FlavorExpand->{SU2W,SU2D}]
+    QLbar.Ga[mu].DC[QL, mu] + LLbar.Ga[mu].DC[LL, mu] + uRbar.Ga[mu].DC[uR, mu] + dRbar.Ga[mu].DC[dR, mu] + lRbar.Ga[mu].DC[lR, mu]), 
+  FlavorExpand->{SU2W,SU2D}]
 ];
 
 LHiggs := Block[{ii,mu, feynmangaugerules},
@@ -686,13 +681,13 @@ LHiggs := Block[{ii,mu, feynmangaugerules},
   ExpandIndices[DC[Phibar[ii],mu] DC[Phi[ii],mu] + muH^2 Phibar[ii] Phi[ii] - lam Phibar[ii] Phi[ii] Phibar[jj] Phi[jj], FlavorExpand->{SU2D,SU2W}]/.feynmangaugerules
  ];
 
-LYukawa := Block[{sp,bb2, ii, bb1, jj, cc, cc2, aa1, cc1, aa2,yuk,feynmangaugerules},
+LYukawa := Block[{sp, cc, cc2, jj, aa1, aa2, cc1, ii, bb2, bb1,yuk,feynmangaugerules},
   feynmangaugerules = If[Not[FeynmanGauge], {G0|GP|GPbar ->0}, {}];
  
   yuk = ExpandIndices[
-    - yl[bb1, bb2] LLbar[sp, ii, bb1].lR [sp, bb2] Phi[ii] 
-    - yd[aa1, aa2] QLbar[sp, ii, aa1, cc].dR [sp, aa2, cc] Phi[ii] 
-    - yu[cc1, cc2] QLbar[sp, ii, cc1, cc].uR [sp, cc2, cc] Phibar[jj] Eps[ii, jj], FlavorExpand -> SU2D];
+   -yd[aa1, aa2] QLbar[sp, ii, aa1, cc].dR [sp, aa2, cc] Phi[ii] - 
+    yl[bb1, bb2] LLbar[sp, ii, bb1].lR [sp, bb2] Phi[ii] - 
+    yu[cc1, cc2] QLbar[sp, ii, cc1, cc].uR [sp, cc2, cc] Phibar[jj] Eps[ii, jj], FlavorExpand -> SU2D];
   yuk+HC[yuk]/.feynmangaugerules
  ];
 
