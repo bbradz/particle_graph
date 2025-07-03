@@ -28,7 +28,7 @@ class ExtParam:
         for key, value in self.__dict__().items():
             param_info.append(f"{key:20} -> {value}")
         param_entry += "    " + ",\n    ".join(param_info) + "\n"
-        param_entry += "  },\n"
+        param_entry += "  }"
         return param_entry
 
 
@@ -36,10 +36,10 @@ class ExtParam:
 ###       Internal Parameter      ###
 ### ============================= ###
 class IntParam:
-    def __init__(self, name, indices, definition, value, InteractionOrder, ParameterName, TeX, Description):
+    def __init__(self, name, indices, definitions, value, InteractionOrder, ParameterName, TeX, Description):
         self.name = name
         self.indices = indices
-        self.definition = definition
+        self.definitions = definitions
         self.value = value
         self.InteractionOrder = InteractionOrder
         self.ParameterName = ParameterName
@@ -47,13 +47,13 @@ class IntParam:
         self.Description = Description
 
     def __str__(self):
-        return f"{self.name} = {self.definition} {self.value} {self.InteractionOrder} {self.ParameterName} {self.TeX} {self.Description}"
+        return f"{self.name} = {self.definitions} {self.value} {self.InteractionOrder} {self.ParameterName} {self.TeX} {self.Description}"
 
     def __dict__(self):
         return {
             "ParameterType": "Internal",
             "Indices": self.indices,
-            "Definition": self.definition,
+            "Definitions": self.definitions,
             "Value": self.value,
             "InteractionOrder": self.InteractionOrder,
             "ParameterName": self.ParameterName,

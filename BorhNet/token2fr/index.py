@@ -7,13 +7,16 @@ class Index:
     name: str
     dim: int
     fold: str
+    gen: bool
     color: bool
     """
-    def __init__(self, name, dim, fold, color = False):
+    def __init__(self, name, dim, fold, gen = False, color = False, flavor = False):
         self.name = name
         self.dim = dim
         self.fold = fold
+        self.gen = gen
         self.color = color
+        self.flavor = flavor 
 
     def __str__(self):
         return self.name

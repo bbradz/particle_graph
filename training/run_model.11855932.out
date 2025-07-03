@@ -1,0 +1,23 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 11855932
+##  Job Name : run_model.sh
+##  Nodelist : node1834
+##      CPUs : 2
+##  Mem/Node : 8192 MB
+## Directory : /oscar/home/qniu3/physics/RL_model_builder
+##   Job Started : Thu Jun 26 05:00:44 PM EDT 2025
+###############################################################################
+161/161
+Standard Model (SM) get score 161/161.
+Standard Model (SM) passed all checks!
+FeynRules file is written to /oscar/home/qniu3/physics/RL_model_builder/theories/SM_2025-06-26-17-00-45
+Running FeynRules checks for SM...
+FeynRules checks completed!
+FeynRules checks found!
+MassCheck: PASS
+HermiticityCheck: PASS
+SM passed FeynRules checks!
+Running FeynArts computations for SM...
+FeynArts computations completed!
+Running NLO computations for SM...
+NLO computations completed!

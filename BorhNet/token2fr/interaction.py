@@ -52,6 +52,17 @@ class Interaction:
             for f in self.fields:
                 assert f.pass_all_checks(), \
                     f"AssertionError: {f} has failed checks"
+                
+        def _check_replicate_fields():
+            assert len(self.fields) == len(set(self.fields)), \
+                f"AssertionError: {self.id} has duplicate fields"
+
+        def _check_replicate_particles():
+            all_components = [p for f in self.fields for p in f.particles]
+            assert len(all_components) == len(set(all_components)), \
+                f"AssertionError: {self.id} has duplicate particles"
+            self.all_particles = [p.fermion if f.type == "fermion" else p for f in self.fields for p in f.particles]
+            self.all_particles = {p.id: p for p in self.all_particles}
 
         def _sort_field():
             self.sorted_fields = {}
@@ -68,6 +79,8 @@ class Interaction:
                                 _field_type_check, 
                                 _field_check, 
                                 _all_field_pass_checks, 
+                                _check_replicate_fields,
+                                _check_replicate_particles,
                                 _sort_field])
     
     @staticmethod
@@ -136,43 +149,51 @@ class Yukawa(Interaction):
                 f"AssertionError: {self.sorted_fields[0].gen} != {self.sorted_fields[1].gen}"
 
         def _dim_check():
-            assert (self.sorted_fields[0].dim == self.sorted_fields[2].dim) or (self.sorted_fields[1].dim == self.sorted_fields[2].dim), f"AssertionError: {self.sorted_fields[0].dim} != {self.sorted_fields[2].dim} and {self.sorted_fields[1].dim} != {self.sorted_fields[2].dim}"
+            assert (self.sorted_fields[0].dim == self.sorted_fields[2].dim) or (self.sorted_fields[1].dim == self.sorted_fields[2].dim), \
+                f"AssertionError: {self.sorted_fields[0].dim} != {self.sorted_fields[2].dim} and {self.sorted_fields[1].dim} != {self.sorted_fields[2].dim}"
         
-        def _assign_mass_type():
-            self.sorted_fields[0].mass_type = "Yukawa"
-            self.sorted_fields[1].mass_type = "Yukawa"
-
         self.all_checks.extend([_gen_check, 
-                                _dim_check, 
-                                _assign_mass_type])
+                                _dim_check])
 
-    def _yukawa_mass(self):
+    def _dirac_bilinear_product(self):
         left = np.array([[p.id for p in gen] for gen in self.sorted_fields[0]._unphy_fields]).transpose()
         right = np.array([[p.id for p in gen] for gen in self.sorted_fields[1]._unphy_fields])
 
         rows_left, cols_left = left.shape
         rows_right, cols_right = right.shape
+        assert cols_left == rows_right, \
+            f"AssertionError: {self.sorted_fields[0].name} and {self.sorted_fields[1].name} have incompatible dimensions"
 
         # Matrix Multiplication of the Left-Handed and Right-Handed Fermions
-        result = [[f"{left[i][k].replace('_L', '')}*{right[k][j].replace('_R', '')}" 
+        self.dirac_bilinears = [[f"{left[i][k].replace('_L', '')}*{right[k][j].replace('_R', '')}" 
                    for k in range(cols_left)] 
                   for j in range(cols_right) 
                  for i in range(rows_left)]
-        
-        particle_ids = []
-        for idx, row in enumerate(result):
+
+    def _get_massive_particles(self):
+        for idx, row in enumerate(self.dirac_bilinears):
             correct_term = all([col.split("*")[0] == col.split("*")[1] for col in row])   
             if correct_term: 
-                particle_ids = [col.split("*")[0] for col in row]
+                self.particle_ids = [col.split("*")[0] for col in row]
+                self.massive_particles = {pid: self.all_particles[pid] for pid in self.particle_ids}
                 self.higgs_loc = idx
                 break
+    
+    def _check_massive_particles(self):
+        [p.assign_mass_type("yukawa") for p in self.massive_particles.values()]
+        assert all(p.mass > 0 for p in self.massive_particles.values()), \
+            f"AssertionError: {self.id} has massless particles"
 
-        particle_ids = list(set(particle_ids))
-        assert len(particle_ids) == self.sorted_fields[0].gen, \
-            f"AssertionError: {self.id} has incompatible dimensions"
+    def _check_U1Y_gauge_symmetry(self):
+        Y_psi_L = self.sorted_fields[0].reps["g1"]
+        Y_psi_R = self.sorted_fields[1].reps["g1"]
+        Y_Phi = self.sorted_fields[2].reps["g1"]
+        sum = - Y_psi_L + Y_psi_R + (1 if self.higgs_loc == 1 else -1) * Y_Phi
+        assert sum == 0, \
+            f"AssertionError: {self.id} has violates U(1)Y gauge symmetry."
 
-        all_particles = [f.fermion for f in self.sorted_fields[1].particles if f.fermion.id in particle_ids]
-        for particle in all_particles:
+    def _yukawa_mass(self):
+        for particle in self.massive_particles.values():
             mass_param = ExtParam(name = "ym" + particle.name, 
                                   BLOCKNAME = "YUKAWA", 
                                   OrderBlock = particle.pdg_id, 
@@ -180,16 +201,16 @@ class Yukawa(Interaction):
                                   Description = f"\"Yukawa mass for {particle.full_name}\"")
             self.ExtParams.append(mass_param)
 
-        # Generate the Yukawa matrix
+    def _yukawa_matrix(self):
         suffix = self.sorted_fields[0].name + self.sorted_fields[1].name
         name = "y" + suffix
         Indices = f"{{{repr(self.sorted_fields[0].gen_idx)}, {repr(self.sorted_fields[1].gen_idx)}}}"
         Definitions = f"{{{name}[i_?NumericQ, j_?NumericQ] :> 0  /; (i =!= j)}}"
         mass_name = [p.name for p in self.ExtParams]
+        mass_symbol = [f"y{m[2:]}" for m in mass_name]
         Value = f"{{{name}[1,1] -> Sqrt[2] {mass_name[0]}/vev, {name}[2,2] -> Sqrt[2] {mass_name[1]}/vev, {name}[3,3] -> Sqrt[2] {mass_name[2]}/vev}}"
         InteractionOrder = "{QED, 1}"
-        
-        ParameterName = f"{{{name}[1,1] -> {mass_name[0]}, {name}[2,2] -> {mass_name[1]}, {name}[3,3] -> {mass_name[2]}}}"
+        ParameterName = f"{{{name}[1,1] -> {mass_symbol[0]}, {name}[2,2] -> {mass_symbol[1]}, {name}[3,3] -> {mass_symbol[2]}}}"
         Tex = f"Superscript[y, {suffix}]"
         Description = f"\"Yukawa coupling for {self.sorted_fields[0].name} and {self.sorted_fields[1].name}\""
         
@@ -206,7 +227,12 @@ class Yukawa(Interaction):
 
     def _all_validations(self):
         super()._all_validations()
-        self.all_validations.extend([self._yukawa_mass])
+        self.all_validations.extend([self._dirac_bilinear_product, 
+                                     self._get_massive_particles, 
+                                     self._check_massive_particles,
+                                     self._check_U1Y_gauge_symmetry,
+                                     self._yukawa_mass,
+                                     self._yukawa_matrix])
 
     def to_fr(self):        
         from .name import generate_dummy_idx
@@ -218,8 +244,8 @@ class Yukawa(Interaction):
         color_idx = ", cc" if self.sorted_fields[0].color > 1 and self.sorted_fields[1].color > 1 else ""
         if self.higgs_loc == 1:
             self.dummy_idx.extend(["ii", "cc"])
-            return f"    - {ym}[{ff}1, {ff}2] QLbar[sp, ii, {ff}1{color_idx}].uR [sp, {ff}2{color_idx}] Phi[ii]"
+            return f"    - {ym}[{ff}1, {ff}2] {self.sorted_fields[0]}bar[sp, ii, {ff}1{color_idx}].{self.sorted_fields[1].name} [sp, {ff}2{color_idx}] Phi[ii]"
         elif self.higgs_loc == 0:
             self.dummy_idx.extend(["ii", "jj", "cc"])
-            return f"    - {ym}[{ff}1, {ff}2] QLbar[sp, ii, {ff}1{color_idx}].dR [sp, {ff}2{color_idx}] Phibar[jj] Eps[ii, jj]"
+            return f"    - {ym}[{ff}1, {ff}2] {self.sorted_fields[0]}bar[sp,ii,{ff}1{color_idx}].{self.sorted_fields[1].name} [sp, {ff}2{color_idx}] Phibar[jj] Eps[ii,jj]"
         

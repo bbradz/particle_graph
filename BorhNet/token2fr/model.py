@@ -11,6 +11,7 @@ from datetime import datetime
 # Local imports
 from .index import Index
 from . import name
+from .utility import run_checks
 
 # ====================================================================
 #                            Model
@@ -19,16 +20,18 @@ class Model:
     """
     Particle Physics Model Class: read JSON file and write FR model file
     """
-    def __init__(self, model_name, author, JSON_PATH, OUTPUT_PATH):
+    def __init__(self, model_name, author, JSON_PATH, OUTPUT_PATH, version = "1.0.0"):
         self.model_name = model_name
         self.model_symbol = ''.join(word[0].upper() for word in self.model_name.split() if word)
         self.author = author
         self.ai = True if author == 'Bohr Network' else False
         self.FeynmanGauge = True
-        
+        self.version = version
         self.JSON_PATH = JSON_PATH
         self.OUTPUT_PATH = OUTPUT_PATH
         self.current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self.output_dir = os.path.join(OUTPUT_PATH, self.model_symbol + "_" + self.current_time)
+        
         self.checklist = {}
         self.indices = {}
         self._read_model()
@@ -183,10 +186,18 @@ class Model:
             self.interactions[itr["id"]] = new_interaction
         pass 
 
+    def _read_parameters(self):
+        self.ext_params = []
+        self.int_params = []
+        for itr in self.interactions.values():
+            self.ext_params.extend(itr.ExtParams)
+            self.int_params.extend(itr.IntParams)
+        self.parameters = self.ext_params + self.int_params
+
     def _read_check_list(self):
         model_score = 0
         max_score = 0
-        model_components = [self.gauge_groups, self.fields, self.interactions]
+        model_components = [self.gauge_groups, self.particles, self.fields, self.interactions]
 
         for component in model_components:
             for item in component.values():
@@ -194,7 +205,9 @@ class Model:
                 score, max_val = map(int, item.score.split("/"))
                 model_score += score
                 max_score += max_val
+
         self.score = f"{model_score}/{max_score}"
+
 
     def pass_all_checks(self):
         score, max_score = map(int, self.score.split("/"))
@@ -203,10 +216,14 @@ class Model:
     def _read_model(self):
         from .utility import read_json
         model_data = read_json(self.JSON_PATH)
+
         self._read_gauge_group(model_data)
         self._read_particles(model_data)
         self._read_fields(model_data)
         self._read_interactions(model_data)
+        [p.__validate__() for p in self.particles.values()]
+
+        self._read_parameters()
         self._read_check_list()
 
 
@@ -220,10 +237,20 @@ class Model:
         file.write(f"M$ModelName = \"{self.model_name}\";\n")
         file.write("\n")
         file.write(f"M$Information = {{ \n")
-        file.write(f"  Authors      -> {self.author}, \n")
+        file.write(f"  Authors      -> {{\"{self.author}\"}}, \n")
+        file.write(f"  Version      -> \"{self.version}\", \n")
         file.write(f"  Date         -> \"{self.current_time}\" \n")
         file.write(f"}};\n")
         file.write("\n")
+
+    def write_NLO_variables(self, file):
+        file.write(f"(* ************************** *)\n")
+        file.write(f"(* *****  NLO variables ***** *)\n")
+        file.write(f"(* ************************** *)\n")
+        file.write(f"FR$LoopSwitches = {{ {{Gf, MW}} }};\n")
+        double_ext_params = [f"{p.name} -> M{p.name[2:]}" for p in self.ext_params if p.BLOCKNAME == "YUKAWA"]
+        file.write("FR$RmDblExt = {")
+        file.write(", ".join(double_ext_params) + "};\n\n")
 
     def write_gauge(self, file):
         file.write(f"FeynmanGauge = {self.FeynmanGauge};\n")
@@ -314,19 +341,6 @@ class Model:
         self.write_scalar(file)
         file.write("};\n\n")
 
-    def write_ExtParams(self, file):
-        for itr in self.interactions.values():
-            for param in itr.ExtParams:
-                file.write(param.to_fr())
-
-    def write_IntParams(self, file):
-        param_str_list = []
-        for itr in self.interactions.values():
-            param_str_list.extend([param.to_fr() for param in itr.IntParams])
-        param_str = ",\n".join(param_str_list)
-        param_str += "\n"
-        file.write(param_str)
-
     def write_parameters(self, file):
         from .sm_setting import write_sm_higgs_parameters_external, write_sm_higgs_parameters_internal
         file.write("(* ************************** *)\n")
@@ -335,10 +349,46 @@ class Model:
         file.write("M$Parameters = {\n")
         write_sm_higgs_parameters_external(file)
         write_sm_higgs_parameters_internal(file)
-        self.write_ExtParams(file)
-        self.write_IntParams(file)
+        
+        all_params = [param.to_fr() for param in self.parameters]
+        file.write(",\n".join(all_params) + "\n")
         file.write("};\n")
+
+    # def write_ExtParams(self, file):
+    #     for itr in self.interactions.values():
+    #         for param in itr.ExtParams:
+    #             file.write(param.to_fr())
+
+    # def write_IntParams(self, file):
+    #     param_str_list = []
+    #     for param in self.int_params:
+    #         param_str_list.append(param.to_fr())
+    #     param_str = ",\n".join(param_str_list)
+    #     param_str += "\n"
+    #     file.write(param_str)
+
+    # def write_parameters(self, file):
+    #     from .sm_setting import write_sm_higgs_parameters_external, write_sm_higgs_parameters_internal
+    #     file.write("(* ************************** *)\n")
+    #     file.write("(* *****   Parameters   ***** *)\n")
+    #     file.write("(* ************************** *)\n")
+    #     file.write("M$Parameters = {\n")
+    #     write_sm_higgs_parameters_external(file)
+    #     write_sm_higgs_parameters_internal(file)
+    #     self.write_ExtParams(file)
+    #     self.write_IntParams(file)
+    #     file.write("};\n")
     
+    def write_fermion_kinetic_term(self, file):
+        all_fermion_kinetic_terms = []
+        for f in self.fermion_fields.values():
+            all_fermion_kinetic_terms.append(f.kinetic_term())
+        file.write("LFermions := Block[{mu}, \n")
+        file.write("  ExpandIndices[I*(\n")
+        file.write("    " + "+ \n    ".join(all_fermion_kinetic_terms) + "\n")
+        file.write("  ), FlavorExpand->{SU2W, SU2D}] \n")
+        file.write("];\n\n")
+
     def write_yukawa(self, file):
         terms = []
         dummy_idx = []
@@ -353,7 +403,7 @@ class Model:
         file.write("\n")
         file.write("  yuk = ExpandIndices[\n")
         file.write("\n".join(terms))
-        file.write("\n  ];\n")
+        file.write("\n, FlavorExpand -> SU2D];\n")
         file.write("  yuk + HC[yuk]/. feynmangaugerules\n")
         file.write("];\n")
 
@@ -363,22 +413,15 @@ class Model:
         file.write("(* *****   Lagrangian   ***** *)\n")
         file.write("(* ************************** *)\n")
         file.write("\n")
+        self.write_fermion_kinetic_term(file)
         self.write_yukawa(file)
         write_sm_lagrangian(file)
 
-    def _write_feynrules_file(self, output_dir):
-        
-        model_file = os.path.join(output_dir, f"{self.model_symbol}.fr")
-        particle_file = os.path.join(output_dir, f"{self.model_symbol}_particles.fr")
-        parameter_file = os.path.join(output_dir, f"{self.model_symbol}_parameters.fr")
-        lagrangian_file = os.path.join(output_dir, f"{self.model_symbol}_lagrangian.fr")
+    def _write_feynrules_file(self):
+        model_file = os.path.join(self.output_dir, f"{self.model_symbol}.fr")
 
-        fr_files = [model_file, particle_file, parameter_file, lagrangian_file]
-
-        for file in fr_files:
-
-            if os.path.exists(file):
-                os.remove(file)
+        if os.path.exists(model_file):
+            os.remove(model_file)
         
         with open(model_file, "w") as f:
             f.write("(******************************************************************************************************************)\n")
@@ -395,43 +438,32 @@ class Model:
 
             self.write_info(f)
             self.write_gauge(f)
+            self.write_NLO_variables(f)
             self.write_vevs(f)
             self.write_gauge_group(f)
             self.write_Indices(f)
             self.write_Interaction_orders(f)
             f.write("\n")
-            f.write(f"Get[\"{self.model_symbol}_particles.fr\"];\n")
-            f.write(f"Get[\"{self.model_symbol}_parameters.fr\"];\n")
-            f.write(f"Get[\"{self.model_symbol}_lagrangian.fr\"];\n")
-            f.write("\n")
-            with open(particle_file, "w") as f: 
-                self.write_fields(f)
-                self.write_FeynArts(f)
-            with open(parameter_file, "w") as f:
-                self.write_parameters(f)
-            with open(lagrangian_file, "w") as f:
-                self.write_lagrangian(f)
+            self.write_fields(f)
+            self.write_FeynArts(f)
+            self.write_parameters(f)
+            self.write_lagrangian(f)
 
-    def write_checklist(self, output_dir):
-        with open(os.path.join(output_dir, "checklist.csv"), "w") as f:
+    def write_checklist(self):
+        with open(os.path.join(self.output_dir, "checklist.csv"), "w") as f:
             f.write("id, check, result\n")
             for id, checklist in self.checklist.items():
                 for key, value in checklist.items():
                     f.write(f"{id}, {key}, {value}\n")
 
     def to_fr(self):
-        # make output directory
-        os.makedirs(self.OUTPUT_PATH, exist_ok=True)
-        model_dir_name = self.model_symbol + "_" + self.current_time  
-        self.output_dir = os.path.join(self.OUTPUT_PATH, model_dir_name)
         os.makedirs(self.output_dir, exist_ok=True)
-
-        # write checklist
-        self.write_checklist(self.output_dir)
+        # write checklist and feynrules files
+        self.write_checklist()
         
         # write feynrules files
         if self.pass_all_checks():
-            self._write_feynrules_file(self.output_dir)
+            self._write_feynrules_file()
 
             print(f"{self.model_name} ({self.model_symbol}) get score {self.score}.")
             print(f"{self.model_name} ({self.model_symbol}) passed all checks!")
@@ -439,24 +471,4 @@ class Model:
         else:
             print(f"{self.model_name} ({self.model_symbol}) get score {self.score}.")
             print(f"Please check the checklist.log for more details.")
-            return None
-
-    def run_mathematica_checks(self):
-        import subprocess
-        if self.pass_all_checks():
-            return None 
-        if self.output_dir is None:
-            print("Please run to_fr() first to output a FeynRules file.")
-            return None
-
-        FEYNRULES_PATH = "/oscar/home/qniu3/physics/FeynRules"
-        load_process = subprocess.run(
-            ["/bin/bash", "-c", "module load mathematica"],
-            capture_output=True,
-            text=True
-        )
-        
-        if load_process.returncode != 0:
-            print("Failed to load Mathematica module:")
-            print(load_process.stderr)
             return None

@@ -206,15 +206,15 @@ class GaugeGroup:
         self.all_checks = []
 
     def _check_in_SM(self):
-        if self.name == "SU3C" and self.group == "SU_3" and self.boson == "G":
+        if self.name == "SU3C":
             self.isSU3C = True
         else:
             self.isSU3C = False
-        if self.name == "SU2L" and self.group == "SU_2" and self.boson == "W":
+        if self.name == "SU2L":
             self.isSU2L = True
         else:
             self.isSU2L = False
-        if self.name == "U1Y" and self.group == "U_1" and self.boson == "B":
+        if self.name == "U1Y":
             self.isU1Y = True
         else:
             self.isU1Y = False

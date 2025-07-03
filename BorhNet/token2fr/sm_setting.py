@@ -343,8 +343,8 @@ LHiggs := Block[{ii,mu, feynmangaugerules},
 LGhost := Block[{LGh1,LGhw,LGhs,LGhphi,mu, generators,gh,ghbar,Vectorize,phi1,phi2,togoldstones,doublet,doublet0},
   (* Pure gauge piece *) 	
   LGh1 = -ghBbar.del[DC[ghB,mu],mu];
-  LGhw = -ghWibar[ii].del[DC[ghWi[ii],mu],mu];
-  LGhs = -ghGbar[ii].del[DC[ghG[ii],mu],mu];
+  LGhw = -ghWibar.del[DC[ghWi,mu],mu];
+  LGhs = -ghGbar.del[DC[ghG,mu],mu];
 
   (* Scalar pieces: see Peskin pages 739-742 *)
   (* phi1 and phi2 are the real degrees of freedom of GP *)

@@ -29,6 +29,7 @@ class Particle:
         self._width = "Auto" # _width can be overridden by the pdg_info
         self.color = color # color can be assigned by field class
         self.flavor = flavor # flavor can be assigned by field class
+        self._mass_types = [] # mass_types can be assigned by interaction class
         self.__check__()
 
     def __str__(self):
@@ -127,6 +128,25 @@ class Particle:
         max_score = len(self.checklist)
         score = sum(1 for value in self.checklist.values() if value is True)
         return f"{score}/{max_score}"
+
+    def _check_mass_type(self):
+        if self.mass == 0:
+            assert len(self._mass_types) == 0, \
+                f"AssertionError: {self.name} is massless and should not have mass term."
+        else:
+            assert len(self._mass_types) > 0, \
+                f"AssertionError: {self.name} is massive and should have at least one mass term."
+
+    def _all_validations(self):
+        self.all_validations = [self._check_mass_type]
+
+    def __validate__(self):
+        self._all_validations()
+        self.run_checks(self.all_validations, self.checklist, skip_check=True)
+
+    def assign_mass_type(self, mass_type):
+        if mass_type not in self._mass_types:
+            self._mass_types.append(mass_type)
 
     def pass_all_checks(self):
         return len(self.checklist) == sum(1 for value in self.checklist.values() if value is True)
