@@ -1,0 +1,283 @@
+{{{{bar[UFe[{gt1}]], Fe[{gt2}], Ah}, 
+   {-((sum[j2, 1, 3, conj[Ve[gt2, j2]]*Ye[gt1, j2]]*ThetaStep[gt1, 3])/
+      Sqrt[2]), PL}, {(sum[j1, 1, 3, conj[Ye[j1, gt1]]*Ue[gt2, j1]]*
+      ThetaStep[gt1, 3])/Sqrt[2], PR}}, FFS}, 
+ {{{bar[UFe[{gt1}]], Fe[{gt2}], hh}, 
+   {((-I)*sum[j2, 1, 3, conj[Ve[gt2, j2]]*Ye[gt1, j2]]*ThetaStep[gt1, 3])/
+     Sqrt[2], PL}, {((-I)*sum[j1, 1, 3, conj[Ye[j1, gt1]]*Ue[gt2, j1]]*
+      ThetaStep[gt1, 3])/Sqrt[2], PR}}, FFS}, 
+ {{{bar[UFe[{gt1}]], Fe[{gt2}], VP[{lt3}]}, 
+   {(I/2)*conj[Ve[gt2, gt1]]*(g1*Cos[ThetaW] + g2*Sin[ThetaW])*
+     ThetaStep[gt1, 3], LorentzProduct[gamma[lt3], PL]}, 
+   {I*g1*Cos[ThetaW]*ThetaStep[gt1, 3]*Ue[gt2, gt1], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[UFe[{gt1}]], Fe[{gt2}], VZ[{lt3}]}, 
+   {(I/2)*conj[Ve[gt2, gt1]]*(g2*Cos[ThetaW] - g1*Sin[ThetaW])*
+     ThetaStep[gt1, 3], LorentzProduct[gamma[lt3], PL]}, 
+   {(-I)*g1*Sin[ThetaW]*ThetaStep[gt1, 3]*Ue[gt2, gt1], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[UFe[{gt1}]], Fv[{gt2}], conj[Hp]}, 
+   {(-I)*ThetaStep[gt1, 3]*Ye[gt1, gt2], PL}, {0, PR}}, FFS}, 
+ {{{bar[UFe[{gt1}]], Fv[{gt2}], conj[VWp[{lt3}]]}, 
+   {((-I)*g2*Delta[gt1, gt2]*ThetaStep[gt2, 3])/Sqrt[2], 
+    LorentzProduct[gamma[lt3], PL]}, {0, PR}}, FFV}, 
+ {{{bar[UFu[{gt1, ct1}]], Fu[{gt2, ct2}], Ah}, 
+   {(Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vu[gt2, j2]]*Yu[gt1, j2]]*
+      ThetaStep[gt1, 3])/Sqrt[2], PL}, 
+   {-((Delta[ct1, ct2]*sum[j1, 1, 3, conj[Yu[j1, gt1]]*Uu[gt2, j1]]*
+       ThetaStep[gt1, 3])/Sqrt[2]), PR}}, FFS}, 
+ {{{bar[UFu[{gt1, ct1}]], Fd[{gt2, ct2}], Hp}, 
+   {I*Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vd[gt2, j2]]*Yu[gt1, j2]]*
+     ThetaStep[gt1, 3], PL}, {(-I)*Delta[ct1, ct2]*
+     sum[j1, 1, 3, conj[Yd[j1, gt1]]*Ud[gt2, j1]]*ThetaStep[gt1, 3], PR}}, 
+  FFS}, {{{bar[UFu[{gt1, ct1}]], Fd[{gt2, ct2}], VWp[{lt3}]}, 
+   {((-I)*g2*conj[Vd[gt2, gt1]]*Delta[ct1, ct2]*ThetaStep[gt1, 3])/Sqrt[2], 
+    LorentzProduct[gamma[lt3], PL]}, {0, PR}}, FFV}, 
+ {{{bar[UFu[{gt1, ct1}]], Fu[{gt2, ct2}], hh}, 
+   {((-I)*Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vu[gt2, j2]]*Yu[gt1, j2]]*
+      ThetaStep[gt1, 3])/Sqrt[2], PL}, 
+   {((-I)*Delta[ct1, ct2]*sum[j1, 1, 3, conj[Yu[j1, gt1]]*Uu[gt2, j1]]*
+      ThetaStep[gt1, 3])/Sqrt[2], PR}}, FFS}, 
+ {{{bar[UFu[{gt1, ct1}]], Fu[{gt2, ct2}], VG[{ct3, lt3}]}, 
+   {(-1/2*I)*g3*conj[Vu[gt2, gt1]]*Lam[ct3, ct1, ct2]*ThetaStep[gt1, 3], 
+    LorentzProduct[gamma[lt3], PL]}, {(-1/2*I)*g3*Lam[ct3, ct1, ct2]*
+     ThetaStep[gt1, 3]*Uu[gt2, gt1], LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[UFu[{gt1, ct1}]], Fu[{gt2, ct2}], VP[{lt3}]}, 
+   {(-1/6*I)*conj[Vu[gt2, gt1]]*Delta[ct1, ct2]*(g1*Cos[ThetaW] + 
+      3*g2*Sin[ThetaW])*ThetaStep[gt1, 3], LorentzProduct[gamma[lt3], PL]}, 
+   {((-2*I)/3)*g1*Cos[ThetaW]*Delta[ct1, ct2]*ThetaStep[gt1, 3]*Uu[gt2, gt1], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[UFu[{gt1, ct1}]], Fu[{gt2, ct2}], VZ[{lt3}]}, 
+   {(-1/6*I)*conj[Vu[gt2, gt1]]*Delta[ct1, ct2]*(3*g2*Cos[ThetaW] - 
+      g1*Sin[ThetaW])*ThetaStep[gt1, 3], LorentzProduct[gamma[lt3], PL]}, 
+   {((2*I)/3)*g1*Delta[ct1, ct2]*Sin[ThetaW]*ThetaStep[gt1, 3]*Uu[gt2, gt1], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[UFd[{gt1, ct1}]], Fd[{gt2, ct2}], Ah}, 
+   {-((Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vd[gt2, j2]]*Yd[gt1, j2]]*
+       ThetaStep[gt1, 3])/Sqrt[2]), PL}, 
+   {(Delta[ct1, ct2]*sum[j1, 1, 3, conj[Yd[j1, gt1]]*Ud[gt2, j1]]*
+      ThetaStep[gt1, 3])/Sqrt[2], PR}}, FFS}, 
+ {{{bar[UFd[{gt1, ct1}]], Fd[{gt2, ct2}], hh}, 
+   {((-I)*Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vd[gt2, j2]]*Yd[gt1, j2]]*
+      ThetaStep[gt1, 3])/Sqrt[2], PL}, 
+   {((-I)*Delta[ct1, ct2]*sum[j1, 1, 3, conj[Yd[j1, gt1]]*Ud[gt2, j1]]*
+      ThetaStep[gt1, 3])/Sqrt[2], PR}}, FFS}, 
+ {{{bar[UFd[{gt1, ct1}]], Fd[{gt2, ct2}], VG[{ct3, lt3}]}, 
+   {(-1/2*I)*g3*conj[Vd[gt2, gt1]]*Lam[ct3, ct1, ct2]*ThetaStep[gt1, 3], 
+    LorentzProduct[gamma[lt3], PL]}, {(-1/2*I)*g3*Lam[ct3, ct1, ct2]*
+     ThetaStep[gt1, 3]*Ud[gt2, gt1], LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[UFd[{gt1, ct1}]], Fd[{gt2, ct2}], VP[{lt3}]}, 
+   {(-1/6*I)*conj[Vd[gt2, gt1]]*Delta[ct1, ct2]*(g1*Cos[ThetaW] - 
+      3*g2*Sin[ThetaW])*ThetaStep[gt1, 3], LorentzProduct[gamma[lt3], PL]}, 
+   {(I/3)*g1*Cos[ThetaW]*Delta[ct1, ct2]*ThetaStep[gt1, 3]*Ud[gt2, gt1], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[UFd[{gt1, ct1}]], Fd[{gt2, ct2}], VZ[{lt3}]}, 
+   {(I/6)*conj[Vd[gt2, gt1]]*Delta[ct1, ct2]*(3*g2*Cos[ThetaW] + 
+      g1*Sin[ThetaW])*ThetaStep[gt1, 3], LorentzProduct[gamma[lt3], PL]}, 
+   {(-1/3*I)*g1*Delta[ct1, ct2]*Sin[ThetaW]*ThetaStep[gt1, 3]*Ud[gt2, gt1], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[UFd[{gt1, ct1}]], Fu[{gt2, ct2}], conj[Hp]}, 
+   {(-I)*Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vu[gt2, j2]]*Yd[gt1, j2]]*
+     ThetaStep[gt1, 3], PL}, 
+   {I*Delta[ct1, ct2]*sum[j1, 1, 3, conj[Yu[j1, gt1]]*Uu[gt2, j1]]*
+     ThetaStep[gt1, 3], PR}}, FFS}, 
+ {{{bar[UFd[{gt1, ct1}]], Fu[{gt2, ct2}], conj[VWp[{lt3}]]}, 
+   {((-I)*g2*conj[Vu[gt2, gt1]]*Delta[ct1, ct2]*ThetaStep[gt1, 3])/Sqrt[2], 
+    LorentzProduct[gamma[lt3], PL]}, {0, PR}}, FFV}, 
+ {{{bar[UFv[{gt1}]], Fe[{gt2}], Hp}, {0, PL}, 
+   {(-I)*sum[j1, 1, 3, conj[Ye[j1, gt1]]*Ue[gt2, j1]], PR}}, FFS}, 
+ {{{bar[UFv[{gt1}]], Fe[{gt2}], VWp[{lt3}]}, 
+   {((-I)*g2*conj[Ve[gt2, gt1]]*ThetaStep[gt1, 3])/Sqrt[2], 
+    LorentzProduct[gamma[lt3], PL]}, {0, PR}}, FFV}, 
+ {{{bar[UFv[{gt1}]], Fv[{gt2}], VZ[{lt3}]}, 
+   {(-1/2*I)*Delta[gt1, gt2]*(g2*Cos[ThetaW] + g1*Sin[ThetaW]), 
+    LorentzProduct[gamma[lt3], PL]}, {0, PR}}, FFV}, 
+ {{{Ah, conj[Hp], VWp[{lt3}]}, {g2/2, Mom[Ah, lt3] - Mom[conj[Hp], lt3]}}, 
+  SSV}, {{{bar[Fd[{gt1, ct1}]], Fu[{gt2, ct2}], conj[Hp]}, 
+   {(-I)*Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vu[gt2, j2]]*
+       sum[j1, 1, 3, conj[Ud[gt1, j1]]*Yd[j1, j2]]], PL}, 
+   {I*Delta[ct1, ct2]*sum[j2, 1, 3, 
+      sum[j1, 1, 3, conj[Yu[j1, j2]]*Uu[gt2, j1]]*Vd[gt1, j2]], PR}}, FFS}, 
+ {{{bar[Fe[{gt1}]], Fv[{gt2}], conj[Hp]}, 
+   {(-I)*sum[j1, 1, 3, conj[Ue[gt1, j1]]*Ye[j1, gt2]], PL}, {0, PR}}, FFS}, 
+ {{{bar[gZ], gWp, conj[Hp]}, 
+   {(I/4)*g2*v*RXi[Z]*(g2*Cos[ThetaW] + g1*Sin[ThetaW]), 1}}, GGS}, 
+ {{{bar[gWp], gZ, Hp}, {(-1/4*I)*g2*v*RXi[Wp]*(g2*Cos[ThetaW] - 
+      g1*Sin[ThetaW]), 1}}, GGS}, 
+ {{{bar[gWpC], gZ, conj[Hp]}, {(-1/4*I)*g2*v*RXi[Wp]*
+     (g2*Cos[ThetaW] - g1*Sin[ThetaW]), 1}}, GGS}, 
+ {{{bar[gZ], gWpC, Hp}, {(I/4)*g2*v*RXi[Z]*(g2*Cos[ThetaW] + g1*Sin[ThetaW]), 
+    1}}, GGS}, {{{hh, Hp, conj[Hp]}, {(-I)*v*\[Lambda], 1}}, SSS}, 
+ {{{hh, conj[Hp], VWp[{lt3}]}, {(-1/2*I)*g2, Mom[hh, lt3] - 
+     Mom[conj[Hp], lt3]}}, SSV}, 
+ {{{Hp, conj[Hp], VP[{lt3}]}, {(-1/2*I)*(g1*Cos[ThetaW] + g2*Sin[ThetaW]), 
+    Mom[Hp, lt3] - Mom[conj[Hp], lt3]}}, SSV}, 
+ {{{Hp, conj[Hp], VZ[{lt3}]}, {(-1/2*I)*(g2*Cos[ThetaW] - g1*Sin[ThetaW]), 
+    Mom[Hp, lt3] - Mom[conj[Hp], lt3]}}, SSV}, 
+ {{{conj[Hp], VP[{lt2}], VWp[{lt3}]}, {(I/2)*g1*g2*v*Cos[ThetaW], 
+    g[lt2, lt3]}}, SVV}, {{{conj[Hp], VWp[{lt2}], VZ[{lt3}]}, 
+   {(-1/2*I)*g1*g2*v*Sin[ThetaW], g[lt2, lt3]}}, SVV}, 
+ {{{Ah, Ah, Hp, conj[Hp]}, {(-I)*\[Lambda], 1}}, SSSS}, 
+ {{{hh, hh, Hp, conj[Hp]}, {(-I)*\[Lambda], 1}}, SSSS}, 
+ {{{Hp, Hp, conj[Hp], conj[Hp]}, {(-2*I)*\[Lambda], 1}}, SSSS}, 
+ {{{Hp, conj[Hp], VP[{lt3}], VP[{lt4}]}, 
+   {(I/2)*(g1*Cos[ThetaW] + g2*Sin[ThetaW])^2, g[lt3, lt4]}}, SSVV}, 
+ {{{Hp, conj[Hp], conj[VWp[{lt3}]], VWp[{lt4}]}, {(I/2)*g2^2, g[lt3, lt4]}}, 
+  SSVV}, {{{Hp, conj[Hp], VZ[{lt3}], VZ[{lt4}]}, 
+   {(I/2)*(g2*Cos[ThetaW] - g1*Sin[ThetaW])^2, g[lt3, lt4]}}, SSVV}, 
+ {{{Ah, Ah, hh}, {(-I)*v*\[Lambda], 1}}, SSS}, 
+ {{{bar[Fd[{gt1, ct1}]], Fd[{gt2, ct2}], Ah}, 
+   {-((Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vd[gt2, j2]]*
+         sum[j1, 1, 3, conj[Ud[gt1, j1]]*Yd[j1, j2]]])/Sqrt[2]), PL}, 
+   {(Delta[ct1, ct2]*sum[j2, 1, 3, sum[j1, 1, 3, conj[Yd[j1, j2]]*
+          Ud[gt2, j1]]*Vd[gt1, j2]])/Sqrt[2], PR}}, FFS}, 
+ {{{bar[Fe[{gt1}]], Fe[{gt2}], Ah}, 
+   {-(sum[j2, 1, 3, conj[Ve[gt2, j2]]*sum[j1, 1, 3, conj[Ue[gt1, j1]]*
+          Ye[j1, j2]]]/Sqrt[2]), PL}, 
+   {sum[j2, 1, 3, sum[j1, 1, 3, conj[Ye[j1, j2]]*Ue[gt2, j1]]*Ve[gt1, j2]]/
+     Sqrt[2], PR}}, FFS}, {{{bar[Fu[{gt1, ct1}]], Fu[{gt2, ct2}], Ah}, 
+   {(Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vu[gt2, j2]]*
+        sum[j1, 1, 3, conj[Uu[gt1, j1]]*Yu[j1, j2]]])/Sqrt[2], PL}, 
+   {-((Delta[ct1, ct2]*sum[j2, 1, 3, sum[j1, 1, 3, conj[Yu[j1, j2]]*
+           Uu[gt2, j1]]*Vu[gt1, j2]])/Sqrt[2]), PR}}, FFS}, 
+ {{{bar[gWp], gWp, Ah}, {(g2^2*v*RXi[Wp])/4, 1}}, GGS}, 
+ {{{bar[gWpC], gWpC, Ah}, {-1/4*(g2^2*v*RXi[Wp]), 1}}, GGS}, 
+ {{{Ah, hh, VZ[{lt3}]}, {(-(g2*Cos[ThetaW]) - g1*Sin[ThetaW])/2, 
+    Mom[Ah, lt3] - Mom[hh, lt3]}}, SSV}, 
+ {{{Ah, Hp, conj[VWp[{lt3}]]}, {g2/2, Mom[Ah, lt3] - Mom[Hp, lt3]}}, SSV}, 
+ {{{Ah, Ah, Ah, Ah}, {(-3*I)*\[Lambda], 1}}, SSSS}, 
+ {{{Ah, Ah, hh, hh}, {(-I)*\[Lambda], 1}}, SSSS}, 
+ {{{Ah, Ah, conj[VWp[{lt3}]], VWp[{lt4}]}, {(I/2)*g2^2, g[lt3, lt4]}}, SSVV}, 
+ {{{Ah, Ah, VZ[{lt3}], VZ[{lt4}]}, 
+   {(I/2)*(g2*Cos[ThetaW] + g1*Sin[ThetaW])^2, g[lt3, lt4]}}, SSVV}, 
+ {{{bar[Fd[{gt1, ct1}]], Fd[{gt2, ct2}], hh}, 
+   {((-I)*Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vd[gt2, j2]]*
+        sum[j1, 1, 3, conj[Ud[gt1, j1]]*Yd[j1, j2]]])/Sqrt[2], PL}, 
+   {((-I)*Delta[ct1, ct2]*sum[j2, 1, 3, 
+       sum[j1, 1, 3, conj[Yd[j1, j2]]*Ud[gt2, j1]]*Vd[gt1, j2]])/Sqrt[2], 
+    PR}}, FFS}, {{{bar[Fe[{gt1}]], Fe[{gt2}], hh}, 
+   {((-I)*sum[j2, 1, 3, conj[Ve[gt2, j2]]*sum[j1, 1, 3, 
+         conj[Ue[gt1, j1]]*Ye[j1, j2]]])/Sqrt[2], PL}, 
+   {((-I)*sum[j2, 1, 3, sum[j1, 1, 3, conj[Ye[j1, j2]]*Ue[gt2, j1]]*
+        Ve[gt1, j2]])/Sqrt[2], PR}}, FFS}, 
+ {{{bar[Fu[{gt1, ct1}]], Fu[{gt2, ct2}], hh}, 
+   {((-I)*Delta[ct1, ct2]*sum[j2, 1, 3, conj[Vu[gt2, j2]]*
+        sum[j1, 1, 3, conj[Uu[gt1, j1]]*Yu[j1, j2]]])/Sqrt[2], PL}, 
+   {((-I)*Delta[ct1, ct2]*sum[j2, 1, 3, 
+       sum[j1, 1, 3, conj[Yu[j1, j2]]*Uu[gt2, j1]]*Vu[gt1, j2]])/Sqrt[2], 
+    PR}}, FFS}, {{{bar[gWp], gWp, hh}, {(-1/4*I)*g2^2*v*RXi[Wp], 1}}, GGS}, 
+ {{{bar[gWpC], gWpC, hh}, {(-1/4*I)*g2^2*v*RXi[Wp], 1}}, GGS}, 
+ {{{bar[gZ], gZ, hh}, {(-1/4*I)*v*RXi[Z]*(g2*Cos[ThetaW] + g1*Sin[ThetaW])^2, 
+    1}}, GGS}, {{{hh, hh, hh}, {(-3*I)*v*\[Lambda], 1}}, SSS}, 
+ {{{hh, Hp, conj[VWp[{lt3}]]}, {(I/2)*g2, Mom[hh, lt3] - Mom[Hp, lt3]}}, 
+  SSV}, {{{hh, conj[VWp[{lt2}]], VWp[{lt3}]}, {(I/2)*g2^2*v, g[lt2, lt3]}}, 
+  SVV}, {{{hh, VZ[{lt2}], VZ[{lt3}]}, 
+   {(I/2)*v*(g2*Cos[ThetaW] + g1*Sin[ThetaW])^2, g[lt2, lt3]}}, SVV}, 
+ {{{hh, hh, hh, hh}, {(-3*I)*\[Lambda], 1}}, SSSS}, 
+ {{{hh, hh, conj[VWp[{lt3}]], VWp[{lt4}]}, {(I/2)*g2^2, g[lt3, lt4]}}, SSVV}, 
+ {{{hh, hh, VZ[{lt3}], VZ[{lt4}]}, 
+   {(I/2)*(g2*Cos[ThetaW] + g1*Sin[ThetaW])^2, g[lt3, lt4]}}, SSVV}, 
+ {{{bar[Fd[{gt1, ct1}]], Fd[{gt2, ct2}], VG[{ct3, lt3}]}, 
+   {(-1/2*I)*g3*Delta[gt1, gt2]*Lam[ct3, ct1, ct2], 
+    LorentzProduct[gamma[lt3], PL]}, 
+   {(-1/2*I)*g3*Delta[gt1, gt2]*Lam[ct3, ct1, ct2], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[Fu[{gt1, ct1}]], Fu[{gt2, ct2}], VG[{ct3, lt3}]}, 
+   {(-1/2*I)*g3*Delta[gt1, gt2]*Lam[ct3, ct1, ct2], 
+    LorentzProduct[gamma[lt3], PL]}, 
+   {(-1/2*I)*g3*Delta[gt1, gt2]*Lam[ct3, ct1, ct2], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[gG[{ct1}]], gG[{ct2}], VG[{ct3, lt3}]}, {g3*fSU3[ct1, ct2, ct3], 
+    Mom[gG[{ct2}], lt3]}}, GGV}, 
+ {{{VG[{ct1, lt1}], VG[{ct2, lt2}], VG[{ct3, lt3}]}, 
+   {g3*fSU3[ct1, ct2, ct3], g[lt1, lt2]*(-Mom[VG[{ct1, lt1}], lt3] + 
+       Mom[VG[{ct2, lt2}], lt3]) + g[lt2, lt3]*(-Mom[VG[{ct2, lt2}], lt1] + 
+       Mom[VG[{ct3, lt3}], lt1]) + g[lt1, lt3]*(Mom[VG[{ct1, lt1}], lt2] - 
+       Mom[VG[{ct3, lt3}], lt2])}}, VVV}, 
+ {{{VG[{ct1, lt1}], VG[{ct2, lt2}], VG[{ct3, lt3}], VG[{ct4, lt4}]}, 
+   {I*g3^2*(-sum[j1, 1, 8, fSU3[ct1, ct4, j1]*fSU3[ct2, ct3, j1]] - 
+      sum[j1, 1, 8, fSU3[ct1, ct3, j1]*fSU3[ct2, ct4, j1]]), 
+    g[lt1, lt2]*g[lt3, lt4]}, 
+   {I*g3^2*(sum[j1, 1, 8, fSU3[ct1, ct4, j1]*fSU3[ct2, ct3, j1]] - 
+      sum[j1, 1, 8, fSU3[ct1, ct2, j1]*fSU3[ct3, ct4, j1]]), 
+    g[lt1, lt3]*g[lt2, lt4]}, 
+   {I*g3^2*(sum[j1, 1, 8, fSU3[ct1, ct3, j1]*fSU3[ct2, ct4, j1]] + 
+      sum[j1, 1, 8, fSU3[ct1, ct2, j1]*fSU3[ct3, ct4, j1]]), 
+    g[lt1, lt4]*g[lt2, lt3]}}, VVVV}, 
+ {{{bar[Fd[{gt1, ct1}]], Fd[{gt2, ct2}], VP[{lt3}]}, 
+   {(-1/6*I)*Delta[ct1, ct2]*Delta[gt1, gt2]*(g1*Cos[ThetaW] - 
+      3*g2*Sin[ThetaW]), LorentzProduct[gamma[lt3], PL]}, 
+   {(I/3)*g1*Cos[ThetaW]*Delta[ct1, ct2]*Delta[gt1, gt2], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[Fe[{gt1}]], Fe[{gt2}], VP[{lt3}]}, 
+   {(I/2)*Delta[gt1, gt2]*(g1*Cos[ThetaW] + g2*Sin[ThetaW]), 
+    LorentzProduct[gamma[lt3], PL]}, {I*g1*Cos[ThetaW]*Delta[gt1, gt2], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[Fu[{gt1, ct1}]], Fu[{gt2, ct2}], VP[{lt3}]}, 
+   {(-1/6*I)*Delta[ct1, ct2]*Delta[gt1, gt2]*(g1*Cos[ThetaW] + 
+      3*g2*Sin[ThetaW]), LorentzProduct[gamma[lt3], PL]}, 
+   {((-2*I)/3)*g1*Cos[ThetaW]*Delta[ct1, ct2]*Delta[gt1, gt2], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[gWp], gWp, VP[{lt3}]}, {I*g2*Sin[ThetaW], Mom[gWp, lt3]}}, GGV}, 
+ {{{bar[gWpC], gWpC, VP[{lt3}]}, {(-I)*g2*Sin[ThetaW], Mom[gWpC, lt3]}}, 
+  GGV}, {{{Hp, conj[VWp[{lt2}]], VP[{lt3}]}, {(I/2)*g1*g2*v*Cos[ThetaW], 
+    g[lt2, lt3]}}, SVV}, {{{conj[VWp[{lt1}]], VP[{lt2}], VWp[{lt3}]}, 
+   {(-I)*g2*Sin[ThetaW], g[lt1, lt2]*(-Mom[conj[VWp[{lt1}]], lt3] + 
+       Mom[VP[{lt2}], lt3]) + g[lt2, lt3]*(-Mom[VP[{lt2}], lt1] + 
+       Mom[VWp[{lt3}], lt1]) + g[lt1, lt3]*(Mom[conj[VWp[{lt1}]], lt2] - 
+       Mom[VWp[{lt3}], lt2])}}, VVV}, 
+ {{{conj[VWp[{lt1}]], VP[{lt2}], VP[{lt3}], VWp[{lt4}]}, 
+   {I*g2^2*Sin[ThetaW]^2, g[lt1, lt2]*g[lt3, lt4]}, 
+   {I*g2^2*Sin[ThetaW]^2, g[lt1, lt3]*g[lt2, lt4]}, 
+   {(-2*I)*g2^2*Sin[ThetaW]^2, g[lt1, lt4]*g[lt2, lt3]}}, VVVV}, 
+ {{{bar[Fd[{gt1, ct1}]], Fd[{gt2, ct2}], VZ[{lt3}]}, 
+   {(I/6)*Delta[ct1, ct2]*Delta[gt1, gt2]*(3*g2*Cos[ThetaW] + 
+      g1*Sin[ThetaW]), LorentzProduct[gamma[lt3], PL]}, 
+   {(-1/3*I)*g1*Delta[ct1, ct2]*Delta[gt1, gt2]*Sin[ThetaW], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[Fe[{gt1}]], Fe[{gt2}], VZ[{lt3}]}, 
+   {(I/2)*Delta[gt1, gt2]*(g2*Cos[ThetaW] - g1*Sin[ThetaW]), 
+    LorentzProduct[gamma[lt3], PL]}, {(-I)*g1*Delta[gt1, gt2]*Sin[ThetaW], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[Fu[{gt1, ct1}]], Fu[{gt2, ct2}], VZ[{lt3}]}, 
+   {(-1/6*I)*Delta[ct1, ct2]*Delta[gt1, gt2]*(3*g2*Cos[ThetaW] - 
+      g1*Sin[ThetaW]), LorentzProduct[gamma[lt3], PL]}, 
+   {((2*I)/3)*g1*Delta[ct1, ct2]*Delta[gt1, gt2]*Sin[ThetaW], 
+    LorentzProduct[gamma[lt3], PR]}}, FFV}, 
+ {{{bar[Fv[{gt1}]], Fv[{gt2}], VZ[{lt3}]}, 
+   {(-1/2*I)*Delta[gt1, gt2]*(g2*Cos[ThetaW] + g1*Sin[ThetaW]), 
+    LorentzProduct[gamma[lt3], PL]}, {0, PR}}, FFV}, 
+ {{{bar[gWp], gWp, VZ[{lt3}]}, {I*g2*Cos[ThetaW], Mom[gWp, lt3]}}, GGV}, 
+ {{{bar[gWpC], gWpC, VZ[{lt3}]}, {(-I)*g2*Cos[ThetaW], Mom[gWpC, lt3]}}, 
+  GGV}, {{{Hp, conj[VWp[{lt2}]], VZ[{lt3}]}, {(-1/2*I)*g1*g2*v*Sin[ThetaW], 
+    g[lt2, lt3]}}, SVV}, {{{conj[VWp[{lt1}]], VWp[{lt2}], VZ[{lt3}]}, 
+   {I*g2*Cos[ThetaW], g[lt1, lt2]*(-Mom[conj[VWp[{lt1}]], lt3] + 
+       Mom[VWp[{lt2}], lt3]) + g[lt2, lt3]*(-Mom[VWp[{lt2}], lt1] + 
+       Mom[VZ[{lt3}], lt1]) + g[lt1, lt3]*(Mom[conj[VWp[{lt1}]], lt2] - 
+       Mom[VZ[{lt3}], lt2])}}, VVV}, 
+ {{{conj[VWp[{lt1}]], VWp[{lt2}], VZ[{lt3}], VZ[{lt4}]}, 
+   {(-2*I)*g2^2*Cos[ThetaW]^2, g[lt1, lt2]*g[lt3, lt4]}, 
+   {I*g2^2*Cos[ThetaW]^2, g[lt1, lt3]*g[lt2, lt4]}, 
+   {I*g2^2*Cos[ThetaW]^2, g[lt1, lt4]*g[lt2, lt3]}}, VVVV}, 
+ {{{bar[Fd[{gt1, ct1}]], Fu[{gt2, ct2}], conj[VWp[{lt3}]]}, 
+   {((-I)*g2*Delta[ct1, ct2]*sum[j1, 1, 3, conj[Vu[gt2, j1]]*Vd[gt1, j1]])/
+     Sqrt[2], LorentzProduct[gamma[lt3], PL]}, {0, PR}}, FFV}, 
+ {{{bar[Fe[{gt1}]], Fv[{gt2}], conj[VWp[{lt3}]]}, 
+   {((-I)*g2*ThetaStep[gt2, 3]*Ve[gt1, gt2])/Sqrt[2], 
+    LorentzProduct[gamma[lt3], PL]}, {0, PR}}, FFV}, 
+ {{{bar[gWpC], gP, conj[VWp[{lt3}]]}, {I*g2*Sin[ThetaW], Mom[gP, lt3]}}, 
+  GGV}, {{{bar[gP], gWp, conj[VWp[{lt3}]]}, {(-I)*g2*Sin[ThetaW], 
+    Mom[gWp, lt3]}}, GGV}, {{{bar[gZ], gWp, conj[VWp[{lt3}]]}, 
+   {(-I)*g2*Cos[ThetaW], Mom[gWp, lt3]}}, GGV}, 
+ {{{bar[gWpC], gZ, conj[VWp[{lt3}]]}, {I*g2*Cos[ThetaW], Mom[gZ, lt3]}}, 
+  GGV}, {{{conj[VWp[{lt1}]], conj[VWp[{lt2}]], VWp[{lt3}], VWp[{lt4}]}, 
+   {(2*I)*g2^2, g[lt1, lt2]*g[lt3, lt4]}, 
+   {(-I)*g2^2, g[lt1, lt3]*g[lt2, lt4]}, 
+   {(-I)*g2^2, g[lt1, lt4]*g[lt2, lt3]}}, VVVV}, 
+ {{{Hp, conj[Hp], VP[{lt3}], VZ[{lt4}]}, 
+   {(I/4)*(2*g1*g2*Cos[2*ThetaW] - (g1^2 - g2^2)*Sin[2*ThetaW]), 
+    g[lt3, lt4]}}, SSVV}, 
+ {{{conj[VWp[{lt1}]], VP[{lt2}], VWp[{lt3}], VZ[{lt4}]}, 
+   {(I/2)*g2^2*Sin[2*ThetaW], g[lt1, lt2]*g[lt3, lt4]}, 
+   {(-I)*g2^2*Sin[2*ThetaW], g[lt1, lt3]*g[lt2, lt4]}, 
+   {(I/2)*g2^2*Sin[2*ThetaW], g[lt1, lt4]*g[lt2, lt3]}}, VVVV}}

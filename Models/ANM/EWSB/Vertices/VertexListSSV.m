@@ -1,0 +1,10 @@
+{{{Ah, hh, VZ[{lt3}]}, {(-(g2*Cos[ThetaW]) - g1*Sin[ThetaW])/2, 
+   Mom[Ah, lt3] - Mom[hh, lt3]}}, {{Ah, Hp, conj[VWp[{lt3}]]}, 
+  {g2/2, Mom[Ah, lt3] - Mom[Hp, lt3]}}, {{Ah, conj[Hp], VWp[{lt3}]}, 
+  {g2/2, Mom[Ah, lt3] - Mom[conj[Hp], lt3]}}, {{hh, Hp, conj[VWp[{lt3}]]}, 
+  {(I/2)*g2, Mom[hh, lt3] - Mom[Hp, lt3]}}, {{hh, conj[Hp], VWp[{lt3}]}, 
+  {(-1/2*I)*g2, Mom[hh, lt3] - Mom[conj[Hp], lt3]}}, 
+ {{Hp, conj[Hp], VP[{lt3}]}, {(-1/2*I)*(g1*Cos[ThetaW] + g2*Sin[ThetaW]), 
+   Mom[Hp, lt3] - Mom[conj[Hp], lt3]}}, {{Hp, conj[Hp], VZ[{lt3}]}, 
+  {(-1/2*I)*(g2*Cos[ThetaW] - g1*Sin[ThetaW]), 
+   Mom[Hp, lt3] - Mom[conj[Hp], lt3]}}}

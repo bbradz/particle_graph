@@ -1,0 +1,12 @@
+{
+    "m_W": {
+        "LHA_loc": ["Block", "MASS", "24"], 
+        "measured": 80.447, 
+        "sigma": 0.042
+    },
+    "delta_rho": {
+        "LHA_loc": ["Block", "SPhenoLowEnergy", "39"], 
+        "measured": 0.0064, 
+        "sigma": 0.0018
+    }
+}
