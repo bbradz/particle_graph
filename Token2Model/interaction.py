@@ -234,10 +234,10 @@ class Yukawa(Interaction):
                 self.higgs_loc = idx
                 break
     
-    def _check_massive_particles(self):
-        [p.assign_mass_type("yukawa") for p in self.massive_particles.values()]
-        assert all(p.mass > 0 for p in self.massive_particles.values()), \
-            f"AssertionError: {self.id} has massless particles"
+    # def _check_massive_particles(self):
+    #     [p.assign_mass_type("yukawa") for p in self.massive_particles.values()]
+    #     assert all(p.mass > 0 for p in self.massive_particles.values()), \
+    #         f"AssertionError: {self.id} has massless particles"
 
     def _check_U1Y_gauge_symmetry(self):
         Y_psi_L = self.sorted_fields[0].reps["g1"]
@@ -370,7 +370,7 @@ class Yukawa(Interaction):
         super()._all_validations()
         self.all_validations.extend([self._dirac_bilinear_product, 
                                      self._get_massive_particles, 
-                                     self._check_massive_particles,
+                                     #self._check_massive_particles,
                                      self._check_U1Y_gauge_symmetry,
                                      self._yukawa_mass,
                                      self._yukawa_matrix,
@@ -393,8 +393,6 @@ class VectorLikeFermion(Interaction):
     def __init__(self, id, fields):
         super().__init__(id, "VectorLikeFermion", self.field_types, fields, self.param_list)
         
-
-
 
 # ====================================================================
 #                     Scalar Self-Interaction

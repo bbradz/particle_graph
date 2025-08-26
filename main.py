@@ -1,22 +1,35 @@
 from Token2Model.model import Model
 from CalcObs.observables import ObservableCalc
 
-model_name = "A A New Model"
-author = "Cooper"
-json_path = "SM_test.json"
-output_path = "Models"
-obv_list_path = "obs_list.json"
+MODEL_NAME = "Test New Model"
+AUTHOR = "Cooper"
+JSON_PATH = "/users/qniu3/physics/RL_builder-2.0/SM_test.json"
+MODEL_BASE_PATH = "/users/qniu3/physics/RL_builder-2.0/Models"
+OBS_LIST_PATH = "/users/qniu3/physics/RL_builder-2.0/obs_list.json"
+SARAH_PATH = "/users/qniu3/physics/SARAH-4.15.4"
+SPHENO_PATH = "/users/qniu3/physics/SPheno-4.0.5"
 
 
-model = Model(model_name, author, json_path, output_path)
+model = Model(MODEL_NAME, AUTHOR, JSON_PATH, MODEL_BASE_PATH, simplify_checklist = True)
+print(model.model_name)
 print(model.model_symbol)
 print(model.score)
 model.write_model()
 model.write_checklist()
 
-# sarah = ObservableCalc("AANM", model_base = "Models", obv_list_path = obv_list_path, keep_log = False)
-# # sarah.run_sarah()
-# # sarah.compile_spheno()
-# # sarah.run_spheno()
-# #sarah.minimize_chi2()
-# sarah.make_plot()
+
+#module load mathematica 
+sarah = ObservableCalc(model.model_symbol, 
+                       model_base = MODEL_BASE_PATH, 
+                       obs_list_path = OBS_LIST_PATH, 
+                       keep_log = True, 
+                       sarah_path = SARAH_PATH, 
+                       spheno_path = SPHENO_PATH,
+                       sigma_threshold = 2
+                       )
+sarah.run_sarah()
+sarah.compile_spheno()
+sarah.run_spheno()
+sarah.minimize_chi2()
+chi2_result = sarah.chi2_result
+print(chi2_result)

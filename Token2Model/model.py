@@ -21,7 +21,8 @@ class Model:
     """
     def __init__(self, model_name, author, JSON_PATH, OUTPUT_PATH, 
                  sm_particles_json = "sm_particles.json", 
-                 sm_parameters_json = "sm_parameters.json"):
+                 sm_parameters_json = "sm_parameters.json",
+                 simplify_checklist = True):
         self.model_name = model_name
         self.model_symbol = ''.join(word[0].upper() for word in self.model_name.split() if word)
         self.author = author
@@ -39,6 +40,7 @@ class Model:
 
         self.sm_particles_json = os.path.join(os.path.dirname(__file__), sm_particles_json)
         self.sm_parameters_json = os.path.join(os.path.dirname(__file__), sm_parameters_json)
+        self.simplify_checklist = simplify_checklist
 
         self.free_params = {}
         self.checklist = {}
@@ -93,13 +95,13 @@ class Model:
 
             if p["type"] == "fermion":
                 p.pop("type")
-                self.fermion_particles[p["id"]] = Fermion(**p)
+                self.fermion_particles[p["id"]] = Fermion(**p, simplify_checklist = self.simplify_checklist)
             elif p["type"] == "real":
                 p.pop("type")
-                self.scalar_particles[p["id"]] = RealScalar(**p)
+                self.scalar_particles[p["id"]] = RealScalar(**p, simplify_checklist = self.simplify_checklist)
             elif p["type"] == "complex":
                 p.pop("type")
-                self.scalar_particles[p["id"]] = ComplexScalar(**p)
+                self.scalar_particles[p["id"]] = ComplexScalar(**p, simplify_checklist = self.simplify_checklist)
             else:
                 type = p["type"]
                 print(f"invalid field type {type}")
@@ -122,7 +124,7 @@ class Model:
                 sf.pop('chirality')
                 sf["groups"] = self.gauge_groups
                 sf["particles"] = scalar_list
-                new_scalar_field = ScalarField(**sf)
+                new_scalar_field = ScalarField(**sf, simplify_checklist = self.simplify_checklist)
                 self.scalar_fields[sf["id"]] = new_scalar_field
 
     def _read_vector_fields(self, model_data):
@@ -150,8 +152,7 @@ class Model:
                 ff["groups"] = self.gauge_groups
                 ff["particles"] = weyl_list
                 ff.pop('type')
-                new_fermion_field = FermionField(**ff)
-                #new_fermion_field.__validate__()
+                new_fermion_field = FermionField(**ff, simplify_checklist = self.simplify_checklist)
                 self.fermion_fields[ff["id"]] = new_fermion_field
 
         try:        

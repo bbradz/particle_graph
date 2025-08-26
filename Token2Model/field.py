@@ -26,7 +26,7 @@ class Field:
     particles: list of Particle
     self_conjugate: bool
     """
-    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate):
+    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate, simplify_checklist):
         self.id = id
         self.name = name
         self.type = type
@@ -36,6 +36,7 @@ class Field:
         self.gen = gen
         self.particles = particles
         self.self_conjugate = self_conjugate
+        self.simplify_checklist = simplify_checklist
         self.full_reps = {}
         self.is_massive = False
         self.mass_type = None
@@ -143,6 +144,7 @@ class Field:
                 assert self.gen == 1, \
                     f"Error: Non-fermion fields can have only one generation"
 
+        # Sort reps
         def _sort_reps():
             rep_dict = {}
             self.allow_dim = [1]
@@ -158,6 +160,7 @@ class Field:
             self.full_reps = rep_dict
             self.allow_dim = list(set(self.allow_dim))
 
+        # Check reps and dim consistency
         def _check_reps_dim_consistency():          
             assert self.dim in self.allow_dim, \
                 f"Error: {self.name} with dim-{self.dim} is not in allowed dims: {self.allow_dim}"
@@ -167,13 +170,27 @@ class Field:
 
             assert len(self.allow_dim) == 1 and self.allow_dim[0] == 1, \
                 f"Error: {self.name} with dim-{self.dim} is not in allowed dims: {self.allow_dim}"
-            
-        def _sort_particle_ordering():
-            charge_eigenvec = {}
+        
+        def _allowed_charge():
+            if self.reps["g2"] == "singlet":
+                T3 = [0]
+            elif self.reps["g2"] == "fnd":
+                T3 = [1/2, -1/2]
+            elif self.reps["g2"] == "adj":
+                T3 = [1, 0, -1]
+            Y = self.reps["g1"]/6
+            Q = np.array(T3) + Y
+            Q = Q*3
+            self.allowed_Q = -Q if self.chirality == "right" else Q
 
+        # Sort particle ordering
+        def _sort_particle_ordering():
+            charge_eigenvec = {q: [] for q in self.allowed_Q}
+            
             for p in self.particles:
                 if p.charge not in charge_eigenvec:
-                    charge_eigenvec[p.charge] = [p]
+                    print(self.allowed_Q)
+                    print(p.charge, p.name)
                 else:
                     charge_eigenvec[p.charge].append(p)
             
@@ -187,25 +204,33 @@ class Field:
                 f"Error: {self.name} has {len(charge_eigenval)} charges, but {self.gen} generations are required."
             
             self._unphy_fields = np.column_stack([charge_eigenvec[charge] for charge in charge_eigenval])
-
             self._phy_fields = np.array(self._unphy_fields).transpose().tolist()
-            print(self._phy_fields)
 
-        self.all_checks = [_id_check, 
-                           _name_check, 
-                           _type_check, 
-                           _groups_check, 
-                           _reps_check, 
-                           _dim_check, 
-                           _gen_check, 
-                           _particles_check, 
-                           _self_conjugate_check, 
-                           _ptcl_check, 
-                           _check_gen_type_consistency,
-                           _sort_reps,
-                           _check_reps_dim_consistency,
-                           _sort_particle_ordering
-                           ]
+        if self.simplify_checklist:
+            self.all_checks = [_ptcl_check, 
+                               _check_gen_type_consistency,
+                               _sort_reps,
+                               _check_reps_dim_consistency,
+                               _allowed_charge,
+                               _sort_particle_ordering
+                               ]
+        else:
+            self.all_checks = [_id_check, 
+                               _name_check, 
+                               _type_check, 
+                               _groups_check, 
+                               _reps_check, 
+                               _dim_check, 
+                               _gen_check, 
+                               _particles_check, 
+                               _self_conjugate_check, 
+                               _ptcl_check, 
+                               _check_gen_type_consistency,
+                               _sort_reps,
+                               _check_reps_dim_consistency,
+                               _allowed_charge,
+                               _sort_particle_ordering
+                               ]
 
     def __check__(self):
         """ Input checks for the field class. """
@@ -245,12 +270,12 @@ class FermionField(Field):
     self_conjugate: bool
     chirality: str
     """
-    def __init__(self, id, name, groups, reps, dim, gen, particles, self_conjugate, chirality):
+    def __init__(self, id, name, groups, reps, dim, gen, particles, self_conjugate, chirality, simplify_checklist):
         self.chirality = chirality
         self._unphy_fields = None
         self._phy_fields = None
         self.color = 1
-        super().__init__(id, name, "fermion", groups, reps, dim, gen, particles, self_conjugate)
+        super().__init__(id, name, "fermion", groups, reps, dim, gen, particles, self_conjugate, simplify_checklist)
         
 
     def __dict__(self):
@@ -380,11 +405,13 @@ class FermionField(Field):
 #                            Scalar Field
 # ====================================================================
 class ScalarField(Field):
-    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate):
-        super().__init__(id, name, type, groups, reps, dim, gen, particles, self_conjugate)
+    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate, simplify_checklist):
+        self.chirality = None
+        super().__init__(id, name, type, groups, reps, dim, gen, particles, self_conjugate, simplify_checklist)
         self.potential = None
         self.vev = None
         self.get_vev = False
+        
 
     def _all_validations(self):
         super()._all_validations()
@@ -409,8 +436,8 @@ class ScalarField(Field):
 #                            Vector Fields
 # ====================================================================
 class VectorField(Field):
-    def __init__(self, id, name, groups, reps, dim, gen, particles, self_conjugate):
-        super().__init__(id, name, "vector", groups, reps, dim, gen, particles, self_conjugate)
+    def __init__(self, id, name, groups, reps, dim, gen, particles, self_conjugate, simplify_checklist):
+        super().__init__(id, name, "vector", groups, reps, dim, gen, particles, self_conjugate, simplify_checklist)
         self.__check__()
 
     def __check__(self):

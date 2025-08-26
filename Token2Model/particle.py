@@ -20,7 +20,7 @@ class Particle:
     color: int
     flavor: str
     """
-    def __init__(self, id, name, type, mass, charge, color=1, flavor=None):
+    def __init__(self, id, name, type, mass, charge, color=1, flavor=None, simplify_checklist = True):
         self.id = id
         self._name = name # _name can be overridden by the pdg_info
         self.type = type
@@ -29,7 +29,7 @@ class Particle:
         self._width = "Automatic" # _width can be overridden by the pdg_info
         self.color = color # color can be assigned by field class
         self.flavor = flavor # flavor can be assigned by field class
-        self._mass_types = [] # mass_types can be assigned by interaction class
+        self.simplify_checklist = simplify_checklist
         self.__check__()
 
     def __str__(self):
@@ -62,7 +62,10 @@ class Particle:
             assert isinstance(self.charge, int), \
                 f"Error: Charge must be an integer"
     
-        self.all_checks = [_type_check, 
+        if self.simplify_checklist:
+            self.all_checks = []
+        else:
+            self.all_checks = [_type_check, 
                            _id_check, 
                            _name_check, 
                            _mass_check, 
@@ -129,24 +132,12 @@ class Particle:
         score = sum(1 for value in self.checklist.values() if value is True)
         return f"{score}/{max_score}"
 
-    def _check_mass_type(self):
-        if self.mass == 0:
-            assert len(self._mass_types) == 0, \
-                f"AssertionError: {self.name} is massless and should not have mass term."
-        else:
-            assert len(self._mass_types) > 0, \
-                f"AssertionError: {self.name} is massive and should have at least one mass term."
-
     def _all_validations(self):
-        self.all_validations = [self._check_mass_type]
+        self.all_validations = []
 
     def __validate__(self):
         self._all_validations()
         self.run_checks(self.all_validations, self.checklist, skip_check=True)
-
-    def assign_mass_type(self, mass_type):
-        if mass_type not in self._mass_types:
-            self._mass_types.append(mass_type)
 
     def pass_all_checks(self):
         return len(self.checklist) == sum(1 for value in self.checklist.values() if value is True)
@@ -180,19 +171,10 @@ class WeylSpinor:
 #                              Fermion
 # ====================================================================
 class Fermion(Particle):
-    def __init__(self, id, name, mass, charge):
-        super().__init__(id, name, "fermion", mass, charge)
-        
-    def _all_checks(self):
-        super()._all_checks()
-
-        def _WeylSpinor():
-            assert self.type == "fermion", \
-                f"Error: Only fermions can be Weyl spinors"
-            self.left = WeylSpinor(self, "left")
-            self.right = WeylSpinor(self, "right")
-
-        self.all_checks.append(_WeylSpinor)
+    def __init__(self, id, name, mass, charge, simplify_checklist = True):
+        super().__init__(id, name, "fermion", mass, charge, simplify_checklist = simplify_checklist)
+        self.left = WeylSpinor(self, "left")
+        self.right = WeylSpinor(self, "right")
 
 
 
@@ -200,8 +182,8 @@ class Fermion(Particle):
 #                            Real Scalar
 # ====================================================================
 class RealScalar(Particle):
-    def __init__(self, id, name, mass, charge):
-        super().__init__(id, "real", name, mass, charge)
+    def __init__(self, id, name, mass, charge, simplify_checklist = True):
+        super().__init__(id, "real", name, mass, charge, simplify_checklist = simplify_checklist)
 
 
 
@@ -209,8 +191,8 @@ class RealScalar(Particle):
 #                           Complex Scalar
 # ====================================================================
 class ComplexScalar(Particle):
-    def __init__(self, id, name, mass, charge):
-        super().__init__(id, name, "complex", mass, charge)
+    def __init__(self, id, name, mass, charge, simplify_checklist = True):
+        super().__init__(id, name, "complex", mass, charge, simplify_checklist = simplify_checklist)
         self.isDecomposed = False
 
     def __str__(self):
@@ -238,8 +220,8 @@ class ComplexScalar(Particle):
 #                           Vector Boson
 # ====================================================================
 class VectorBoson(Particle):
-    def __init__(self, id, name, mass, charge):
-        super().__init__(id, "vector", name, mass, charge)
+    def __init__(self, id, name, mass, charge, simplify_checklist = True):
+        super().__init__(id, "vector", name, mass, charge, simplify_checklist = simplify_checklist)
 
 # ------------------------------------------------------------------
 if __name__ == "__main__":

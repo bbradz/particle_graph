@@ -20,19 +20,25 @@ class ObservableCalc:
                  model_base= "./Models",
                  sarah_path= "../SARAH-4.15.4", 
                  spheno_path= "../SPheno-4.0.5",
-                 obv_list_path = None,
+                 obs_list_path = None,
                  timeout = 1,
+                 sigma_threshold = 3,
                  keep_log = True,
                  loop_mass = True,
-                 include_tachyon = False,
-                 calc_decays = False
+                 include_tachyon = True,
+                 calc_decays = False,
+                 mass_precision = 1e-6,
+                 three_body_decays = False,
+                 higgs_bounds = False,
+                 eft_higgs_coupling = False,
+                 diphoton_width = False
                  ):
         self.MODEL_NAME = model_name
         self.MODEL_BASE = os.path.abspath(model_base)
         self.MODEL_PATH = os.path.join(model_base, model_name)
         self.SARAH_PATH = os.path.abspath(sarah_path)
         self.SPHENO_PATH = os.path.abspath(spheno_path)
-        self.OBV_LIST_PATH = os.path.abspath(obv_list_path)
+        self.OBS_LIST_PATH = os.path.abspath(obs_list_path)
         self.free_params_path = os.path.join(self.MODEL_PATH, "free_params.json")
         self.calc_spheno_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "calc_spheno.m")
         self.input_path = os.path.join(self.MODEL_PATH, "EWSB", "SPheno", "Input_Files", f"LesHouches.in.{self.MODEL_NAME}")
@@ -40,6 +46,7 @@ class ObservableCalc:
         os.makedirs(self.output_path, exist_ok = True)
 
         self.N_CPU_CORES = multiprocessing.cpu_count()
+        self.sigma_threshold = sigma_threshold
 
         self.pre_check()
         self.timeout = timeout
@@ -47,6 +54,11 @@ class ObservableCalc:
         self.loop_mass = loop_mass
         self.include_tachyon = include_tachyon
         self.calc_decays = calc_decays
+        self.mass_precision = mass_precision
+        self.three_body_decays = three_body_decays
+        self.higgs_bounds = higgs_bounds
+        self.eft_higgs_coupling = eft_higgs_coupling
+        self.diphoton_width = diphoton_width
 
     def pre_check(self):
         # Check if SPheno.m, parameters.m, and particles.m exist in the model path
@@ -70,10 +82,10 @@ class ObservableCalc:
             self.pass_pre_check = False
 
         try:
-            with open(self.OBV_LIST_PATH, "r") as f:
-                self.obv_list = json.load(f)
+            with open(self.OBS_LIST_PATH, "r") as f:
+                self.obs_list = json.load(f)
         except:
-            self.obv_list = {}
+            self.obs_list = {}
             print("No observable list file found.")
             self.pass_pre_check = False
         
@@ -158,6 +170,16 @@ class ObservableCalc:
                     line = f" {key} {1 if self.include_tachyon else 0}  #{comment}"
                 elif key == "55":
                     line = f" {key} {1 if self.loop_mass else 0}  #{comment}"
+                elif key == "34":
+                    line = f" {key} {self.mass_precision}  #{comment}"
+                elif key == "13":
+                    line = f" {key} {1 if self.three_body_decays else 0}  #{comment}"
+                elif key == "76":
+                    line = f" {key} {2 if self.higgs_bounds else 0}  #{comment}"
+                elif key == "520":
+                    line = f" {key} {1 if self.eft_higgs_coupling else 0}  #{comment}"
+                elif key == "521":
+                    line = f" {key} {1 if self.diphoton_width else 0}  #{comment}"
                 else:
                     pass
             elif current_block == "DECAYOPTIONS":
@@ -248,7 +270,7 @@ class ObservableCalc:
         return blocks, decays, decays1l
     
 
-    def compute_obv(self, args):
+    def compute_obs(self, args):
         assert len(args) == self.num_params, "Number of parameters does not match"
         input_param = {}
         for i, (key, value) in enumerate(self.free_params.items()):
@@ -266,19 +288,19 @@ class ObservableCalc:
         if not self.keep_log:
             subprocess.run(f"rm {self.spheno_out}", shell=True)
         
-        if self.obv_list is None:
+        if self.obs_list is None:
             print("No observable list provided. Return all.")
             return blocks, decays, decays1l
 
-        obvs = {} 
-        for obv, loc in self.obv_list.items():
+        obss = {} 
+        for obs, loc in self.obs_list.items():
             if loc["LHA_loc"][0] == "Block":
-                obvs[obv] = blocks[loc["LHA_loc"][1]][loc["LHA_loc"][2]]
+                obss[obs] = blocks[loc["LHA_loc"][1]][loc["LHA_loc"][2]]
             elif loc["LHA_loc"][0] == "DECAY":
-                obvs[obv] = decays[loc["LHA_loc"][1]][loc["LHA_loc"][2]]
+                obss[obs] = decays[loc["LHA_loc"][1]][loc["LHA_loc"][2]]
             elif loc["LHA_loc"][0] == "DECAY1L":
-                obvs[obv] = decays1l[loc["LHA_loc"][1]][loc["LHA_loc"][2]]
-        return obvs
+                obss[obs] = decays1l[loc["LHA_loc"][1]][loc["LHA_loc"][2]]
+        return obss
     
 
 
@@ -287,19 +309,25 @@ class ObservableCalc:
     # ------------------------------------------------------------
     def chi2(self, params):
         """chi-squared function"""
-        predicted_value = self.compute_obv(params)
+
+        all_obs = list(self.obs_list.keys())
+        chi2_dict = {obs: 1e4 for obs in all_obs}
+        chi2_dict["total"] = sum(chi2_dict.values())
+
+        predicted_value = self.compute_obs(params)
         if predicted_value is None:
-            return 1e4
-        chi2 = 0
-        sub_chi2 = []
-        for obv, measured_value in self.obv_list.items():
-            sub_chi2.append((float(predicted_value[obv]) - float(measured_value["measured"]))**2 / float(measured_value["sigma"])**2)
-        chi2 = sum(sub_chi2)
-        return chi2, sub_chi2
+            return chi2_dict
+        
+        chi2_dict["total"] = 0
+        for obs, measured_value in self.obs_list.items():
+            chi2_dict[obs] = (float(predicted_value[obs]) - float(measured_value["measured"]))**2 / float(measured_value["sigma"])**2
+        chi2_dict["total"] = sum(chi2_dict.values())
+        return chi2_dict
 
     def log_likelihood(self, params):
         """log-likelihood function"""
-        return -0.5 * self.chi2(params)
+        chi2_dict = self.chi2(params)
+        return -0.5 * chi2_dict["total"]
     
     def log_prior(self, params):
         """log-prior function"""
@@ -313,13 +341,14 @@ class ObservableCalc:
         """log-probability function"""
         return self.log_prior(params) + self.log_likelihood(params)
     
-    def confidence_level(self, n_sigma = 3):
+    def confidence_level(self, n_sigma):
         """confidence level of the chi-squared distribution"""
         return stats.norm.cdf(n_sigma) - stats.norm.cdf(-n_sigma)
 
-    def chi2_threshold(self, n_dof, n_sigma = 3):
+    def chi2_threshold(self):
         """threshold of the chi-squared distribution"""
-        return stats.chi2.ppf(self.confidence_level(n_sigma), n_dof)
+        df = self.num_params
+        return stats.chi2.ppf(self.confidence_level(self.sigma_threshold), df)
 
     def generate_initial_conditions(self, n_minimizers, method = "latin_hypercube"):
         """generate initial conditions for the minimizers"""
@@ -337,45 +366,57 @@ class ObservableCalc:
             samples[:, index] = low + samples[:, index] * (high - low)
         return samples
     
-    def minimize_chi2(self, maxiter = 10, seed = 42):
+    def minimize_chi2(self, maxiter = 10, popsize = 5, seed = 42):
         """minimize the chi-squared function"""
 
         self.keep_log = False
-
         chi2_history = []
-        sub_chi2_history = []
         params_history = []
 
+        class EarlyStopException(Exception):
+            pass
+        
         def tracked_chi2(params):
-            chi2, sub_chi2 = self.chi2(params)
-            chi2_history.append(chi2)
-            sub_chi2_history.append(sub_chi2)
+            chi2_dict = self.chi2(params)
+            chi2_history.append(chi2_dict)
             params_history.append(params)
-            return chi2
-  
+            print(f"tracked_chi2 called {len(chi2_history)} times, chi2 = {chi2_dict['total']}")
+
+            # Early stopping condition
+            if chi2_dict["total"] < self.chi2_threshold():
+                raise EarlyStopException("chi2 below threshold")
+
+            return chi2_dict["total"]
+        
         bounds = list(map(tuple, self.free_params.values()))
-        result = differential_evolution(tracked_chi2, 
-                                        popsize = 5,
-                                        bounds = bounds, 
-                                        maxiter = maxiter,
-                                        seed = seed
-                                        )
+        try:
+            result = differential_evolution(tracked_chi2, 
+                                            popsize = popsize,
+                                            bounds = bounds, 
+                                            maxiter = maxiter,
+                                            seed = seed
+                                            )
+            print(f"Minimized chi2: {result.fun}")
+            print(f"Minimized parameters: {result.x}")
+        except EarlyStopException as e:
+            result = {"fun": chi2_history[-1]["total"], "x": params_history[-1]}
+            print(f"Early stop: {e}")
+            print(f"Minimized chi2: {result['fun']}")
+            print(f"Minimized parameters: {result['x']}")
 
         chi2_history = np.array(chi2_history)
         params_history = np.array(params_history)
-        sub_chi2_history = np.array(sub_chi2_history)
         np.savez(os.path.join(self.output_path, "chi2_data.npz"), 
                  chi2_history = chi2_history, 
-                 sub_chi2_history = sub_chi2_history,
                  params_history = params_history)
-        print(f"Minimized chi2: {result.fun}")
-        print(f"Minimized parameters: {result.x}")
-        return result
+
+        self.chi2_result = result
 
     def make_plot(self):
         chi2_data = np.load(os.path.join(self.output_path, "chi2_data.npz"))
         chi2_history = chi2_data["chi2_history"]
         params_history = chi2_data["params_history"]
+
         for i in range(self.num_params):
             plt.figure()
             plt.scatter(params_history[:, i], chi2_history, label=list(self.free_params.keys())[i])
