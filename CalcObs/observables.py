@@ -44,6 +44,7 @@ class ObservableCalc:
         self.input_path = os.path.join(self.MODEL_PATH, "EWSB", "SPheno", "Input_Files", f"LesHouches.in.{self.MODEL_NAME}")
         self.output_path = os.path.join(self.MODEL_PATH, "Results")
         os.makedirs(self.output_path, exist_ok = True)
+        
 
         self.N_CPU_CORES = multiprocessing.cpu_count()
         self.sigma_threshold = sigma_threshold
@@ -92,9 +93,11 @@ class ObservableCalc:
         try:
             with open(self.free_params_path, "r") as f:
                 self.free_params = json.load(f)
+            self.free_param_keys = list(self.free_params.keys())
             self.num_params = len(self.free_params)
         except:
             self.free_params = {}
+            self.free_param_keys = []
             print("No parameter range file found.")
             self.pass_pre_check = False
 
@@ -404,27 +407,64 @@ class ObservableCalc:
             print(f"Minimized chi2: {result['fun']}")
             print(f"Minimized parameters: {result['x']}")
 
-        chi2_history = np.array(chi2_history)
-        params_history = np.array(params_history)
-        np.savez(os.path.join(self.output_path, "chi2_data.npz"), 
-                 chi2_history = chi2_history, 
-                 params_history = params_history)
+        # Store all chi2 values (total and individual observables)
+        chi2_total = np.array([d["total"] for d in chi2_history])
+        
+        # Get all observable names from the first chi2_dict
+        if chi2_history:
+            obs_names = [key for key in chi2_history[0].keys() if key != "total"]
+            chi2_obs = {}
+            for obs_name in obs_names:
+                chi2_obs[obs_name] = np.array([d[obs_name] for d in chi2_history])
+
+        # Convert params_history to numpy arrays for each parameter
+        params_history_arrays = {}
+        for i, key in enumerate(self.free_param_keys):
+            params_history_arrays[key] = np.array([params[i] for params in params_history])
+
+        # Save all data
+        save_dict = {
+            "chi2_total": chi2_total,
+            **chi2_obs,
+            **params_history_arrays
+        }
+        np.savez(os.path.join(self.output_path, "chi2_data.npz"), **save_dict)
 
         self.chi2_result = result
 
     def make_plot(self):
         chi2_data = np.load(os.path.join(self.output_path, "chi2_data.npz"))
-        chi2_history = chi2_data["chi2_history"]
-        params_history = chi2_data["params_history"]
+        chi2_total = chi2_data["chi2_total"]
+        
+        # Get the parameter arrays from the NPZ file
+        params_history = {}
+        for param_name in self.free_param_keys:
+            params_history[param_name] = chi2_data[param_name]
 
-        for i in range(self.num_params):
+        plt.figure()
+        for obs_name in self.obs_list.keys():
+            plt.plot(range(len(chi2_total)), chi2_data[obs_name], marker='o', label=obs_name)
+        plt.plot(range(len(chi2_total)), chi2_total, marker='o', label="total")
+        plt.xlabel("Iteration")
+        plt.ylabel("chi2")
+        plt.title("chi2 vs Iteration")
+        plt.ylim(0.01, 1000)
+        plt.yscale("log")
+        plt.legend()
+        plt.savefig(os.path.join(self.output_path, "chi2_history.png"))
+        plt.close()
+
+        for param_name in self.free_param_keys:
             plt.figure()
-            plt.scatter(params_history[:, i], chi2_history, label=list(self.free_params.keys())[i])
-            plt.xlabel(list(self.free_params.keys())[i])
+            for obs_name in self.obs_list.keys():
+                plt.scatter(params_history[param_name], chi2_data[obs_name], label=obs_name)
+            plt.scatter(params_history[param_name], chi2_total, label="total")
+            plt.xlabel(param_name)
             plt.ylabel("chi2")
-            plt.ylim(0, 100)
+            plt.ylim(0.01, 1000)
+            plt.yscale("log")
             plt.legend()
-            plt.savefig(os.path.join(self.output_path, f"chi2_plot_{list(self.free_params.keys())[i]}.png"))
+            plt.savefig(os.path.join(self.output_path, f"chi2_plot_{param_name}.png"))
             plt.close()
 
     # ------------------------------------------------------------

@@ -19,17 +19,20 @@ model.write_checklist()
 
 
 #module load mathematica 
-sarah = ObservableCalc(model.model_symbol, 
+sarah = ObservableCalc("TNM", 
                        model_base = MODEL_BASE_PATH, 
                        obs_list_path = OBS_LIST_PATH, 
                        keep_log = True, 
                        sarah_path = SARAH_PATH, 
                        spheno_path = SPHENO_PATH,
-                       sigma_threshold = 2
+                       sigma_threshold = 1,
+                       include_tachyon = False
                        )
+
 sarah.run_sarah()
 sarah.compile_spheno()
 sarah.run_spheno()
 sarah.minimize_chi2()
 chi2_result = sarah.chi2_result
 print(chi2_result)
+sarah.make_plot()
