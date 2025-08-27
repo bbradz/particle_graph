@@ -11,7 +11,6 @@ m1, _sort_reps, True
 m1, _check_reps_dim_consistency, True
 m1, _allowed_charge, True
 m1, _sort_particle_ordering, True
-m1, _chirality_check, True
 m1, _assign_colors, True
 m2, _ptcl_check, True
 m2, _check_gen_type_consistency, True
@@ -19,7 +18,6 @@ m2, _sort_reps, True
 m2, _check_reps_dim_consistency, True
 m2, _allowed_charge, True
 m2, _sort_particle_ordering, True
-m2, _chirality_check, True
 m2, _assign_colors, True
 m3, _ptcl_check, True
 m3, _check_gen_type_consistency, True
@@ -27,7 +25,6 @@ m3, _sort_reps, True
 m3, _check_reps_dim_consistency, True
 m3, _allowed_charge, True
 m3, _sort_particle_ordering, True
-m3, _chirality_check, True
 m3, _assign_colors, True
 m4, _ptcl_check, True
 m4, _check_gen_type_consistency, True
@@ -35,7 +32,6 @@ m4, _sort_reps, True
 m4, _check_reps_dim_consistency, True
 m4, _allowed_charge, True
 m4, _sort_particle_ordering, True
-m4, _chirality_check, True
 m4, _assign_colors, True
 m5, _ptcl_check, True
 m5, _check_gen_type_consistency, True
@@ -43,7 +39,6 @@ m5, _sort_reps, True
 m5, _check_reps_dim_consistency, True
 m5, _allowed_charge, True
 m5, _sort_particle_ordering, True
-m5, _chirality_check, True
 m5, _assign_colors, True
 i1, _id_check, True
 i1, _field_length_check, True

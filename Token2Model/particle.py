@@ -3,6 +3,7 @@
 ###                           Particles Classes                                ###
 ###                                                                            ###
 ### ========================================================================== ###
+from .check import run_checks
 
 allowed_particle_types = ["scalar", "real", "pseudo", "complex", "fermion", "vector"]
 
@@ -43,24 +44,44 @@ class Particle:
         self.all_checks = []
         
         def _type_check():
-            assert self.type in allowed_particle_types, \
-                f"Error: Type must be one of {allowed_particle_types}"
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if self.type not in allowed_particle_types:
+                error_var = ["type"]
+                message = f"Type must be one of {allowed_particle_types}"
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
 
         def _id_check():
-            assert isinstance(self.id, str), \
-                f"Error: ID must be a string"
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if not isinstance(self.id, str):
+                error_var = ["id"]
+                message = f"ID must be a string"
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
 
         def _name_check():
-            assert isinstance(self.name, str), \
-                f"Error: Name must be a string"
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if not isinstance(self.name, str):
+                error_var = ["name"]
+                message = f"Name must be a string"
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
 
         def _mass_check():
-            assert (isinstance(self.mass, float) or isinstance(self.mass, int)) and self.mass >= 0, \
-                f"Error: Mass must be a number and non-negative"
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if not (isinstance(self.mass, float) or isinstance(self.mass, int)) or self.mass < 0:
+                error_var = ["mass"]
+                message = f"Mass must be a number and non-negative"
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
 
         def _charge_check():
-            assert isinstance(self.charge, int), \
-                f"Error: Charge must be an integer"
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if not isinstance(self.charge, int):
+                error_var = ["charge"]
+                message = f"Charge must be an integer"
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
     
         if self.simplify_checklist:
             self.all_checks = []
@@ -71,24 +92,24 @@ class Particle:
                            _mass_check, 
                            _charge_check]
         
-    @staticmethod
-    def run_checks(all_checks, checklist, skip_check = False):
-        for check in all_checks:
-            fail_previous_check = any(isinstance(value, Exception) or value == False for value in checklist.values())
-            if skip_check and fail_previous_check:
-                checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
-            else:
-                try:
-                    check()
-                    checklist[check.__name__] = True
-                except Exception as e:
-                    checklist[check.__name__] = e
+    # @staticmethod
+    # def run_checks(all_checks, checklist, skip_check = False):
+    #     for check in all_checks:
+    #         fail_previous_check = any(isinstance(value, Exception) or value == False for value in checklist.values())
+    #         if skip_check and fail_previous_check:
+    #             checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
+    #         else:
+    #             try:
+    #                 check()
+    #                 checklist[check.__name__] = True
+    #             except Exception as e:
+    #                 checklist[check.__name__] = e
 
     def __check__(self):
         """ Input checks for the particle class. """
         self.checklist = {}
         self._all_checks()
-        self.run_checks(self.all_checks, self.checklist)
+        run_checks(self.all_checks, self.checklist)
 
     @property
     def spin(self):
@@ -129,7 +150,7 @@ class Particle:
     @property
     def score(self):
         max_score = len(self.checklist)
-        score = sum(1 for value in self.checklist.values() if value is True)
+        score = sum(value["score"] for value in self.checklist.values())
         return f"{score}/{max_score}"
 
     def _all_validations(self):
@@ -137,10 +158,12 @@ class Particle:
 
     def __validate__(self):
         self._all_validations()
-        self.run_checks(self.all_validations, self.checklist, skip_check=True)
+        run_checks(self.all_validations, self.checklist, skip_results=True)
 
     def pass_all_checks(self):
-        return len(self.checklist) == sum(1 for value in self.checklist.values() if value is True)
+        score, max_score = self.score.split("/")
+        return float(score) == float(max_score)
+        #return len(self.checklist) == sum(1 for value in self.checklist.values() if value is True)
 
 # ====================================================================
 #                              WeylSpinor

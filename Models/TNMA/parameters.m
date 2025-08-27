@@ -129,20 +129,9 @@ ParameterDefinitions = {
            DependenceSPheno -> None,
            DependenceOptional -> None,
            Real -> True,
-           Value -> 410.58429780607236,
+           Value -> 377.1567470615789,
            LesHouches -> Mt,
            LaTeX -> "m_t"}},
-
-    {\[Lambda], {Description -> "SM Higgs Selfcouplings",
-           OutputName -> LambdaVari4,
-           Dependence -> None,
-           DependenceNum -> Mass[hh]^2/v^2,
-           DependenceSPheno -> None,
-           DependenceOptional -> None,
-           Real -> True,
-           Value -> 0.7775456564135541,
-           LesHouches -> {SM, 1},
-           LaTeX -> "\\lambda"}},
 
     {Ye,  {Description -> "Lepton-Yukawa-Coupling",
            OutputName -> Ye,
@@ -232,16 +221,6 @@ ParameterDefinitions = {
            DependenceOptional -> None,
            Real -> False,
            LesHouches -> UDRMIX,
-           LaTeX -> "U^{d}_R"}},
-
-    {mu2, {Description -> "SM Mu Parameter",
-           OutputName -> m2SM,
-           Dependence -> None,
-           DependenceNum -> None,
-           DependenceSPheno -> None,
-           DependenceOptional -> None,
-           Real -> False,
-           LesHouches -> {SM, 1},
-           LaTeX -> "\\mu"}}
+           LaTeX -> "U^{d}_R"}}
 };
 

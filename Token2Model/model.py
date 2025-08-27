@@ -412,10 +412,10 @@ class Model:
 
     def write_checklist(self):
         with open(os.path.join(self.output_dir, "checklist.csv"), "w") as f:
-            f.write("id, check, result\n")
+            f.write("id, check, score, error_var, message\n")
             for id, checklist in self.checklist.items():
                 for key, value in checklist.items():
-                    f.write(f"{id}, {key}, {value}\n")
+                    f.write(f"{id}, {key}, {value['score']}, {value['error_var']}, {value['message']}\n")
 
 
     

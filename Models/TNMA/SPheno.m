@@ -7,15 +7,13 @@ OnlyLowEnergySPheno = True;
 AddTreeLevelUnitarityLimits=True;
 
 MINPAR={
-{1, MtINPUT},
-{2, LambdaVari4INPUT}
+{1, MtINPUT}
 };
 
-ParametersToSolveTadpoles={mu2};
+ParametersToSolveTadpoles={};
 
 BoundaryLowScaleInput={
-{Mt, MtINPUT},
-{\[Lambda], LambdaVari4INPUT}
+{Mt, MtINPUT}
 };
 
 DEFINITION[MatchingConditions]= {
@@ -37,8 +35,7 @@ DEFINITION[MatchingConditions]= {
 ListDecayParticles = {hh,Fv,Fe,Fu,Fd};
 
 DefaultInputValues={
-MtINPUT -> 410.58429780607236,
-LambdaVari4INPUT -> 0.7775456564135541
+MtINPUT -> 377.1567470615789
 };
 
 RenConditionsDecays={

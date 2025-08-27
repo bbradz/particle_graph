@@ -1,9 +1,9 @@
 Off[General::spell];
 
-Model`Name = "TNM";
-Model`NameLaTeX = "Test New Model";
+Model`Name = "TNMA";
+Model`NameLaTeX = "Test New Model A";
 Model`Authors = "Cooper";
-Model`Date = "2025-08-25-22-32-08";
+Model`Date = "2025-08-27-13-26-33";
 
 (*-------------------------------------------*)
 (*   Particle Content*)
