@@ -171,55 +171,6 @@ class Field:
             return result   
         
         # ------------------------- Necessary Checks ------------------------------
-
-        # check if the number of particles is consistent with the dim and gen
-        def _particle_numbers():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
-            if len(self.particles) != self.dim * self.gen:
-                error_var = ["particles"]
-                message = f"there must be (dim * gen) number of particles"
-                result = {"score": 0, "error_var": error_var, "message": message}
-            return result
-        
-        def _deplicate_particles():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
-            if len(self.particles) != len(set(self.particles)):
-                error_var = ["particles"]
-                message = f"Duplicate particles found"
-                result = {"score": 0, "error_var": error_var, "message": message}
-            return result
-
-        # check if the particles are consistent with the type
-        def _particle_types():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
-            for p in self.particles:
-                if p.type != self.type:
-                    error_var = ["particles"]
-                    message = f"this field is a {self.type} field, but the particle is a {p.type} particle."
-                    result = {"score": 0, "error_var": error_var, "message": message}
-                    return result
-            return result
-        
-        # check if self-conjugate is consistent with the charges
-        def _particle_charges():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
-            if self.self_conjugate and any(p.charge != 0 for p in self.particles):
-                error_var = ["particles"]
-                message = f"this field is self-conjugate, but the particles have non-zero charges."
-                result = {"score": 0, "error_var": error_var, "message": message}
-            return result
-        
-        # check if all particles pass all checks
-        def _all_particle_pass():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
-            if self.type == "fermion":
-                error_var = [f"particle:{p.name}" for p in self.particles if not p.fermion.pass_all_checks()]
-            else: 
-                error_var = [f"particle:{p.name}" for p in self.particles if not p.pass_all_checks()]
-            if error_var:
-                message = f"the following particles do NOT pass ALL checks: {error_var}"
-                result = {"score": 0, "error_var": error_var, "message": message}
-            return result
         
         # check if the field is consistent with the type
         def _gen_type_consistency():
@@ -267,7 +218,7 @@ class Field:
                 result = {"score": 0, "error_var": error_var, "message": message}
                 return result
             return result
-        
+
         # compute allowed charges
         def _allowed_charges():
             result = {"score": 1, "error_var": [], "message": "Passed"}
@@ -291,54 +242,98 @@ class Field:
                           "error_var": ["reps"], 
                           "message": f"Error: {e}"}
             return result
+        
+        # check if there are duplicate particles
+        def _deplicate_particles():
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if len(self.particles) != len(set(self.particles)):
+                error_var = ["particles"]
+                message = f"Duplicate particles found"
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
+
+        # check if the number of particles is consistent with the dim and gen
+        def _particle_numbers():
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if len(self.particles) != self.dim * self.gen:
+                error_var = ["particles", "gen"]
+                message = f"there must be (dim * gen) number of particles"
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
+        
+
+        # check if the particles are consistent with the type
+        def _particle_types():
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            for p in self.particles:
+                if p.type != self.type:
+                    error_var = ["particles"]
+                    message = f"this field is a {self.type} field, but the particle is a {p.type} particle."
+                    result = {"score": 0, "error_var": error_var, "message": message}
+                    return result
+            return result
+        
+        # check if self-conjugate is consistent with the charges
+        def _particle_charges():
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if self.self_conjugate and any(p.charge != 0 for p in self.particles):
+                error_var = ["particles"]
+                message = f"this field is self-conjugate, but the particles have non-zero charges."
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
+        
+        # check if all particles pass all checks
+        def _all_particle_pass():
+            result = {"score": 1, "error_var": [], "message": "Passed"}
+            if self.type == "fermion":
+                error_var = [f"particle:{p.name}" for p in self.particles if not p.fermion.pass_all_checks()]
+            else: 
+                error_var = [f"particle:{p.name}" for p in self.particles if not p.pass_all_checks()]
+            if error_var:
+                message = f"the following particles do NOT pass ALL checks: {error_var}"
+                result = {"score": 0, "error_var": error_var, "message": message}
+            return result
 
         # Sort particle ordering
         def _sort_particles():
             result = {"score": 1, "error_var": [], "message": "Passed"}
             error_var = []
-            def _sort_ptcls():
-                charge_eigenvec = {q: [] for q in self.allowed_Q}
-                
-                for p in self.particles:
-                    if p.charge not in charge_eigenvec:
-                        error_var.append(f"particle:{p.name}")
-                        message = f"Charge {p.charge} is not in allowed charges"
-                        result = {"score": 0, "error_var": error_var, "message": message}
-                        return result
-    
-                    charge_eigenvec[p.charge].append(p)
-            
-                charge_eigenval = sorted(charge_eigenvec.keys(), reverse=True)
-                for _, ptcls in charge_eigenvec.items():
-                    ptcls.sort(key=lambda p: p.mass)
 
-                if len(charge_eigenval) != self.dim:
-                    error_var.append("particles")
-                    message = f"Particle number is not consistent with the dim"
+            charge_eigenvec = {q: [] for q in self.allowed_Q}
+            for p in self.particles:
+                if p.charge not in self.allowed_Q:
+                    error_var.extend([f"particle:{p.name}", "reps:g1", "reps:g2"])
+                    message = f"Charge {p.charge} is not in allowed charges"
                     result = {"score": 0, "error_var": error_var, "message": message}
                     return result
-            
-                self._unphy_fields = np.column_stack([charge_eigenvec[charge] for charge in charge_eigenval])
-                self._phy_fields = np.array(self._unphy_fields).transpose().tolist()
 
-            try:
-                _sort_ptcls()
-            except Exception as e:
-                result = {"score": 0, 
-                          "error_var": ["particles"], 
-                          "message": f"Error: {e}"}
+                charge_eigenvec[p.charge].append(p)
+            
+            charge_eigenval = sorted(charge_eigenvec.keys(), reverse=True)
+            for _, ptcls in charge_eigenvec.items():
+                ptcls.sort(key=lambda p: p.mass)
+
+            if len(charge_eigenval) != self.dim:
+                error_var.append("particles")
+                message = f"Particle number is not consistent with the dim"
+                result = {"score": 0, "error_var": error_var, "message": message}
+                return result
+        
+            self._unphy_fields = np.column_stack([charge_eigenvec[charge] for charge in charge_eigenval])
+            self._phy_fields = np.array(self._unphy_fields).transpose().tolist()
+
             return result
 
         if self.simplify_checklist:
-            self.all_checks = [_particle_numbers, 
+            self.all_checks = [_sort_reps,
+                               _reps_dim_consistency,
+                               _gen_type_consistency,
+                               _allowed_charges,
+                               _deplicate_particles,
+                               _particle_numbers, 
                                _particle_types,
                                _particle_charges,
                                _all_particle_pass,
-                               _deplicate_particles,
-                               _gen_type_consistency,
-                               _sort_reps,
-                               _reps_dim_consistency,
-                               _allowed_charges,
                                _sort_particles
                                ]
         else:
@@ -351,15 +346,15 @@ class Field:
                                _gen_check, 
                                _particles_check, 
                                _self_conjugate_check, 
+                               _sort_reps,
+                               _reps_dim_consistency,
+                               _gen_type_consistency,
+                               _allowed_charges,
+                               _deplicate_particles,
                                _particle_numbers, 
                                _particle_types,
                                _particle_charges,
                                _all_particle_pass,
-                               _deplicate_particles,
-                               _gen_type_consistency,
-                               _sort_reps,
-                               _reps_dim_consistency,
-                               _allowed_charges,
                                _sort_particles
                                ]
 
@@ -478,7 +473,6 @@ class FermionField(Field):
     def phy_field_info(self):
         # Check if the field passes all checks
         if not self.pass_all_checks():
-            print(f"Error: {self.name} has failed the checks")
             return None
         
         def _class_members(idx):

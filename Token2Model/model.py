@@ -272,7 +272,7 @@ class Model:
     # ------------------------------------------------------------------
     def write_model(self):
         if not self.pass_all_checks():
-            print(f"Error: {self.model_name} has failed the checks")
+            print(f"'{self.model_name}' does not pass all checks")
             return None
 
         model_file = os.path.join(self.output_dir, f"{self.model_symbol}.m")
