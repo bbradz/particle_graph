@@ -276,8 +276,11 @@ class Field:
         # check if self-conjugate is consistent with the charges
         def _particle_charges():
             result = {"score": 1, "error_var": [], "message": "Passed"}
-            if self.self_conjugate and any(p.charge != 0 for p in self.particles):
-                error_var = ["particles"]
+            error_var = []
+            if self.self_conjugate:
+                error_var = [f"particle:{p.id}:charge" for p in self.particles if p.charge != 0]
+            if error_var:
+                error_var.append("self_conjugate")
                 message = f"this field is self-conjugate, but the particles have non-zero charges."
                 result = {"score": 0, "error_var": error_var, "message": message}
             return result
