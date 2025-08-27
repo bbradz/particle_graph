@@ -544,7 +544,7 @@ class ScalarSelfInteraction(Interaction):
                                             LaTeX = f"\\\\mu_{self.sorted_fields[0].name}")
 
                 self.IntParams[self.mu2.name] = self.mu2
-                self.ParametersToSolveTadpoles.append(self.mu2.name)
+            self.ParametersToSolveTadpoles.append(self.mu2.name)
         except Exception as e:
             result = {"score": 0, 
                       "error_var": ["fields"], 
@@ -574,7 +574,7 @@ class ScalarSelfInteraction(Interaction):
                                                 Value = self.params["LambdaVar"], 
                                                 LaTeX = f"\\\\lambda_{self.sorted_fields[0].name}")
 
-                self.ExtParams[self.LambdaVar.name] = self.LambdaVar
+            self.ExtParams[self.LambdaVar.name] = self.LambdaVar
         except Exception as e:
             result = {"score": 0, 
                       "error_var": ["fields"], 

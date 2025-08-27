@@ -201,7 +201,6 @@ class Model:
                     free_param_name = f"{free_param}{itr['id']}INPUT"
                     self.free_params[free_param_name] = itr[free_param]
                     itr[free_param] = random.uniform(itr[free_param][0], itr[free_param][1])
-                
             if itr["type"] == "yukawa":
                 itr.pop("type")
                 itr["fields"] = fields
