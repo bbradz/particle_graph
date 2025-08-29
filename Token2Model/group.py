@@ -203,6 +203,16 @@ class SU(Group):
             return "dSUN"
         else:
             return None
+        
+    @property
+    def Dynkin_index(self, dim, N):
+        if N == 3:
+            if abs(dim) == 3: return 1/2  # fundamental or antifundamental
+            elif dim == 1: return 0
+        if N == 2:
+            if dim == 2: return 1/2
+            elif dim == 1: return 0
+        return 0  # extend if needed
     
 class GaugeGroup:
     """

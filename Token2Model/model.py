@@ -10,7 +10,9 @@ import json
 from datetime import datetime
 import random
 import shutil
-
+import numpy as np
+from .check import run_checks
+from .param import GlobalParameterRegistry
 
 # ====================================================================
 #                            Model
@@ -46,6 +48,9 @@ class Model:
         self.checklist = {}
         self._read_model()
 
+        GlobalParameterRegistry.clear()
+
+
     def __str__(self):
         return f"{self.model_name}"
 
@@ -67,18 +72,15 @@ class Model:
     # ------------------------------------------------------------------
     #                           Read Model
     # ------------------------------------------------------------------
+    
+    # Read Guage Groups
     def _read_gauge_group(self, model_data):
         from .group import GaugeGroup
         self.gauge_groups = {}
         for g in model_data['GaugeGroups']:
             self.gauge_groups[g["id"]] = GaugeGroup(**g)
 
-    # def _read_vev(self, model_data):
-    #     from .vev import vev
-    #     self.vevs = {}
-    #     for v in model_data['vevs']:
-    #         self.vevs[v["id"]] = vev(**v)
-
+    # Read Particles
     def _read_particles(self, model_data):
         from .particle import Fermion, RealScalar, ComplexScalar
         self.scalar_particles = {}
@@ -108,6 +110,7 @@ class Model:
 
         self.particles = {**self.scalar_particles, **self.fermion_particles, **self.vector_particles}
 
+    # Read Scalar Fields
     def _read_scalar_fields(self, model_data):
         from .field import ScalarField
         self.scalar_fields = {}
@@ -127,10 +130,12 @@ class Model:
                 new_scalar_field = ScalarField(**sf, simplify_checklist = self.simplify_checklist)
                 self.scalar_fields[sf["id"]] = new_scalar_field
 
+    # Read Vector Fields
     def _read_vector_fields(self, model_data):
         from .field import VectorField
         self.vector_fields = {}
 
+    # Read Fermion Fields
     def _read_fermion_fields(self, model_data):
         from .field import FermionField
         self.fermion_fields = {}
@@ -147,8 +152,7 @@ class Model:
                         chiral_fermions.pop(weyl_fermion.id, None)
                 except:
                     weyl_list = ff["particles"]
-        
-                # TO-DO: add a check to see if the chiral fermion is in the chiral_fermions dictionary
+
                 ff["groups"] = self.gauge_groups
                 ff["particles"] = weyl_list
                 ff.pop('type')
@@ -179,13 +183,15 @@ class Model:
                 dirac_spinor_info["right"] = f"{key}"
             
             self.dirac_spinors[new_key] = dirac_spinor_info        
-        
+
+    # Read Fields
     def _read_fields(self, model_data):
         self._read_scalar_fields(model_data)
         self._read_fermion_fields(model_data)
         self._read_vector_fields(model_data)
         self.fields = {**self.scalar_fields, **self.fermion_fields, **self.vector_fields}
 
+    # Read Interactions
     def _read_interactions(self, model_data):
         from .interaction import Yukawa, ScalarSelfInteraction
         self.interactions = {}
@@ -213,10 +219,10 @@ class Model:
                 print(f"invalid interaction type {itr['type']}")
                 continue
 
-            new_interaction.__validate__()
             self.interactions[itr["id"]] = new_interaction
         pass 
 
+    # Get Parameters from Interactions
     def _read_parameters(self):
         self.ext_params = {}
         self.int_params = {}
@@ -236,17 +242,27 @@ class Model:
                 self.EWSB_matter_sector.append(f"    {{{itr.EWSB_matter_sector}}}")
         self.parameters = {**self.ext_params, **self.int_params}
 
+    # ------------------------------------------------------------------
+    #                           Check Model
+    # ------------------------------------------------------------------
+
+    def _check_gauge_anomaly(self):
+        pass
+
     def _read_check_list(self):
         model_score = 0
         max_score = 0
         model_components = [self.particles, self.fields, self.interactions]
 
-        for component in model_components:
-            for item in component.values():
-                self.checklist[item.id] = item.checklist
-                score, max_val = map(int, item.score.split("/"))
-                model_score += score
-                max_score += max_val
+        all_items = [item for component in model_components for item in component.values()]
+        checklist = self.checklist
+        for item in all_items:
+            checklist[item.id] = item.checklist
+
+        scores = (map(int, item.score.split("/")) for item in all_items)
+        for score, max_val in scores:
+            model_score += score
+            max_score += max_val
 
         self.score = f"{model_score}/{max_score}"
 
@@ -254,6 +270,9 @@ class Model:
         score, max_score = map(int, self.score.split("/"))
         return score == max_score
 
+    # ------------------------------------------------------------------
+    #                     Read Model Main Function
+    # ------------------------------------------------------------------
     def _read_model(self):
         from .utility import read_json
         model_data = read_json(self.JSON_PATH)
@@ -262,10 +281,14 @@ class Model:
         self._read_particles(model_data)
         self._read_fields(model_data)
         self._read_interactions(model_data)
-        [p.__validate__() for p in self.particles.values()]
-
+        
+        [itr.__validate__() for itr in self.interactions.values()]
+        [field.__validate__() for field in self.fields.values()]
+        [ptcl.__validate__() for ptcl in self.particles.values()]
+        
         self._read_parameters()
         self._read_check_list()
+
 
     # ------------------------------------------------------------------
     #                           Write Model
@@ -411,10 +434,10 @@ class Model:
 
     def write_checklist(self):
         with open(os.path.join(self.output_dir, "checklist.csv"), "w") as f:
-            f.write("id, check, score, error_var, message\n")
+            f.write("id, check, score, max_score, error_var, message\n")
             for id, checklist in self.checklist.items():
                 for key, value in checklist.items():
-                    f.write(f"{id}, {key}, {value['score']}, {value['error_var']}, {value['message']}\n")
+                    f.write(f"{id}, {key}, {value['score']}, {value['max_score']}, {value['error_var']}, {value['message']}\n")
 
 
     

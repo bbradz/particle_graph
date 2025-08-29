@@ -44,43 +44,43 @@ class Particle:
         self.all_checks = []
         
         def _type_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if self.type not in allowed_particle_types:
                 error_var = ["type"]
                 message = f"Type must be one of {allowed_particle_types}"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         def _id_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.id, str):
                 error_var = ["id"]
                 message = f"ID must be a string"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         def _name_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.name, str):
                 error_var = ["name"]
                 message = f"Name must be a string"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         def _mass_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not (isinstance(self.mass, float) or isinstance(self.mass, int)) or self.mass < 0:
                 error_var = ["mass"]
                 message = f"Mass must be a number and non-negative"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         def _charge_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.charge, int):
                 error_var = ["charge"]
                 message = f"Charge must be an integer"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
     
         if self.simplify_checklist:
@@ -91,19 +91,6 @@ class Particle:
                            _name_check, 
                            _mass_check, 
                            _charge_check]
-        
-    # @staticmethod
-    # def run_checks(all_checks, checklist, skip_check = False):
-    #     for check in all_checks:
-    #         fail_previous_check = any(isinstance(value, Exception) or value == False for value in checklist.values())
-    #         if skip_check and fail_previous_check:
-    #             checklist[check.__name__] = Exception(f"Skipped due to previous check failure")
-    #         else:
-    #             try:
-    #                 check()
-    #                 checklist[check.__name__] = True
-    #             except Exception as e:
-    #                 checklist[check.__name__] = e
 
     def __check__(self):
         """ Input checks for the particle class. """
@@ -149,7 +136,7 @@ class Particle:
 
     @property
     def score(self):
-        max_score = len(self.checklist)
+        max_score = sum(value["max_score"] for value in self.checklist.values())
         score = sum(value["score"] for value in self.checklist.values())
         return f"{score}/{max_score}"
 
@@ -161,9 +148,8 @@ class Particle:
         run_checks(self.all_validations, self.checklist, skip_results=True)
 
     def pass_all_checks(self):
-        score, max_score = self.score.split("/")
-        return float(score) == float(max_score)
-        #return len(self.checklist) == sum(1 for value in self.checklist.values() if value is True)
+        score, max_score = map(int, self.score.split("/"))
+        return score == max_score
 
 # ====================================================================
 #                              WeylSpinor

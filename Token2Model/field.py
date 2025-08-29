@@ -40,7 +40,7 @@ class Field:
         self.simplify_checklist = simplify_checklist
         self.full_reps = {}
         self.is_massive = False
-        self.mass_type = None
+        self.mass_term = []
         self.__check__()
         
         
@@ -70,87 +70,87 @@ class Field:
         # ------------------------- Simple Checks ------------------------------
         # check if the id is a string
         def _id_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.id, str):
                 error_var = ["id"]
                 message = f"'id' must be a string"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         # check if the name is a string
         def _name_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.name, str):
                 error_var = ["name"]
                 message = f"'name' must be a string."
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
         
         # check if the type is a string and one of complex/real/fermion/vector
         def _type_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.type, str) or self.type not in ["complex", "real", "fermion", "vector"]:
                 error_var = ["type"]
                 message = f"'type' must be a string and one of complex/real/fermion/vector"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
         
         # check if the groups are a dictionary
         def _groups_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.groups, dict):
                 error_var = ["groups"]
                 message = f"'groups' must be a dictionary"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         # check if the reps are a dictionary of int or str
         def _reps_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 3, "error_var": [], "message": "Passed", "max_score": 3}
             if not isinstance(self.reps, dict):
                 error_var = ["reps"]
                 message = f"'reps' must be a dictionary"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
                 return result
             
             if len(self.reps) != len(self.groups):
                 error_var = ["reps"]
                 message = f"'reps' and 'groups' must be the same length"
-                result = {"score": 1/3, "error_var": error_var, "message": message}
+                result.update({"score": 1, "error_var": error_var, "message": message})
                 return result
             
             error_var = [f"reps:{key}" for key, value in self.reps.items() if not isinstance(value, (int, str))]
             if error_var:
                 message = f"'reps' must be a dictionary of int or str"
-                result = {"score": 2/3, "error_var": error_var, "message": message}
+                result.update({"score": 2, "error_var": error_var, "message": message})
                 return result
             return result
         
         # check if the dimension is a positive integer
         def _dim_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.dim, int) or self.dim <= 0:
                 error_var = ["dim"]
                 message = f"'dim' must be a positive integer"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
         
         # check if the generation is a positive integer
         def _gen_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.gen, int) or self.gen <= 0:
                 error_var = ["gen"]
                 message = f"'gen' must be a positive integer"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
         
         # check if the particles are a list of Particle
         def _particles_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 2, "error_var": [], "message": "Passed", "max_score": 2}
             if not isinstance(self.particles, list):
                 error_var = ["particles"]
                 message = f"'particles' must be a list"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
                 return result
             
             fermion_check = self.type == "fermion" and all(isinstance(p, WeylSpinor) for p in self.particles)
@@ -158,32 +158,32 @@ class Field:
             if not fermion_check and not non_fermion_check:
                 error_var = ["particles"]
                 message = f"'particles' must be a list of Particle"
-                result = {"score": 1/2, "error_var": error_var, "message": message}
+                result.update({"score": 1, "error_var": error_var, "message": message})
             return result
         
         # check if self-conjugate is a bool
         def _self_conjugate_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.self_conjugate, bool):
                 error_var = ["self_conjugate"]
                 message = f"'self_conjugate' must be a bool"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result   
         
         # ------------------------- Necessary Checks ------------------------------
         
         # check if the field is consistent with the type
         def _gen_type_consistency():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if self.type != "fermion" and self.gen != 1:
                 error_var = ["gen"]
                 message = f"Non-fermion fields can have only one generation"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         # Sort reps
         def _sort_reps():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             try:
                 rep_dict = {}
                 self.allow_dim = [1]
@@ -197,31 +197,31 @@ class Field:
                         else:
                             self.allow_dim.append(rep_dict[key])
                 self.full_reps = rep_dict
-                self.allow_dim = list(set(self.allow_dim))
+                self.allow_dim = sorted(list(set(self.allow_dim)))
             except Exception as e:
                 error_var = ["reps"]
                 message = f"Error: {e}"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         # Check reps and dim consistency
         def _reps_dim_consistency():          
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if self.dim == 1 and self.allow_dim != [1]:
                 error_var = ["dim"]
                 message = f"reps and dim are not consistent"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
                 return result
             elif self.dim != 1 and self.allow_dim != [1, self.dim]:
                 error_var = ["dim"]
                 message = f"reps and dim are not consistent"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
                 return result
             return result
 
         # compute allowed charges
         def _allowed_charges():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             
             def _compute_allowed_charges():
                 if self.reps["g2"] == "singlet":
@@ -238,68 +238,68 @@ class Field:
             try:
                 _compute_allowed_charges()
             except Exception as e:
-                result = {"score": 0, 
-                          "error_var": ["reps"], 
-                          "message": f"Error: {e}"}
+                error_var = ["reps"]
+                message = f"Error: {e}"
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
         
         # check if there are duplicate particles
         def _deplicate_particles():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if len(self.particles) != len(set(self.particles)):
                 error_var = ["particles"]
                 message = f"Duplicate particles found"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         # check if the number of particles is consistent with the dim and gen
         def _particle_numbers():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if len(self.particles) != self.dim * self.gen:
                 error_var = ["particles", "gen"]
                 message = f"there must be (dim * gen) number of particles"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
         
 
         # check if the particles are consistent with the type
         def _particle_types():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             for p in self.particles:
                 if p.type != self.type:
                     error_var = ["particles"]
                     message = f"this field is a {self.type} field, but the particle is a {p.type} particle."
-                    result = {"score": 0, "error_var": error_var, "message": message}
+                    result.update({"score": 0, "error_var": error_var, "message": message})
                     return result
             return result
         
         # check if self-conjugate is consistent with the charges
         def _particle_charges():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             error_var = []
             if self.self_conjugate:
                 error_var = [f"particle:{p.id}:charge" for p in self.particles if p.charge != 0]
             if error_var:
                 error_var.append("self_conjugate")
                 message = f"this field is self-conjugate, but the particles have non-zero charges."
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
         
         # check if all particles pass all checks
         def _all_particle_pass():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if self.type == "fermion":
                 error_var = [f"particle:{p.name}" for p in self.particles if not p.fermion.pass_all_checks()]
             else: 
                 error_var = [f"particle:{p.name}" for p in self.particles if not p.pass_all_checks()]
             if error_var:
                 message = f"the following particles do NOT pass ALL checks: {error_var}"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         # Sort particle ordering
         def _sort_particles():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 2, "error_var": [], "message": "Passed", "max_score": 2}
             error_var = []
 
             charge_eigenvec = {q: [] for q in self.allowed_Q}
@@ -307,7 +307,7 @@ class Field:
                 if p.charge not in self.allowed_Q:
                     error_var.extend([f"particle:{p.name}", "reps:g1", "reps:g2"])
                     message = f"Charge {p.charge} is not in allowed charges"
-                    result = {"score": 0, "error_var": error_var, "message": message}
+                    result.update({"score": 0, "error_var": error_var, "message": message})
                     return result
 
                 charge_eigenvec[p.charge].append(p)
@@ -319,7 +319,7 @@ class Field:
             if len(charge_eigenval) != self.dim:
                 error_var.append("particles")
                 message = f"Particle number is not consistent with the dim"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 1, "error_var": error_var, "message": message})
                 return result
         
             self._unphy_fields = np.column_stack([charge_eigenvec[charge] for charge in charge_eigenval])
@@ -369,21 +369,38 @@ class Field:
 
     def _all_validations(self):
         """ All validations for the 'Field' class. """
-        self.all_validations = []
+
+        def _mass_term_check():
+            result = {"score": 10, "error_var": [], "message": "Passed", "max_score": 10}
+            if self.type == "fermion":
+                self.is_massive = any(p.fermion.mass != 0 for p in self.particles)
+            else:
+                self.is_massive = any(p.mass != 0 for p in self.particles)
+            if self.is_massive and self.mass_term == []:
+                error_var = ["interactions"]
+                message = f"this field is massive, but no mass term is defined"
+                result.update({"score": 0, "error_var": error_var, "message": message})
+            elif not self.is_massive and self.mass_term != []:
+                error_var = ["interactions"]
+                message = f"this field is massless, but a mass term is defined"
+                result.update({"score": 0, "error_var": error_var, "message": message})
+            return result
+        
+        self.all_validations = [_mass_term_check]
 
     def __validate__(self):
         self._all_validations()
-        run_checks(self.all_validations, self.checklist, skip_check = True)
+        run_checks(self.all_validations, self.checklist, skip_results = True)
 
     @property
     def score(self):
-        max_score = len(self.checklist)
+        max_score = sum(value["max_score"] for value in self.checklist.values())
         score = sum(value["score"] for value in self.checklist.values())
         return f"{score}/{max_score}"
 
     def pass_all_checks(self):
-        score, max_score = self.score.split("/")
-        return float(score) == float(max_score)
+        score, max_score = map(int, self.score.split("/"))
+        return score == max_score
         
 
 # ====================================================================
@@ -426,26 +443,26 @@ class FermionField(Field):
         super()._all_checks()
 
         def _chirality_check():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if self.chirality not in ["left", "right"]:
                 error_var = ["chirality"]
                 message = f"chirality must be left or right"
-                result = {"score": 0, "error_var": error_var, "message": message}
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
         
         # ------------------------------------------------------------------
         
         # Assign colors to the particles
         def _assign_colors():
-            result = {"score": 1, "error_var": [], "message": "Passed"}
+            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             try:
                 for p in self.particles:
                     if self.color is not None:
                         p.fermion.color = self.color
             except Exception as e:
-                result = {"score": 0, 
-                          "error_var": ["particles"], 
-                          "message": f"Error: {e}"}
+                error_var = ["particles"]
+                message = f"Error: {e}"
+                result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         if self.simplify_checklist:
@@ -555,11 +572,22 @@ class ScalarField(Field):
         self.potential = None
         self.vev = None
         self.get_vev = False
+        self.potential = []
         
 
     def _all_validations(self):
+        """ All validations for the 'Field' class. """
         super()._all_validations()
-        self.all_validations.extend([])
+        
+        def _potential_term_check():
+            result = {"score": 10, "error_var": [], "message": "Passed", "max_score": 10}
+            if self.potential == []:
+                error_var = ["interactions"]
+                message = f"scalar field must have a potential term"
+                result.update({"score": 0, "error_var": error_var, "message": message})
+            return result
+        
+        self.all_validations.extend([_potential_term_check])
 
     def phy_field_info(self):
         pass

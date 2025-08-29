@@ -1,21 +1,23 @@
 from Token2Model.model import Model
 from CalcObs.observables import ObservableCalc
 
-MODEL_NAME = "Wrong Model Example 5"
+MODEL_NAME = "Wrong Model Example 6"
 AUTHOR = "Cooper"
-JSON_PATH = "/users/qniu3/physics/RL_builder-2.0/wrong_model5.json"
+JSON_PATH = "/users/qniu3/physics/RL_builder-2.0/wrong_model6.json"
 MODEL_BASE_PATH = "/users/qniu3/physics/RL_builder-2.0/Models"
 OBS_LIST_PATH = "/users/qniu3/physics/RL_builder-2.0/obs_list.json"
 SARAH_PATH = "/users/qniu3/physics/SARAH-4.15.4"
 SPHENO_PATH = "/users/qniu3/physics/SPheno-4.0.5"
 
 
-model = Model(MODEL_NAME, AUTHOR, JSON_PATH, MODEL_BASE_PATH, simplify_checklist = True)
-print(model.model_name)
-print(model.model_symbol)
-print(model.score)
-model.write_model()
-model.write_checklist()
+for i in range(10):
+    MODEL_NAME = "Wrong Model " + str(i)
+    model = Model(MODEL_NAME, AUTHOR, JSON_PATH, MODEL_BASE_PATH, simplify_checklist = True)
+    print(model.model_name)
+    print(model.model_symbol)
+    print(model.score)
+    model.write_model()
+    model.write_checklist()
 
 
 #module load mathematica 
