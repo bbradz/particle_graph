@@ -13,32 +13,41 @@ This project consists of two main components:
 
 ```
 RL_builder-2.0/
-├── main.py                 # Main execution script
+├── main.py                 # Main execution script with example workflow
 ├── test.py                 # Simple test script
 ├── obs_list.json          # Observable definitions and experimental values
-├── SM_test.json           # Standard Model JSON specification
+├── SM_test.json           # Standard Model JSON specification for testing
 ├── SM.json                # Alternative SM specification
+├── wrong_model*.json      # Test models for validation
 ├── Token2Model/           # Model generation module
-│   ├── model.py           # Main Model class
+│   ├── __init__.py        # Package initialization
+│   ├── model.py           # Main Model class and core functionality
 │   ├── field.py           # Field definitions and handling
-│   ├── particle.py        # Particle definitions
-│   ├── interaction.py     # Interaction terms
-│   ├── group.py           # Gauge group definitions
-│   ├── param.py           # Parameter handling
-│   ├── name.py            # Naming conventions
-│   ├── utility.py         # Utility functions
-│   ├── vev.py             # VEV handling
-│   ├── write_model_files.py # File writing utilities
-│   ├── _pdg.json          # PDG particle data
-│   ├── sm_particles.json  # Standard Model particles
-│   └── sm_parameters.json # Standard Model parameters
+│   ├── particle.py        # Particle definitions and properties
+│   ├── interaction.py     # Interaction terms and couplings
+│   ├── group.py           # Gauge group definitions and representations
+│   ├── param.py           # Parameter handling and management
+│   ├── name.py            # Naming conventions and symbol generation
+│   ├── utility.py         # Utility functions and helpers
+│   ├── vev.py             # VEV (Vacuum Expectation Value) handling
+│   ├── write_model_files.py # File writing utilities for SARAH
+│   ├── check.py           # Model validation and checking
+│   ├── _pdg.json          # PDG particle data and properties
+│   ├── sm_particles.json  # Standard Model particles database
+│   └── sm_parameters.json # Standard Model parameters database
 ├── CalcObs/               # Observable calculation module
 │   ├── observables.py     # Main ObservableCalc class
-│   └── calc_spheno.m      # Mathematica script for SARAH
+│   ├── calc_spheno.m      # Mathematica script for SARAH integration
+│   └── *.png              # Generated plots and visualizations
 ├── Models/                # Generated model files
 │   ├── NM/               # Example model (New Model)
-│   └── TNM/              # Example model (Test New Model)
-└── .Old_Models/          # Legacy model files
+│   ├── TNM/              # Example model (Test New Model)
+│   ├── TNMA/             # Additional test model
+│   ├── ST/               # Standard Model test
+│   └── WM*/              # Wrong model test files
+├── test_output/           # Test output directory
+├── .Old_Models/          # Archive of previous model versions
+└── .venv/                # Python virtual environment
 ```
 
 ## Installation and Dependencies
@@ -51,6 +60,7 @@ RL_builder-2.0/
    ```
 
 2. **Mathematica** (for SARAH integration)
+   - On HPC systems, load the module: `module load mathematica`
 
 3. **SARAH 4.15.4** - Download from [SARAH website](https://sarah.hepforge.org/)
 
@@ -65,10 +75,11 @@ RL_builder-2.0/
    SARAH_PATH = "/path/to/SARAH-4.15.4"
    SPHENO_PATH = "/path/to/SPheno-4.0.5"
    ```
-2. The code requires mathematica. One can load it in SSH by
-    ```
-    load module mathematica
-    ```
+
+2. Load Mathematica module (if on HPC):
+   ```bash
+   module load mathematica
+   ```
 
 ## Usage
 
@@ -183,6 +194,36 @@ calc.minimize_chi2(maxiter=10, popsize=5)
 calc.make_plot()
 ```
 
+### 3. Complete Workflow Example
+
+See `main.py` for a complete example:
+
+```python
+from Token2Model.model import Model
+from CalcObs.observables import ObservableCalc
+
+# Model generation
+model = Model("SM Test", "Cooper", "SM_test.json", "./Models", simplify_checklist=True)
+model.write_model()
+model.write_checklist()
+
+# Observable calculation (uncomment to run)
+# sarah = ObservableCalc(
+#     model.model_symbol, 
+#     model_base="./Models", 
+#     obs_list_path="./obs_list.json", 
+#     keep_log=True, 
+#     sarah_path=SARAH_PATH,
+#     spheno_path=SPHENO_PATH,
+#     sigma_threshold=2,
+#     include_tachyon=False
+# )
+# sarah.run_sarah()
+# sarah.compile_spheno()
+# sarah.minimize_chi2()
+# sarah.make_plot()
+```
+
 ## Key Features
 
 ### Token2Model Module
@@ -192,6 +233,8 @@ calc.make_plot()
 - **Validation System**: Comprehensive checklist for model consistency
 - **Multiple Field Types**: Supports fermions, scalars (real/complex), and vector fields
 - **Interaction Types**: Handles Yukawa couplings and scalar self-interactions
+- **Gauge Group Support**: Full support for U(1), SU(2), SU(3) and their representations
+- **Particle Database**: Integrated PDG data and Standard Model particle definitions
 
 ### CalcObs Module
 
@@ -201,14 +244,16 @@ calc.make_plot()
 - **Parameter Scanning**: Efficient parameter space exploration
 - **Visualization**: Automatic plotting of results and parameter correlations
 - **Early Stopping**: Optimization stops when chi-squared threshold is reached
+- **Multi-core Support**: Parallel processing for parameter scans
 
 ### Advanced Features
 
-- **Multi-core Support**: Parallel processing for parameter scans
 - **Timeout Handling**: Prevents hanging calculations
 - **Log Management**: Configurable logging and output retention
 - **Error Recovery**: Graceful handling of calculation failures
 - **Flexible Input**: Customizable SPheno input parameters
+- **Model Validation**: Comprehensive checking of model consistency
+- **Test Suite**: Multiple test models for validation
 
 ## Configuration Options
 
@@ -242,15 +287,16 @@ calc.make_plot()
 ### Calculation Results
 
 - `chi2_data.npz`: Chi-squared history and parameter values
+- `*.png`: Visualization plots and parameter correlations
 
-## Example Workflow
+## Example Models
 
-1. **Define Model**: Create JSON specification for your BSM model
-2. **Generate Files**: Use `Model` class to create SARAH files
-3. **Define Observables**: Specify experimental constraints in `obs_list.json`
-4. **Run Calculations**: Use `ObservableCalc` to compute observables
-5. **Parameter Scan**: Perform chi-squared minimization
-6. **Analyze Results**: Examine plots and parameter correlations
+The project includes several example models:
+
+- **SM.json**: Standard Model specification
+- **SM_test.json**: Test version of Standard Model
+- **wrong_model*.json**: Test models for validation testing
+- **Generated Models**: See `Models/` directory for examples
 
 ## Troubleshooting
 
@@ -261,6 +307,7 @@ calc.make_plot()
 3. **Fortran Compiler**: Check gfortran installation
 4. **Memory Issues**: Reduce `popsize` for large parameter spaces
 5. **Timeout Errors**: Increase `timeout` parameter for complex models
+6. **Module Loading**: On HPC systems, ensure `module load mathematica` is executed
 
 ### Debugging
 
@@ -268,6 +315,26 @@ calc.make_plot()
 - Check `checklist.csv` for model validation issues
 - Monitor chi-squared convergence in plots
 - Verify observable definitions in `obs_list.json`
+- Use test models in `wrong_model*.json` for validation
+
+## Development and Testing
+
+### Test Models
+
+The project includes several test models for validation:
+- `wrong_model0.json` through `wrong_model6.json`: Various test configurations
+- `SM_test.json`: Standard Model test case
+- Generated models in `Models/` directory
+
+### Running Tests
+
+```bash
+# Basic model generation test
+python main.py
+
+# Run specific test
+python test.py
+```
 
 ## Contributing
 

@@ -49,7 +49,7 @@ class Model:
         self._read_model()
 
         GlobalParameterRegistry.clear()
-
+        
 
     def __str__(self):
         return f"{self.model_name}"
@@ -245,29 +245,135 @@ class Model:
     # ------------------------------------------------------------------
     #                           Check Model
     # ------------------------------------------------------------------
+    def _make_anomaly_checklist(self):
+        """
+        Make a checklist for gauge anomaly checks.
+        """
+        abelian_groups = [group for key, group in self.gauge_groups.items() if group.abelian]
+        non_abelian_groups = [group for key, group in self.gauge_groups.items() if not group.abelian]
 
-    def _check_gauge_anomaly(self):
-        pass
+        self.anomaly_checklist = {"G^3":[], "U1-G^2":[], 'U1^3':[], 'U1-grav':[],"U1-mixing":[]}
+
+        # (1) Non-abelian cubic anomalies (AAA)
+        for na_group in non_abelian_groups:
+            self.anomaly_checklist["G^3"].append([na_group, na_group, na_group])
+            
+            # (2) Mixed non-abelian^2 - abelian anomalies (AAB)
+            for a_group in abelian_groups:
+                self.anomaly_checklist["U1-G^2"].append([na_group, na_group, a_group])
+
+        # (3) Pure abelian cubic anomalies (BBB)
+        for a_group in abelian_groups:
+            self.anomaly_checklist["U1^3"].append([a_group, a_group, a_group])
+
+            # (4) Gravitational - abelian anomalies (GAA)
+            self.anomaly_checklist["U1-grav"].append([a_group, a_group, "grav"])
+
+        # (5) Abelian group mixing anomalies (BBC, BCD)
+        for i in range(len(abelian_groups)):
+            for j in range(len(abelian_groups)):
+                if i != j:
+                    self.anomaly_checklist["U1-mixing"].append([abelian_groups[i], abelian_groups[i], abelian_groups[j]])
+            for j in range(i+1, len(abelian_groups)):
+                for k in range(j+1, len(abelian_groups)):
+                    self.anomaly_checklist["U1-mixing"].append([abelian_groups[i], abelian_groups[j], abelian_groups[k]])
+
+    def check_gauge_anomaly(self, alpha = 1):
+        """
+        Check gauge anomaly cancellations for all relevant combinations.
+        Returns a dictionary with anomaly check results.
+        """
+
+        def score(anomaly_coeff):
+            return np.exp(alpha * abs(anomaly_coeff))
+        
+        for key, value in self.anomaly_checklist.items():
+            for check in value:
+                anomaly_coeff = 0
+                if key == "G^3":
+                    G, _, _ = check
+                    anomaly_name = f"({G.name})^3"
+                    error_var = ["all fermions", "reps", check]
+                    def anomaly_func(chiral, dim, gen, color_index):
+                        field_rep = f.reps[f"{G.id}"]
+                        return gen * dim * chiral * G.cubic_anomaly(field_rep) * color_index
+                    
+                elif key == "U1-G^2":
+                    G, _, U1 = check
+                    anomaly_name = f"({U1.name})x({G.name})^2"
+                    error_var = ["all fermions", "reps", check]
+                    def anomaly_func(chiral, dim, gen, color_index):
+                        field_rep = f.reps[f"{G.id}"]
+                        return gen * dim * chiral * G.Dynkin_index(field_rep)[2] * f.reps[f"{U1.id}"] * color_index
+                    
+                elif key == "U1^3":
+                    U1, _, _ = check
+                    anomaly_name = f"({U1.name})^3"
+                    error_var = ["all fermions", "reps", check]
+                    def anomaly_func(chiral, dim, gen, color_index):
+                        Y = f.reps[f"{U1.id}"]
+                        return gen * dim * chiral * Y**3 * color_index
+                    
+                elif key == "U1-grav":
+                    U1, _, _ = check
+                    anomaly_name = f"({U1.name})^2-grav"
+                    error_var = ["all fermions", "reps", check]
+                    def anomaly_func(chiral, dim, gen, color_index):
+                        Y = f.reps[f"{U1.id}"]
+                        return gen * dim * chiral * Y * color_index
+                    
+                elif key == "U1-mixing":
+                    U1i, U1j, U1k = check
+                    anomaly_name = f"({U1i.name})x({U1j.name})x({U1k.name})"
+                    error_var = ["all fermions", "reps", check]
+                    def anomaly_func(chiral, dim, gen, color_index):
+                        Y1 = f.reps[f"{U1i.id}"]
+                        Y2 = f.reps[f"{U1j.id}"]
+                        Y3 = f.reps[f"{U1k.id}"]
+                        return gen * dim * chiral * Y1 * Y2 * Y3 * color_index
+    
+                if not self.pass_all_checks():
+                    self.checklist['global'][anomaly_name] = {"score": 0, "max_score": 1, "error_var": [], "message": "Skipped"}
+                    continue
+                
+                for f in self.fermion_fields.values():
+                    chiral = 1 if f.chirality == "left" else -1
+                    dim = f.dim
+                    gen = f.gen
+                    color_index = f.full_reps["g3"]
+                    anomaly_coeff += anomaly_func(chiral, dim, gen, color_index)
+
+                if anomaly_coeff != 0:
+                    self.checklist['global'][anomaly_name] = {"score": score(anomaly_coeff), "max_score": 1, "error_var": error_var, "message": f"{anomaly_name} anomaly detected."}
+                else:
+                    self.checklist['global'][anomaly_name] = {"score": 1, "max_score": 1, "error_var": [], "message": "Passed"}                    
 
     def _read_check_list(self):
+        model_components = [self.particles, self.fields, self.interactions]
+        self.all_objects = [item for component in model_components for item in component.values()]
+        for item in self.all_objects:
+            self.checklist[item.id] = item.checklist
+        self.checklist['global'] = {}
+
+    @property
+    def score(self):
         model_score = 0
         max_score = 0
-        model_components = [self.particles, self.fields, self.interactions]
 
-        all_items = [item for component in model_components for item in component.values()]
-        checklist = self.checklist
-        for item in all_items:
-            checklist[item.id] = item.checklist
-
-        scores = (map(int, item.score.split("/")) for item in all_items)
-        for score, max_val in scores:
+        for item in self.all_objects:
+            score, max_val = item.score
             model_score += score
             max_score += max_val
 
-        self.score = f"{model_score}/{max_score}"
+        for _, check_info in self.checklist['global'].items():
+            score, max_val = check_info['score'], check_info['max_score']
+            model_score += score
+            max_score += max_val
+
+        return model_score, max_score
 
     def pass_all_checks(self):
-        score, max_score = map(int, self.score.split("/"))
+        score, max_score = self.score
         return score == max_score
 
     # ------------------------------------------------------------------
@@ -285,10 +391,11 @@ class Model:
         [itr.__validate__() for itr in self.interactions.values()]
         [field.__validate__() for field in self.fields.values()]
         [ptcl.__validate__() for ptcl in self.particles.values()]
+        self._make_anomaly_checklist()
         
         self._read_parameters()
         self._read_check_list()
-
+        self.check_gauge_anomaly()
 
     # ------------------------------------------------------------------
     #                           Write Model
@@ -431,7 +538,9 @@ class Model:
         with open(os.path.join(self.output_dir, "free_params.json"), "w") as f:
             json.dump(self.free_params, f)
 
-
+    # ------------------------------------------------------------------
+    #                           Write Checklist
+    # ------------------------------------------------------------------
     def write_checklist(self):
         with open(os.path.join(self.output_dir, "checklist.csv"), "w") as f:
             f.write("id, check, score, max_score, error_var, message\n")

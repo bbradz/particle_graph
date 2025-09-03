@@ -191,7 +191,7 @@ class Field:
                     if group.abelian:
                         rep_dict[key] = Fraction(self.reps[key], 6)
                     else:
-                        rep_dict[key] = group.rep_list[self.reps[key]]
+                        rep_dict[key] = group.dim(self.reps[key])
                         if group.isSU3C:
                             self.color = rep_dict[key]
                         else:
@@ -233,8 +233,8 @@ class Field:
                 Y = self.reps["g1"]/6
                 Q = np.array(T3) + Y
                 Q = Q * 3            # times 3 to get integer charges
-                self.allowed_Q = -Q if self.chirality == "right" else Q
-            
+                #self.allowed_Q = -Q if self.chirality == "right" else Q
+                self.allowed_Q = Q
             try:
                 _compute_allowed_charges()
             except Exception as e:
@@ -303,6 +303,7 @@ class Field:
             error_var = []
 
             charge_eigenvec = {q: [] for q in self.allowed_Q}
+
             for p in self.particles:
                 if p.charge not in self.allowed_Q:
                     error_var.extend([f"particle:{p.name}", "reps:g1", "reps:g2"])
@@ -396,10 +397,10 @@ class Field:
     def score(self):
         max_score = sum(value["max_score"] for value in self.checklist.values())
         score = sum(value["score"] for value in self.checklist.values())
-        return f"{score}/{max_score}"
+        return score, max_score
 
     def pass_all_checks(self):
-        score, max_score = map(int, self.score.split("/"))
+        score, max_score = self.score
         return score == max_score
         
 
@@ -552,6 +553,8 @@ class FermionField(Field):
                 pass
             else:
                 self.full_reps["g3"] = - self.full_reps["g3"]
+
+            self.full_reps["g1"] = - self.full_reps["g1"]
     
         if self.dim == 1:
             multiplet = element[0]

@@ -70,7 +70,7 @@ m5, _particle_charges, 1, 1, [], Passed
 m5, _all_particle_pass, 1, 1, [], Passed
 m5, _sort_particles, 2, 2, [], Passed
 m5, _assign_colors, 1, 1, [], Passed
-m5, _mass_term_check, 0, 10, ['interactions'], this field is massive, but no mass term is defined
+m5, _mass_term_check, 10, 10, [], Passed
 i1, _id_check, 1, 1, [], Passed
 i1, _field_length_check, 1, 1, [], Passed
 i1, _field_check, 1, 1, [], Passed
@@ -103,6 +103,22 @@ i2, _yukawa_mass, 1, 1, [], Passed
 i2, _yukawa_matrix, 1, 1, [], Passed
 i2, _mixing_matrix, 1, 1, [], Passed
 i2, _yukawa_lagrangian, 1, 1, [], Passed
+i3, _id_check, 1, 1, [], Passed
+i3, _field_length_check, 1, 1, [], Passed
+i3, _field_check, 1, 1, [], Passed
+i3, _params_check, 1, 1, [], Passed
+i3, _all_field_pass_checks, 1, 1, [], Passed
+i3, _check_replicate_fields, 1, 1, [], Passed
+i3, _sort_field, 1, 1, [], Passed
+i3, _gen_check, 1, 1, [], Passed
+i3, _dim_check, 1, 1, [], Passed
+i3, _dirac_bilinear_product, 1, 1, [], Passed
+i3, _get_massive_particles, 1, 1, [], Passed
+i3, _check_U1Y_gauge_symmetry, 1, 1, [], Passed
+i3, _yukawa_mass, 1, 1, [], Passed
+i3, _yukawa_matrix, 1, 1, [], Passed
+i3, _mixing_matrix, 1, 1, [], Passed
+i3, _yukawa_lagrangian, 1, 1, [], Passed
 i4, _id_check, 1, 1, [], Passed
 i4, _field_length_check, 1, 1, [], Passed
 i4, _field_check, 1, 1, [], Passed
@@ -113,3 +129,9 @@ i4, _sort_field, 1, 1, [], Passed
 i4, _scalar_mass, 1, 1, [], Passed
 i4, _scalar_quartic, 1, 1, [], Passed
 i4, _scalar_lagrangian, 1, 1, [], Passed
+global, (left)^3, 1, 1, [], Passed
+global, (color)^3, 1, 1, [], Passed
+global, (hypercharge)x(left)^2, 1, 1, [], Passed
+global, (hypercharge)x(color)^2, 1, 1, [], Passed
+global, (hypercharge)^3, 1, 1, [], Passed
+global, (hypercharge)^2-grav, 1, 1, [], Passed

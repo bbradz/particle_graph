@@ -142,7 +142,7 @@
             "gen": 3,
             "chirality": "right",
             "self_conjugate": false,
-            "reps": {"g1": 6, "g2": "singlet", "g3": "singlet"},
+            "reps": {"g1": -6, "g2": "singlet", "g3": "singlet"},
             "particles": ["f1", "f2", "f3"]
         },
         {
@@ -165,7 +165,7 @@
             "gen": 3,
             "chirality": "right",
             "self_conjugate": false,
-            "reps": {"g1": -4, "g2": "singlet", "g3": "fnd"},
+            "reps": {"g1": 4, "g2": "singlet", "g3": "fnd"},
             "particles": ["f7", "f9", "f11"]
         },
         {
@@ -176,7 +176,7 @@
             "gen": 3,   
             "chirality": "right",
             "self_conjugate": false,
-            "reps": {"g1": 2, "g2": "singlet", "g3": "fnd"},
+            "reps": {"g1": -2, "g2": "singlet", "g3": "fnd"},
             "particles": ["f8", "f10", "f12"]
         },
         {

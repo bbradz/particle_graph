@@ -138,7 +138,7 @@ class Particle:
     def score(self):
         max_score = sum(value["max_score"] for value in self.checklist.values())
         score = sum(value["score"] for value in self.checklist.values())
-        return f"{score}/{max_score}"
+        return score, max_score
 
     def _all_validations(self):
         self.all_validations = []
@@ -148,7 +148,7 @@ class Particle:
         run_checks(self.all_validations, self.checklist, skip_results=True)
 
     def pass_all_checks(self):
-        score, max_score = map(int, self.score.split("/"))
+        score, max_score = self.score
         return score == max_score
 
 # ====================================================================

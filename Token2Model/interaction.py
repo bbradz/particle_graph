@@ -137,10 +137,10 @@ class Interaction:
     def score(self):
         max_score = sum(value["max_score"] for value in self.checklist.values())
         score = sum(value["score"] for value in self.checklist.values())
-        return f"{score}/{max_score}"
+        return score, max_score
 
     def pass_all_checks(self):
-        score, max_score = map(int, self.score.split("/"))
+        score, max_score = self.score
         return score == max_score
 
 
@@ -180,9 +180,9 @@ class Yukawa(Interaction):
         
         self.is_LL = self.sorted_fields[0].reps == {"g1": -3, "g2": "fnd", "g3": "singlet"}
         self.is_QL = self.sorted_fields[0].reps == {"g1": 1, "g2": "fnd", "g3": "fnd"}
-        self.is_uR = self.sorted_fields[1].reps == {"g1": -4, "g2": "singlet", "g3": "fnd"}
-        self.is_dR = self.sorted_fields[1].reps == {"g1": 2, "g2": "singlet", "g3": "fnd"}
-        self.is_lR = self.sorted_fields[1].reps == {"g1": 6, "g2": "singlet", "g3": "singlet"}
+        self.is_uR = self.sorted_fields[1].reps == {"g1": 4, "g2": "singlet", "g3": "fnd"}
+        self.is_dR = self.sorted_fields[1].reps == {"g1": -2, "g2": "singlet", "g3": "fnd"}
+        self.is_lR = self.sorted_fields[1].reps == {"g1": -6, "g2": "singlet", "g3": "singlet"}
         self.is_Phi = self.sorted_fields[2].reps == {"g1": 3, "g2": "fnd", "g3": "singlet"}
 
         if self.is_Phi and self.is_LL and self.is_lR:
@@ -276,8 +276,9 @@ class Yukawa(Interaction):
             Y_psi_L = self.sorted_fields[0].reps["g1"]
             Y_psi_R = self.sorted_fields[1].reps["g1"]
             Y_Phi = self.sorted_fields[2].reps["g1"]
-            sum = Y_psi_L + Y_psi_R + (-1 if self.higgs_loc == 1 else 1) * Y_Phi
+            sum = -Y_psi_L + Y_psi_R + (-1 if self.higgs_loc == 0 else 1) * Y_Phi
             sign = "+" if self.higgs_loc == 1 else "-"
+            
             if sum != 0:
                 error_var = ["fields:0:reps:g1", "fields:1:reps:g1", "fields:2:reps:g1"]
                 error_message = f"Violates U(1)Y gauge symmetry. {Y_psi_L} + {Y_psi_R} {sign} {Y_Phi} = {sum}"
