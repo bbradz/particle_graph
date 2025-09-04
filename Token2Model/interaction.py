@@ -44,16 +44,9 @@ class Interaction:
         """ All checks for the initial INPUTs of the 'Interaction' class. """
         self.all_checks = []
 
-        # -------------------------- basic checks --------------------------
-        def _id_check():
-            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
-            if not isinstance(self.id, str):
-                result.update({"score": 0, "error_var": ["id"], "message": f"'id' must be a string"})
-            return result
-
         def _params_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
-            error_var = [f"param:{par}" for par in self.param_list if par not in self.params.keys()]
+            error_var = [f"interactions.{self.id}.{par}" for par in self.param_list if par not in self.params.keys()]
             if error_var:
                 error_message = f"Invalid parameters: {error_var}"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
@@ -62,14 +55,14 @@ class Interaction:
         def _field_length_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if len(self.fields) != len(self.requirements):
-                error_var = ["fields"]
+                error_var = [f"interactions.{self.id}.fields"]
                 error_message = f"Number of fields ({len(self.fields)}) does not match number of requirements ({len(self.requirements)})"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
             return result
 
         def _field_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
-            error_var = [f"field:{field.id}" for field in self.fields if not isinstance(field, Field)]
+            error_var = [f"interactions.{self.id}.fields.{field.id}" for field in self.fields if not isinstance(field, Field)]
             if error_var:
                 error_message = f"Fields are not instances of Field: {error_var}"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
@@ -77,7 +70,7 @@ class Interaction:
 
         def _all_field_pass_checks():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
-            error_var = [f"field:{field.id}" for field in self.fields if not field.pass_all_checks()]
+            error_var = [f"fields.{field.id}" for field in self.fields if not field.pass_all_checks()]
             if error_var:
                 error_message = f"Fields failed checks: {error_var}"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
@@ -87,7 +80,7 @@ class Interaction:
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             all_fields = [f.id for f in self.fields]
             if len(all_fields) != len(set(all_fields)):
-                error_var = ["fields"]
+                error_var = [f"interactions.{self.id}.fields"]
                 error_message = f"Duplicate fields found"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
             else:
@@ -107,18 +100,18 @@ class Interaction:
                         f"AssertionError: Multiple fields with \"{key} = {value}\" found for {self.id}: {candidate}"
                     self.sorted_fields[pos] = candidate[0]
             except Exception as e:
-                error_var = ["fields"]
+                error_var = [f"interactions.{self.id}.fields"]
                 error_message = f"Error: {e}"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
             return result
 
-        self.all_checks.extend([_id_check, 
-                                _field_length_check, 
-                                _field_check, 
-                                _params_check,
-                                _all_field_pass_checks, 
-                                _check_replicate_fields,
-                                _sort_field])
+        self.all_checks.extend([(_field_length_check, 1), 
+                                (_field_check, 1), 
+                                (_params_check, 1),
+                                (_all_field_pass_checks, 1), 
+                                (_check_replicate_fields, 1),
+                                (_sort_field, 1)
+                                ])
 
     def __check__(self):
         self.checklist = {}
@@ -212,21 +205,23 @@ class Yukawa(Interaction):
         def _gen_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if self.sorted_fields[0].gen != self.sorted_fields[1].gen:
-                error_var = ["fields"]
+                error_var = [f"fields.{self.sorted_fields[0].id}.gen", f"fields.{self.sorted_fields[1].id}.gen"]
                 error_message = f"The two fermions have different generations: {self.sorted_fields[0].gen} != {self.sorted_fields[1].gen}"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
             return result
 
         def _dim_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
-            if self.sorted_fields[0].dim != self.sorted_fields[2].dim and self.sorted_fields[1].dim != self.sorted_fields[2].dim:
-                error_var = ["fields"]
-                error_message = f"The scalar and fermions have different dimensions: {self.sorted_fields[0].dim} != {self.sorted_fields[2].dim} and {self.sorted_fields[1].dim} != {self.sorted_fields[2].dim}"
+            if self.sorted_fields[0].dim != self.sorted_fields[2].dim:
+                error_var = [f"fields.{self.sorted_fields[0].id}.dim", f"fields.{self.sorted_fields[2].id}.dim"]
+                error_message = f"The scalar and fermions have different dimensions: {self.sorted_fields[0].dim} != {self.sorted_fields[2].dim}"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
+
             return result
         
-        self.all_checks.extend([_gen_check, 
-                                _dim_check])
+        self.all_checks.extend([(_gen_check, 1), 
+                                (_dim_check, 1)
+                                ])
 
     # --------------------------------------------------------------------
     #                       Validation Checks
@@ -249,7 +244,7 @@ class Yukawa(Interaction):
                     for i in range(rows_left)]
             
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -265,7 +260,7 @@ class Yukawa(Interaction):
                     self.higgs_loc = idx
                     break
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -280,11 +275,11 @@ class Yukawa(Interaction):
             sign = "+" if self.higgs_loc == 1 else "-"
             
             if sum != 0:
-                error_var = ["fields:0:reps:g1", "fields:1:reps:g1", "fields:2:reps:g1"]
+                error_var = [f"fields.{self.sorted_fields[0].id}.reps.g1", f"fields.{self.sorted_fields[1].id}.reps.g1", f"fields.{self.sorted_fields[2].id}.reps.g1"]
                 error_message = f"Violates U(1)Y gauge symmetry. {Y_psi_L} + {Y_psi_R} {sign} {Y_Phi} = {sum}"
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"fields.{self.sorted_fields[0].id}.reps.g1", f"fields.{self.sorted_fields[1].id}.reps.g1", f"fields.{self.sorted_fields[2].id}.reps.g1"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -297,7 +292,7 @@ class Yukawa(Interaction):
                 self.Description = f"{self.name}-Yukawa-Coupling"
                 self.LaTeX = f"Y_{{{self.sorted_fields[0].name}}}"
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"fields.{self.sorted_fields[0].id}"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -322,7 +317,7 @@ class Yukawa(Interaction):
                                         LaTeX = f"m_{particle.name}")
                     self.ExtParams[mf.name] = mf
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"interactions.{self.id}.fields"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -362,7 +357,7 @@ class Yukawa(Interaction):
                 else:
                     self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], Sqrt[2]/vSM*M{value.name}")
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"interactions.{self.id}.fields"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -375,10 +370,10 @@ class Yukawa(Interaction):
             else:
                 lag = f"- {self.name} {self.sorted_fields[1].name}.{self.sorted_fields[0].name}.{self.scalar_name}"
             self.LagHC.append(lag)
-            self.sorted_fields[0].mass_term.append(lag)
-            self.sorted_fields[1].mass_term.append(lag)
+            self.sorted_fields[0].mass_term.append(self.id)
+            self.sorted_fields[1].mass_term.append(self.id)
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"interactions.{self.id}.fields"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -424,21 +419,23 @@ class Yukawa(Interaction):
 
             self.EWSB_matter_sector = f"{{{{{self.left_spinor}}}, {{conj[{self.right_spinor}]}}}}, {{{{{self.left_spinor.upper()}, V{self.dirac_spinor}}}, {{{self.right_spinor.upper()}, U{self. dirac_spinor}}}}}"
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"interaction.{self.id}.fields"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
        
     def _all_validations(self):
         super()._all_validations()
-        self.all_validations.extend([self._dirac_bilinear_product, 
-                                     self._get_massive_particles, 
+        
+        self.all_validations.extend([(self._dirac_bilinear_product, 1), 
+                                     (self._get_massive_particles, 1), 
                                      #self._check_massive_particles,
-                                     self._check_U1Y_gauge_symmetry,
-                                     self._yukawa_mass,
-                                     self._yukawa_matrix,
-                                     self._mixing_matrix,
-                                     self._yukawa_lagrangian])
+                                     (self._check_U1Y_gauge_symmetry, 1),
+                                     (self._yukawa_mass, 1),
+                                     (self._yukawa_matrix, 1),
+                                     (self._mixing_matrix, 1),
+                                     (self._yukawa_lagrangian, 1)
+                                     ])
 
 # ====================================================================
 #                     Vector-Like Fermion
@@ -453,8 +450,6 @@ class VectorLikeFermion(Interaction):
     field_requirements = {0: field1, 1: field2}
     param_list = []
     all_such_interactions = []
-
-
 
     def __init__(self, id, fields):
         super().__init__(id, "VectorLikeFermion", self.field_requirements, fields, self.param_list)
@@ -515,7 +510,7 @@ class ScalarSelfInteraction(Interaction):
                 self.IntParams[self.mu2.name] = self.mu2
             self.ParametersToSolveTadpoles.append(self.mu2.name)
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"interactions.{self.id}.fields"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -545,7 +540,7 @@ class ScalarSelfInteraction(Interaction):
 
             self.ExtParams[self.LambdaVar.name] = self.LambdaVar
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"interactions.{self.id}.fields"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
@@ -558,18 +553,19 @@ class ScalarSelfInteraction(Interaction):
             self.LagNoHC.append(lag)
             self.sorted_fields[0].potential.append(lag)
         except Exception as e:
-            error_var = ["fields"]
+            error_var = [f"interactions.{self.id}.fields"]
             error_message = f"Error: {e}"
             result.update({"score": 0, "error_var": error_var, "message": error_message})
         return result
 
     def _all_validations(self):
         super()._all_validations()
-        self.all_validations.extend([self._scalar_mass, 
-                                     self._scalar_quartic, 
-                                     self._scalar_lagrangian])
-        
-    
+
+        self.all_validations.extend([(self._scalar_mass, 1), 
+                                     (self._scalar_quartic, 1), 
+                                     (self._scalar_lagrangian, 1)
+                                     ])
+
 
 # ====================================================================
 #                       Scalar-Scalar Mixing

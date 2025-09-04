@@ -46,23 +46,15 @@ class Particle:
         def _type_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if self.type not in allowed_particle_types:
-                error_var = ["type"]
+                error_var = [f"particles.{self.id}.type"]
                 message = f"Type must be one of {allowed_particle_types}"
-                result.update({"score": 0, "error_var": error_var, "message": message})
-            return result
-
-        def _id_check():
-            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
-            if not isinstance(self.id, str):
-                error_var = ["id"]
-                message = f"ID must be a string"
                 result.update({"score": 0, "error_var": error_var, "message": message})
             return result
 
         def _name_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.name, str):
-                error_var = ["name"]
+                error_var = [f"particles.{self.id}.name"]
                 message = f"Name must be a string"
                 result.update({"score": 0, "error_var": error_var, "message": message})
             return result
@@ -70,7 +62,7 @@ class Particle:
         def _mass_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not (isinstance(self.mass, float) or isinstance(self.mass, int)) or self.mass < 0:
-                error_var = ["mass"]
+                error_var = [f"particles.{self.id}.mass"]
                 message = f"Mass must be a number and non-negative"
                 result.update({"score": 0, "error_var": error_var, "message": message})
             return result
@@ -78,7 +70,7 @@ class Particle:
         def _charge_check():
             result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
             if not isinstance(self.charge, int):
-                error_var = ["charge"]
+                error_var = [f"particles.{self.id}.charge"]
                 message = f"Charge must be an integer"
                 result.update({"score": 0, "error_var": error_var, "message": message})
             return result
@@ -86,11 +78,11 @@ class Particle:
         if self.simplify_checklist:
             self.all_checks = []
         else:
-            self.all_checks = [_type_check, 
-                           _id_check, 
-                           _name_check, 
-                           _mass_check, 
-                           _charge_check]
+            self.all_checks = [(_type_check, 1), 
+                               (_name_check, 1), 
+                               (_mass_check, 1), 
+                               (_charge_check, 1)
+                               ]
 
     def __check__(self):
         """ Input checks for the particle class. """
@@ -202,27 +194,6 @@ class RealScalar(Particle):
 class ComplexScalar(Particle):
     def __init__(self, id, name, mass, charge, simplify_checklist = True):
         super().__init__(id, name, "complex", mass, charge, simplify_checklist = simplify_checklist)
-        self.isDecomposed = False
-
-    def __str__(self):
-        if self.isDecomposed:
-            return f"{self.name}1 + I{self.name}2"
-        else:
-            return f"{self.name}"
-
-    def decompose(self):
-        real_dof = RealScalar(id = self.id + "1", 
-                              name = self.name + "1", 
-                              mass = self.mass, 
-                              charge = self.charge)
-        
-        imaginary_dof = RealScalar(id = self.id + "2", 
-                                   name = self.name + "2", 
-                                   mass = self.mass, 
-                                   charge = self.charge)
-        self.isDecomposed = True
-        return real_dof, imaginary_dof
-
 
 
 # ====================================================================
@@ -231,6 +202,8 @@ class ComplexScalar(Particle):
 class VectorBoson(Particle):
     def __init__(self, id, name, mass, charge, simplify_checklist = True):
         super().__init__(id, "vector", name, mass, charge, simplify_checklist = simplify_checklist)
+
+
 
 # ------------------------------------------------------------------
 if __name__ == "__main__":

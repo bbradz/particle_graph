@@ -7,7 +7,6 @@ m6, _deplicate_particles, 1, 1, [], Passed
 m6, _particle_numbers, 1, 1, [], Passed
 m6, _particle_types, 1, 1, [], Passed
 m6, _particle_charges, 1, 1, [], Passed
-m6, _all_particle_pass, 1, 1, [], Passed
 m6, _sort_particles, 2, 2, [], Passed
 m6, _mass_term_check, 10, 10, [], Passed
 m6, _potential_term_check, 10, 10, [], Passed
@@ -19,7 +18,6 @@ m1, _deplicate_particles, 1, 1, [], Passed
 m1, _particle_numbers, 1, 1, [], Passed
 m1, _particle_types, 1, 1, [], Passed
 m1, _particle_charges, 1, 1, [], Passed
-m1, _all_particle_pass, 1, 1, [], Passed
 m1, _sort_particles, 2, 2, [], Passed
 m1, _assign_colors, 1, 1, [], Passed
 m1, _mass_term_check, 10, 10, [], Passed
@@ -31,7 +29,6 @@ m2, _deplicate_particles, 1, 1, [], Passed
 m2, _particle_numbers, 1, 1, [], Passed
 m2, _particle_types, 1, 1, [], Passed
 m2, _particle_charges, 1, 1, [], Passed
-m2, _all_particle_pass, 1, 1, [], Passed
 m2, _sort_particles, 2, 2, [], Passed
 m2, _assign_colors, 1, 1, [], Passed
 m2, _mass_term_check, 10, 10, [], Passed
@@ -43,7 +40,6 @@ m3, _deplicate_particles, 1, 1, [], Passed
 m3, _particle_numbers, 1, 1, [], Passed
 m3, _particle_types, 1, 1, [], Passed
 m3, _particle_charges, 1, 1, [], Passed
-m3, _all_particle_pass, 1, 1, [], Passed
 m3, _sort_particles, 2, 2, [], Passed
 m3, _assign_colors, 1, 1, [], Passed
 m3, _mass_term_check, 10, 10, [], Passed
@@ -55,7 +51,6 @@ m4, _deplicate_particles, 1, 1, [], Passed
 m4, _particle_numbers, 1, 1, [], Passed
 m4, _particle_types, 1, 1, [], Passed
 m4, _particle_charges, 1, 1, [], Passed
-m4, _all_particle_pass, 1, 1, [], Passed
 m4, _sort_particles, 2, 2, [], Passed
 m4, _assign_colors, 1, 1, [], Passed
 m4, _mass_term_check, 10, 10, [], Passed
@@ -67,11 +62,9 @@ m5, _deplicate_particles, 1, 1, [], Passed
 m5, _particle_numbers, 1, 1, [], Passed
 m5, _particle_types, 1, 1, [], Passed
 m5, _particle_charges, 1, 1, [], Passed
-m5, _all_particle_pass, 1, 1, [], Passed
 m5, _sort_particles, 2, 2, [], Passed
 m5, _assign_colors, 1, 1, [], Passed
 m5, _mass_term_check, 10, 10, [], Passed
-i1, _id_check, 1, 1, [], Passed
 i1, _field_length_check, 1, 1, [], Passed
 i1, _field_check, 1, 1, [], Passed
 i1, _params_check, 1, 1, [], Passed
@@ -87,7 +80,6 @@ i1, _yukawa_mass, 1, 1, [], Passed
 i1, _yukawa_matrix, 1, 1, [], Passed
 i1, _mixing_matrix, 1, 1, [], Passed
 i1, _yukawa_lagrangian, 1, 1, [], Passed
-i2, _id_check, 1, 1, [], Passed
 i2, _field_length_check, 1, 1, [], Passed
 i2, _field_check, 1, 1, [], Passed
 i2, _params_check, 1, 1, [], Passed
@@ -103,7 +95,6 @@ i2, _yukawa_mass, 1, 1, [], Passed
 i2, _yukawa_matrix, 1, 1, [], Passed
 i2, _mixing_matrix, 1, 1, [], Passed
 i2, _yukawa_lagrangian, 1, 1, [], Passed
-i3, _id_check, 1, 1, [], Passed
 i3, _field_length_check, 1, 1, [], Passed
 i3, _field_check, 1, 1, [], Passed
 i3, _params_check, 1, 1, [], Passed
@@ -119,7 +110,6 @@ i3, _yukawa_mass, 1, 1, [], Passed
 i3, _yukawa_matrix, 1, 1, [], Passed
 i3, _mixing_matrix, 1, 1, [], Passed
 i3, _yukawa_lagrangian, 1, 1, [], Passed
-i4, _id_check, 1, 1, [], Passed
 i4, _field_length_check, 1, 1, [], Passed
 i4, _field_check, 1, 1, [], Passed
 i4, _params_check, 1, 1, [], Passed

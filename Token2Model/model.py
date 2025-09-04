@@ -15,7 +15,7 @@ from .check import run_checks
 from .param import GlobalParameterRegistry
 
 # ====================================================================
-#                            Model
+#                               Model
 # ====================================================================
 class Model:
     """
@@ -77,8 +77,9 @@ class Model:
     def _read_gauge_group(self, model_data):
         from .group import GaugeGroup
         self.gauge_groups = {}
-        for g in model_data['GaugeGroups']:
-            self.gauge_groups[g["id"]] = GaugeGroup(**g)
+        for key, g in model_data['GaugeGroups'].items():
+            g["id"] = key
+            self.gauge_groups[key] = GaugeGroup(**g)
 
     # Read Particles
     def _read_particles(self, model_data):
@@ -87,8 +88,8 @@ class Model:
         self.fermion_particles = {}
         self.vector_particles = {}
         
-        for p in model_data['particles']:
-
+        for key, p in model_data['particles'].items():
+            p["id"] = key
             # find free parameters
             if isinstance(p["mass"], list):
                 free_param_name = f"M{p['name']}INPUT"
@@ -97,16 +98,15 @@ class Model:
 
             if p["type"] == "fermion":
                 p.pop("type")
-                self.fermion_particles[p["id"]] = Fermion(**p, simplify_checklist = self.simplify_checklist)
+                self.fermion_particles[key] = Fermion(**p, simplify_checklist = self.simplify_checklist)
             elif p["type"] == "real":
                 p.pop("type")
-                self.scalar_particles[p["id"]] = RealScalar(**p, simplify_checklist = self.simplify_checklist)
+                self.scalar_particles[key] = RealScalar(**p, simplify_checklist = self.simplify_checklist)
             elif p["type"] == "complex":
                 p.pop("type")
-                self.scalar_particles[p["id"]] = ComplexScalar(**p, simplify_checklist = self.simplify_checklist)
+                self.scalar_particles[key] = ComplexScalar(**p, simplify_checklist = self.simplify_checklist)
             else:
-                type = p["type"]
-                print(f"invalid field type {type}")
+                print(f"invalid field type {p['type']}")
 
         self.particles = {**self.scalar_particles, **self.fermion_particles, **self.vector_particles}
 
@@ -115,7 +115,8 @@ class Model:
         from .field import ScalarField
         self.scalar_fields = {}
         scalar_particles = self.scalar_particles.copy()
-        for sf in model_data["fields"]: # sf stands for "scalar field"
+        for key, sf in model_data["fields"].items(): # sf stands for "scalar field"
+            sf["id"] = key
             if sf["type"] in ["real", "complex", "scalar"]:
                 try:
                     scalar_list = [self.scalar_particles[id] for id in sf["particles"]]
@@ -128,7 +129,7 @@ class Model:
                 sf["groups"] = self.gauge_groups
                 sf["particles"] = scalar_list
                 new_scalar_field = ScalarField(**sf, simplify_checklist = self.simplify_checklist)
-                self.scalar_fields[sf["id"]] = new_scalar_field
+                self.scalar_fields[key] = new_scalar_field
 
     # Read Vector Fields
     def _read_vector_fields(self, model_data):
@@ -144,20 +145,25 @@ class Model:
         chiral_fermions = {**{f"{id}_left": ptcl.left for id, ptcl in self.fermion_particles.items()},
                            **{f"{id}_right": ptcl.right for id, ptcl in self.fermion_particles.items()}}
         
-        for ff in model_data["fields"]:
+        for key, ff in model_data["fields"].items():
+            ff["id"] = key
             if ff["type"] == "fermion":
                 try:
-                    weyl_list = [chiral_fermions[f"{p}_left"] if ff["chirality"] == "left" else chiral_fermions[f"{p}_right"] for p in ff["particles"]]
+                    weyl_list = [chiral_fermions.get(f"{p}_left", p) if ff["chirality"] == "left" else chiral_fermions.get(f"{p}_right", p) for p in ff["particles"]]
+
                     for weyl_fermion in weyl_list:
-                        chiral_fermions.pop(weyl_fermion.id, None)
-                except:
+                        if not isinstance(weyl_fermion, str):
+                            chiral_fermions.pop(weyl_fermion.id, None)
+                
+                except Exception as e:
+                    print(e)
                     weyl_list = ff["particles"]
 
                 ff["groups"] = self.gauge_groups
                 ff["particles"] = weyl_list
                 ff.pop('type')
                 new_fermion_field = FermionField(**ff, simplify_checklist = self.simplify_checklist)
-                self.fermion_fields[ff["id"]] = new_fermion_field
+                self.fermion_fields[key] = new_fermion_field
 
         try:        
             self.weyl_spinors = {}
@@ -195,7 +201,8 @@ class Model:
     def _read_interactions(self, model_data):
         from .interaction import Yukawa, ScalarSelfInteraction
         self.interactions = {}
-        for itr in model_data["interactions"]:
+        for key, itr in model_data["interactions"].items():
+            itr["id"] = key
             try:
                 fields = [self.fields[id] for id in itr["fields"]]
             except:
@@ -219,7 +226,7 @@ class Model:
                 print(f"invalid interaction type {itr['type']}")
                 continue
 
-            self.interactions[itr["id"]] = new_interaction
+            self.interactions[key] = new_interaction
         pass 
 
     # Get Parameters from Interactions
@@ -231,6 +238,7 @@ class Model:
         self.EWSB_matter_sector = []
         self.lagNoHC = []
         self.lagHC = []
+
         for itr in self.interactions.values():
             self.ext_params.update(itr.ExtParams)
             self.int_params.update(itr.IntParams)
@@ -240,6 +248,7 @@ class Model:
             self.parameters_to_solve_tadpoles.extend(itr.ParametersToSolveTadpoles)
             if itr.EWSB_matter_sector is not None:
                 self.EWSB_matter_sector.append(f"    {{{itr.EWSB_matter_sector}}}")
+
         self.parameters = {**self.ext_params, **self.int_params}
 
     # ------------------------------------------------------------------
@@ -293,7 +302,9 @@ class Model:
                 if key == "G^3":
                     G, _, _ = check
                     anomaly_name = f"({G.name})^3"
-                    error_var = ["all fermions", "reps", check]
+                    #error_var = ["all fermions", "reps", check]
+                    error_var = [f"fields.{f.id}.reps.{G.id}" for f in self.fermion_fields.values()]
+                    
                     def anomaly_func(chiral, dim, gen, color_index):
                         field_rep = f.reps[f"{G.id}"]
                         return gen * dim * chiral * G.cubic_anomaly(field_rep) * color_index
@@ -301,7 +312,10 @@ class Model:
                 elif key == "U1-G^2":
                     G, _, U1 = check
                     anomaly_name = f"({U1.name})x({G.name})^2"
-                    error_var = ["all fermions", "reps", check]
+                    #error_var = ["all fermions", "reps", check]
+                    error_var = [f"fields.{f.id}.reps.{G.id}" for f in self.fermion_fields.values()]
+                    error_var.extend([f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()])
+                    
                     def anomaly_func(chiral, dim, gen, color_index):
                         field_rep = f.reps[f"{G.id}"]
                         return gen * dim * chiral * G.Dynkin_index(field_rep)[2] * f.reps[f"{U1.id}"] * color_index
@@ -309,7 +323,8 @@ class Model:
                 elif key == "U1^3":
                     U1, _, _ = check
                     anomaly_name = f"({U1.name})^3"
-                    error_var = ["all fermions", "reps", check]
+                    #error_var = ["all fermions", "reps", check]
+                    error_var = [f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()]
                     def anomaly_func(chiral, dim, gen, color_index):
                         Y = f.reps[f"{U1.id}"]
                         return gen * dim * chiral * Y**3 * color_index
@@ -317,7 +332,8 @@ class Model:
                 elif key == "U1-grav":
                     U1, _, _ = check
                     anomaly_name = f"({U1.name})^2-grav"
-                    error_var = ["all fermions", "reps", check]
+                    #error_var = ["all fermions", "reps", check]
+                    error_var = [f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()]
                     def anomaly_func(chiral, dim, gen, color_index):
                         Y = f.reps[f"{U1.id}"]
                         return gen * dim * chiral * Y * color_index
@@ -325,7 +341,10 @@ class Model:
                 elif key == "U1-mixing":
                     U1i, U1j, U1k = check
                     anomaly_name = f"({U1i.name})x({U1j.name})x({U1k.name})"
-                    error_var = ["all fermions", "reps", check]
+                    #error_var = ["all fermions", "reps", check]
+                    error_var = [f"fields.{f.id}.reps.{U1i.id}" for f in self.fermion_fields.values()]
+                    error_var.extend([f"fields.{f.id}.reps.{U1j.id}" for f in self.fermion_fields.values()])
+                    error_var.extend([f"fields.{f.id}.reps.{U1k.id}" for f in self.fermion_fields.values()])
                     def anomaly_func(chiral, dim, gen, color_index):
                         Y1 = f.reps[f"{U1i.id}"]
                         Y2 = f.reps[f"{U1j.id}"]

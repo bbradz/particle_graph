@@ -129,7 +129,7 @@ ParameterDefinitions = {
            DependenceSPheno -> None,
            DependenceOptional -> None,
            Real -> True,
-           Value -> 320.0201281242623,
+           Value -> 197.86554333157517,
            LesHouches -> Mt,
            LaTeX -> "m_t"}},
 
@@ -140,7 +140,7 @@ ParameterDefinitions = {
            DependenceSPheno -> None,
            DependenceOptional -> None,
            Real -> True,
-           Value -> 0.11329688148737227,
+           Value -> 0.6057062106935661,
            LesHouches -> {SM, 1},
            LaTeX -> "\\lambda"}},
 
