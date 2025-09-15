@@ -8,7 +8,7 @@ def run_checks(all_checks, checklists, skip_results=True):
                 break
         if fail_previous_check and skip_results:
             
-            result = {"score": 0, "error_var": [], "message": "Skipped", "max_score": max_score}
+            result = {"score": 0, "error_var": [], "good_var": [], "message": "Skipped", "max_score": max_score}
             checklists[check.__name__] = result
         else:
             checklists[check.__name__] = check()

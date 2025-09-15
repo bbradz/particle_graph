@@ -1,5 +1,6 @@
 id, check, score, max_score, error_var, message
-m6, _sort_reps, 1, 1, [], Passed
+m6, _particles_check, 1, 1, [], Passed
+m6, _sort_reps, 3, 3, [], Passed
 m6, _reps_dim_consistency, 1, 1, [], Passed
 m6, _gen_type_consistency, 1, 1, [], Passed
 m6, _allowed_charges, 1, 1, [], Passed
@@ -9,8 +10,9 @@ m6, _particle_types, 1, 1, [], Passed
 m6, _particle_charges, 1, 1, [], Passed
 m6, _sort_particles, 2, 2, [], Passed
 m6, _mass_term_check, 10, 10, [], Passed
-m6, _potential_term_check, 10, 10, [], Passed
-m1, _sort_reps, 1, 1, [], Passed
+m6, _potential_term_check, 1, 1, [], Passed
+m1, _particles_check, 1, 1, [], Passed
+m1, _sort_reps, 3, 3, [], Passed
 m1, _reps_dim_consistency, 1, 1, [], Passed
 m1, _gen_type_consistency, 1, 1, [], Passed
 m1, _allowed_charges, 1, 1, [], Passed
@@ -21,7 +23,8 @@ m1, _particle_charges, 1, 1, [], Passed
 m1, _sort_particles, 2, 2, [], Passed
 m1, _assign_colors, 1, 1, [], Passed
 m1, _mass_term_check, 10, 10, [], Passed
-m2, _sort_reps, 1, 1, [], Passed
+m2, _particles_check, 1, 1, [], Passed
+m2, _sort_reps, 3, 3, [], Passed
 m2, _reps_dim_consistency, 1, 1, [], Passed
 m2, _gen_type_consistency, 1, 1, [], Passed
 m2, _allowed_charges, 1, 1, [], Passed
@@ -32,7 +35,8 @@ m2, _particle_charges, 1, 1, [], Passed
 m2, _sort_particles, 2, 2, [], Passed
 m2, _assign_colors, 1, 1, [], Passed
 m2, _mass_term_check, 10, 10, [], Passed
-m3, _sort_reps, 1, 1, [], Passed
+m3, _particles_check, 1, 1, [], Passed
+m3, _sort_reps, 3, 3, [], Passed
 m3, _reps_dim_consistency, 1, 1, [], Passed
 m3, _gen_type_consistency, 1, 1, [], Passed
 m3, _allowed_charges, 1, 1, [], Passed
@@ -43,7 +47,8 @@ m3, _particle_charges, 1, 1, [], Passed
 m3, _sort_particles, 2, 2, [], Passed
 m3, _assign_colors, 1, 1, [], Passed
 m3, _mass_term_check, 10, 10, [], Passed
-m4, _sort_reps, 1, 1, [], Passed
+m4, _particles_check, 1, 1, [], Passed
+m4, _sort_reps, 3, 3, [], Passed
 m4, _reps_dim_consistency, 1, 1, [], Passed
 m4, _gen_type_consistency, 1, 1, [], Passed
 m4, _allowed_charges, 1, 1, [], Passed
@@ -54,7 +59,8 @@ m4, _particle_charges, 1, 1, [], Passed
 m4, _sort_particles, 2, 2, [], Passed
 m4, _assign_colors, 1, 1, [], Passed
 m4, _mass_term_check, 10, 10, [], Passed
-m5, _sort_reps, 1, 1, [], Passed
+m5, _particles_check, 1, 1, [], Passed
+m5, _sort_reps, 3, 3, [], Passed
 m5, _reps_dim_consistency, 1, 1, [], Passed
 m5, _gen_type_consistency, 1, 1, [], Passed
 m5, _allowed_charges, 1, 1, [], Passed

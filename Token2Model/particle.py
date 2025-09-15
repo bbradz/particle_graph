@@ -44,35 +44,63 @@ class Particle:
         self.all_checks = []
         
         def _type_check():
-            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
+            result = {"score": 1, 
+                      "error_var": [], 
+                      "good_var": [f"particles.{self.id}.type"], 
+                      "message": "Passed", 
+                      "max_score": 1,
+                      }
             if self.type not in allowed_particle_types:
-                error_var = [f"particles.{self.id}.type"]
-                message = f"Type must be one of {allowed_particle_types}"
-                result.update({"score": 0, "error_var": error_var, "message": message})
+                result.update({"score": 0, 
+                               "error_var": [f"particles.{self.id}.type"], 
+                               "good_var": [], 
+                               "message": f"Type must be one of scalar/real/pseudo/complex/fermion/vector"
+                               })
             return result
 
         def _name_check():
-            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
+            result = {"score": 1, 
+                      "error_var": [], 
+                      "good_var": [f"particles.{self.id}.name"], 
+                      "message": "Passed", 
+                      "max_score": 1,
+                      }
             if not isinstance(self.name, str):
-                error_var = [f"particles.{self.id}.name"]
-                message = f"Name must be a string"
-                result.update({"score": 0, "error_var": error_var, "message": message})
+                result.update({"score": 0, 
+                               "error_var": [f"particles.{self.id}.name"], 
+                               "good_var": [], 
+                               "message": f"Name must be a string"
+                               })
             return result
 
         def _mass_check():
-            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
+            result = {"score": 1, 
+                      "error_var": [], 
+                      "good_var": [f"particles.{self.id}.mass"], 
+                      "message": "Passed", 
+                      "max_score": 1,
+                      }
             if not (isinstance(self.mass, float) or isinstance(self.mass, int)) or self.mass < 0:
-                error_var = [f"particles.{self.id}.mass"]
-                message = f"Mass must be a number and non-negative"
-                result.update({"score": 0, "error_var": error_var, "message": message})
+                result.update({"score": 0, 
+                               "error_var": [f"particles.{self.id}.mass"], 
+                               "good_var": [], 
+                               "message": f"Mass must be a number and non-negative"
+                               })
             return result
 
         def _charge_check():
-            result = {"score": 1, "error_var": [], "message": "Passed", "max_score": 1}
+            result = {"score": 1, 
+                      "error_var": [], 
+                      "good_var": [f"particles.{self.id}.charge"], 
+                      "message": "Passed", 
+                      "max_score": 1,
+                      }
             if not isinstance(self.charge, int):
-                error_var = [f"particles.{self.id}.charge"]
-                message = f"Charge must be an integer"
-                result.update({"score": 0, "error_var": error_var, "message": message})
+                result.update({"score": 0, 
+                               "error_var": [f"particles.{self.id}.charge"], 
+                               "good_var": [], 
+                               "message": f"Charge must be an integer"
+                               })
             return result
     
         if self.simplify_checklist:

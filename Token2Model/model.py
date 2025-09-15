@@ -352,7 +352,7 @@ class Model:
                         return gen * dim * chiral * Y1 * Y2 * Y3 * color_index
     
                 if not self.pass_all_checks():
-                    self.checklist['global'][anomaly_name] = {"score": 0, "max_score": 1, "error_var": [], "message": "Skipped"}
+                    self.checklist['global'][anomaly_name] = {"score": 0, "max_score": 1, "error_var": [], "good_var": [], "message": "Skipped"}
                     continue
                 
                 for f in self.fermion_fields.values():
@@ -363,9 +363,9 @@ class Model:
                     anomaly_coeff += anomaly_func(chiral, dim, gen, color_index)
 
                 if anomaly_coeff != 0:
-                    self.checklist['global'][anomaly_name] = {"score": score(anomaly_coeff), "max_score": 1, "error_var": error_var, "message": f"{anomaly_name} anomaly detected."}
+                    self.checklist['global'][anomaly_name] = {"score": score(anomaly_coeff), "max_score": 1, "error_var": error_var, "good_var": [], "message": f"{anomaly_name} anomaly detected."}
                 else:
-                    self.checklist['global'][anomaly_name] = {"score": 1, "max_score": 1, "error_var": [], "message": "Passed"}                    
+                    self.checklist['global'][anomaly_name] = {"score": 1, "max_score": 1, "error_var": [], "good_var": [], "message": "Passed"}                    
 
     def _read_check_list(self):
         model_components = [self.particles, self.fields, self.interactions]
@@ -562,10 +562,12 @@ class Model:
     # ------------------------------------------------------------------
     def write_checklist(self):
         with open(os.path.join(self.output_dir, "checklist.csv"), "w") as f:
-            f.write("id, check, score, max_score, error_var, message\n")
+            f.write("id, check, score, max_score, error_var, good_var, message\n")
             for id, checklist in self.checklist.items():
                 for key, value in checklist.items():
-                    f.write(f"{id}, {key}, {value['score']}, {value['max_score']}, {value['error_var']}, {value['message']}\n")
+
+                    f.write(f"{id}, {key}, {value['score']}, {value['max_score']}, {value['error_var']}, {value['good_var']}, {value['message']}\n")
+
 
 
     
