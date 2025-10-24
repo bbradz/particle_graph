@@ -1,0 +1,242 @@
+id, check, score, max_score, error_var, good_var, message
+s1, _type_check, 1, 1, [], ['particles.s1.type'], Passed
+s1, _name_check, 1, 1, [], ['particles.s1.name'], Passed
+s1, _mass_check, 1, 1, [], ['particles.s1.mass'], Passed
+s1, _charge_check, 1, 1, [], ['particles.s1.charge'], Passed
+s2, _type_check, 1, 1, [], ['particles.s2.type'], Passed
+s2, _name_check, 1, 1, [], ['particles.s2.name'], Passed
+s2, _mass_check, 1, 1, [], ['particles.s2.mass'], Passed
+s2, _charge_check, 1, 1, [], ['particles.s2.charge'], Passed
+f1, _type_check, 1, 1, [], ['particles.f1.type'], Passed
+f1, _name_check, 1, 1, [], ['particles.f1.name'], Passed
+f1, _mass_check, 1, 1, [], ['particles.f1.mass'], Passed
+f1, _charge_check, 1, 1, [], ['particles.f1.charge'], Passed
+f2, _type_check, 1, 1, [], ['particles.f2.type'], Passed
+f2, _name_check, 1, 1, [], ['particles.f2.name'], Passed
+f2, _mass_check, 1, 1, [], ['particles.f2.mass'], Passed
+f2, _charge_check, 1, 1, [], ['particles.f2.charge'], Passed
+f3, _type_check, 1, 1, [], ['particles.f3.type'], Passed
+f3, _name_check, 1, 1, [], ['particles.f3.name'], Passed
+f3, _mass_check, 1, 1, [], ['particles.f3.mass'], Passed
+f3, _charge_check, 1, 1, [], ['particles.f3.charge'], Passed
+f4, _type_check, 1, 1, [], ['particles.f4.type'], Passed
+f4, _name_check, 1, 1, [], ['particles.f4.name'], Passed
+f4, _mass_check, 1, 1, [], ['particles.f4.mass'], Passed
+f4, _charge_check, 1, 1, [], ['particles.f4.charge'], Passed
+f5, _type_check, 1, 1, [], ['particles.f5.type'], Passed
+f5, _name_check, 1, 1, [], ['particles.f5.name'], Passed
+f5, _mass_check, 1, 1, [], ['particles.f5.mass'], Passed
+f5, _charge_check, 1, 1, [], ['particles.f5.charge'], Passed
+f6, _type_check, 1, 1, [], ['particles.f6.type'], Passed
+f6, _name_check, 1, 1, [], ['particles.f6.name'], Passed
+f6, _mass_check, 1, 1, [], ['particles.f6.mass'], Passed
+f6, _charge_check, 1, 1, [], ['particles.f6.charge'], Passed
+f7, _type_check, 1, 1, [], ['particles.f7.type'], Passed
+f7, _name_check, 1, 1, [], ['particles.f7.name'], Passed
+f7, _mass_check, 1, 1, [], ['particles.f7.mass'], Passed
+f7, _charge_check, 1, 1, [], ['particles.f7.charge'], Passed
+f8, _type_check, 1, 1, [], ['particles.f8.type'], Passed
+f8, _name_check, 1, 1, [], ['particles.f8.name'], Passed
+f8, _mass_check, 1, 1, [], ['particles.f8.mass'], Passed
+f8, _charge_check, 1, 1, [], ['particles.f8.charge'], Passed
+f9, _type_check, 1, 1, [], ['particles.f9.type'], Passed
+f9, _name_check, 1, 1, [], ['particles.f9.name'], Passed
+f9, _mass_check, 1, 1, [], ['particles.f9.mass'], Passed
+f9, _charge_check, 1, 1, [], ['particles.f9.charge'], Passed
+f10, _type_check, 1, 1, [], ['particles.f10.type'], Passed
+f10, _name_check, 1, 1, [], ['particles.f10.name'], Passed
+f10, _mass_check, 1, 1, [], ['particles.f10.mass'], Passed
+f10, _charge_check, 1, 1, [], ['particles.f10.charge'], Passed
+f11, _type_check, 1, 1, [], ['particles.f11.type'], Passed
+f11, _name_check, 1, 1, [], ['particles.f11.name'], Passed
+f11, _mass_check, 1, 1, [], ['particles.f11.mass'], Passed
+f11, _charge_check, 1, 1, [], ['particles.f11.charge'], Passed
+f12, _type_check, 1, 1, [], ['particles.f12.type'], Passed
+f12, _name_check, 1, 1, [], ['particles.f12.name'], Passed
+f12, _mass_check, 1, 1, [], ['particles.f12.mass'], Passed
+f12, _charge_check, 1, 1, [], ['particles.f12.charge'], Passed
+m6, _name_check, 1, 1, [], ['fields.m6.name'], Passed
+m6, _type_check, 1, 1, [], ['fields.m6.type'], Passed
+m6, _groups_check, 1, 1, [], ['fields.m6.groups'], Passed
+m6, _reps_check, 3, 3, [], ['fields.m6.reps'], Passed
+m6, _dim_check, 1, 1, [], ['fields.m6.dim'], Passed
+m6, _gen_check, 1, 1, [], ['fields.m6.gen'], Passed
+m6, _particles_check, 2, 2, [], [], Passed
+m6, _self_conjugate_check, 1, 1, [], ['fields.m6.self_conjugate'], Passed
+m6, _sort_reps, 3, 3, [], ['fields.m6.reps'], Passed
+m6, _reps_dim_consistency, 1, 1, [], ['fields.m6.dim', 'fields.m6.reps.g2'], Passed
+m6, _gen_type_consistency, 1, 1, [], ['fields.m6.gen'], Passed
+m6, _allowed_charges, 1, 1, [], ['fields.m6.reps.g2', 'fields.m6.reps.g1'], Passed
+m6, _deplicate_particles, 1, 1, [], ['fields.m6.particles'], Passed
+m6, _particle_numbers, 1, 1, [], ['fields.m6.particles', 'fields.m6.gen', 'fields.m6.dim'], Passed
+m6, _particle_types, 1, 1, [], ['fields.m6.particles'], Passed
+m6, _particle_charges, 1, 1, [], ['particles.s1.charge', 'particles.s2.charge', 'fields.m6.self_conjugate'], Passed
+m6, _all_particle_pass, 1, 1, [], ['particles.s1.charge', 'particles.s2.charge', 'fields.m6.self_conjugate'], Passed
+m6, _sort_particles, 2, 2, [], ['particles.s1', 'particles.s2'], Passed
+m6, _mass_term_check, 10, 10, [], [], Passed
+m6, _potential_term_check, 1, 1, [], ['interactions.i4'], Passed
+m1, _name_check, 1, 1, [], ['fields.m1.name'], Passed
+m1, _type_check, 1, 1, [], ['fields.m1.type'], Passed
+m1, _groups_check, 1, 1, [], ['fields.m1.groups'], Passed
+m1, _reps_check, 3, 3, [], ['fields.m1.reps'], Passed
+m1, _dim_check, 1, 1, [], ['fields.m1.dim'], Passed
+m1, _gen_check, 1, 1, [], ['fields.m1.gen'], Passed
+m1, _particles_check, 2, 2, [], [], Passed
+m1, _self_conjugate_check, 1, 1, [], ['fields.m1.self_conjugate'], Passed
+m1, _sort_reps, 3, 3, [], ['fields.m1.reps'], Passed
+m1, _reps_dim_consistency, 1, 1, [], ['fields.m1.dim', 'fields.m1.reps.g2'], Passed
+m1, _gen_type_consistency, 1, 1, [], ['fields.m1.gen'], Passed
+m1, _allowed_charges, 1, 1, [], ['fields.m1.reps.g2', 'fields.m1.reps.g1'], Passed
+m1, _deplicate_particles, 1, 1, [], ['fields.m1.particles'], Passed
+m1, _particle_numbers, 1, 1, [], ['fields.m1.particles', 'fields.m1.gen', 'fields.m1.dim'], Passed
+m1, _particle_types, 1, 1, [], ['fields.m1.particles'], Passed
+m1, _particle_charges, 1, 1, [], ['particles.f4.charge', 'particles.f1.charge', 'particles.f5.charge', 'particles.f2.charge', 'particles.f6.charge', 'particles.f3.charge', 'fields.m1.self_conjugate'], Passed
+m1, _all_particle_pass, 1, 1, [], ['particles.f4.charge', 'particles.f1.charge', 'particles.f5.charge', 'particles.f2.charge', 'particles.f6.charge', 'particles.f3.charge', 'fields.m1.self_conjugate'], Passed
+m1, _sort_particles, 2, 2, [], ['particles.f4', 'particles.f1', 'particles.f5', 'particles.f2', 'particles.f6', 'particles.f3'], Passed
+m1, _chirality_check, 1, 1, [], [], Passed
+m1, _assign_colors, 1, 1, [], [], Passed
+m1, _mass_term_check, 10, 10, [], [], Passed
+m2, _name_check, 1, 1, [], ['fields.m2.name'], Passed
+m2, _type_check, 1, 1, [], ['fields.m2.type'], Passed
+m2, _groups_check, 1, 1, [], ['fields.m2.groups'], Passed
+m2, _reps_check, 3, 3, [], ['fields.m2.reps'], Passed
+m2, _dim_check, 1, 1, [], ['fields.m2.dim'], Passed
+m2, _gen_check, 1, 1, [], ['fields.m2.gen'], Passed
+m2, _particles_check, 2, 2, [], [], Passed
+m2, _self_conjugate_check, 1, 1, [], ['fields.m2.self_conjugate'], Passed
+m2, _sort_reps, 3, 3, [], ['fields.m2.reps'], Passed
+m2, _reps_dim_consistency, 1, 1, [], ['fields.m2.dim', 'fields.m2.reps.g2'], Passed
+m2, _gen_type_consistency, 1, 1, [], ['fields.m2.gen'], Passed
+m2, _allowed_charges, 1, 1, [], ['fields.m2.reps.g2', 'fields.m2.reps.g1'], Passed
+m2, _deplicate_particles, 1, 1, [], ['fields.m2.particles'], Passed
+m2, _particle_numbers, 1, 1, [], ['fields.m2.particles', 'fields.m2.gen', 'fields.m2.dim'], Passed
+m2, _particle_types, 1, 1, [], ['fields.m2.particles'], Passed
+m2, _particle_charges, 1, 1, [], ['particles.f1.charge', 'particles.f2.charge', 'particles.f3.charge', 'fields.m2.self_conjugate'], Passed
+m2, _all_particle_pass, 1, 1, [], ['particles.f1.charge', 'particles.f2.charge', 'particles.f3.charge', 'fields.m2.self_conjugate'], Passed
+m2, _sort_particles, 2, 2, [], ['particles.f1', 'particles.f2', 'particles.f3'], Passed
+m2, _chirality_check, 1, 1, [], [], Passed
+m2, _assign_colors, 1, 1, [], [], Passed
+m2, _mass_term_check, 10, 10, [], [], Passed
+m3, _name_check, 1, 1, [], ['fields.m3.name'], Passed
+m3, _type_check, 1, 1, [], ['fields.m3.type'], Passed
+m3, _groups_check, 1, 1, [], ['fields.m3.groups'], Passed
+m3, _reps_check, 3, 3, [], ['fields.m3.reps'], Passed
+m3, _dim_check, 1, 1, [], ['fields.m3.dim'], Passed
+m3, _gen_check, 1, 1, [], ['fields.m3.gen'], Passed
+m3, _particles_check, 2, 2, [], [], Passed
+m3, _self_conjugate_check, 1, 1, [], ['fields.m3.self_conjugate'], Passed
+m3, _sort_reps, 3, 3, [], ['fields.m3.reps'], Passed
+m3, _reps_dim_consistency, 1, 1, [], ['fields.m3.dim', 'fields.m3.reps.g2'], Passed
+m3, _gen_type_consistency, 1, 1, [], ['fields.m3.gen'], Passed
+m3, _allowed_charges, 1, 1, [], ['fields.m3.reps.g2', 'fields.m3.reps.g1'], Passed
+m3, _deplicate_particles, 1, 1, [], ['fields.m3.particles'], Passed
+m3, _particle_numbers, 1, 1, [], ['fields.m3.particles', 'fields.m3.gen', 'fields.m3.dim'], Passed
+m3, _particle_types, 1, 1, [], ['fields.m3.particles'], Passed
+m3, _particle_charges, 1, 1, [], ['particles.f7.charge', 'particles.f8.charge', 'particles.f9.charge', 'particles.f10.charge', 'particles.f11.charge', 'particles.f12.charge', 'fields.m3.self_conjugate'], Passed
+m3, _all_particle_pass, 1, 1, [], ['particles.f7.charge', 'particles.f8.charge', 'particles.f9.charge', 'particles.f10.charge', 'particles.f11.charge', 'particles.f12.charge', 'fields.m3.self_conjugate'], Passed
+m3, _sort_particles, 2, 2, [], ['particles.f7', 'particles.f8', 'particles.f9', 'particles.f10', 'particles.f11', 'particles.f12'], Passed
+m3, _chirality_check, 1, 1, [], [], Passed
+m3, _assign_colors, 1, 1, [], [], Passed
+m3, _mass_term_check, 10, 10, [], [], Passed
+m4, _name_check, 1, 1, [], ['fields.m4.name'], Passed
+m4, _type_check, 1, 1, [], ['fields.m4.type'], Passed
+m4, _groups_check, 1, 1, [], ['fields.m4.groups'], Passed
+m4, _reps_check, 3, 3, [], ['fields.m4.reps'], Passed
+m4, _dim_check, 1, 1, [], ['fields.m4.dim'], Passed
+m4, _gen_check, 1, 1, [], ['fields.m4.gen'], Passed
+m4, _particles_check, 2, 2, [], [], Passed
+m4, _self_conjugate_check, 1, 1, [], ['fields.m4.self_conjugate'], Passed
+m4, _sort_reps, 3, 3, [], ['fields.m4.reps'], Passed
+m4, _reps_dim_consistency, 1, 1, [], ['fields.m4.dim', 'fields.m4.reps.g2'], Passed
+m4, _gen_type_consistency, 1, 1, [], ['fields.m4.gen'], Passed
+m4, _allowed_charges, 1, 1, [], ['fields.m4.reps.g2', 'fields.m4.reps.g1'], Passed
+m4, _deplicate_particles, 1, 1, [], ['fields.m4.particles'], Passed
+m4, _particle_numbers, 1, 1, [], ['fields.m4.particles', 'fields.m4.gen', 'fields.m4.dim'], Passed
+m4, _particle_types, 1, 1, [], ['fields.m4.particles'], Passed
+m4, _particle_charges, 1, 1, [], ['particles.f7.charge', 'particles.f9.charge', 'particles.f11.charge', 'fields.m4.self_conjugate'], Passed
+m4, _all_particle_pass, 1, 1, [], ['particles.f7.charge', 'particles.f9.charge', 'particles.f11.charge', 'fields.m4.self_conjugate'], Passed
+m4, _sort_particles, 2, 2, [], ['particles.f7', 'particles.f9', 'particles.f11'], Passed
+m4, _chirality_check, 1, 1, [], [], Passed
+m4, _assign_colors, 1, 1, [], [], Passed
+m4, _mass_term_check, 10, 10, [], [], Passed
+m5, _name_check, 1, 1, [], ['fields.m5.name'], Passed
+m5, _type_check, 1, 1, [], ['fields.m5.type'], Passed
+m5, _groups_check, 1, 1, [], ['fields.m5.groups'], Passed
+m5, _reps_check, 3, 3, [], ['fields.m5.reps'], Passed
+m5, _dim_check, 1, 1, [], ['fields.m5.dim'], Passed
+m5, _gen_check, 1, 1, [], ['fields.m5.gen'], Passed
+m5, _particles_check, 2, 2, [], [], Passed
+m5, _self_conjugate_check, 1, 1, [], ['fields.m5.self_conjugate'], Passed
+m5, _sort_reps, 3, 3, [], ['fields.m5.reps'], Passed
+m5, _reps_dim_consistency, 1, 1, [], ['fields.m5.dim', 'fields.m5.reps.g2'], Passed
+m5, _gen_type_consistency, 1, 1, [], ['fields.m5.gen'], Passed
+m5, _allowed_charges, 1, 1, [], ['fields.m5.reps.g2', 'fields.m5.reps.g1'], Passed
+m5, _deplicate_particles, 1, 1, [], ['fields.m5.particles'], Passed
+m5, _particle_numbers, 1, 1, [], ['fields.m5.particles', 'fields.m5.gen', 'fields.m5.dim'], Passed
+m5, _particle_types, 1, 1, [], ['fields.m5.particles'], Passed
+m5, _particle_charges, 1, 1, [], ['particles.f8.charge', 'particles.f10.charge', 'particles.f12.charge', 'fields.m5.self_conjugate'], Passed
+m5, _all_particle_pass, 1, 1, [], ['particles.f8.charge', 'particles.f10.charge', 'particles.f12.charge', 'fields.m5.self_conjugate'], Passed
+m5, _sort_particles, 2, 2, [], ['particles.f8', 'particles.f10', 'particles.f12'], Passed
+m5, _chirality_check, 1, 1, [], [], Passed
+m5, _assign_colors, 1, 1, [], [], Passed
+m5, _mass_term_check, 10, 10, [], [], Passed
+i1, _field_length_check, 1, 1, [], ['interactions.i1.fields'], Passed
+i1, _field_check, 1, 1, [], ['interactions.i1.fields'], Passed
+i1, _params_check, 1, 1, [], [], Passed
+i1, _all_field_pass_checks, 1, 1, [], ['interactions.i1.fields'], Passed
+i1, _check_replicate_fields, 1, 1, [], ['interactions.i1.fields'], Passed
+i1, _sort_field, 1, 1, [], ['interactions.i1.fields'], Passed
+i1, _gen_check, 1, 1, [], ['fields.m1.gen', 'fields.m2.gen'], Passed
+i1, _dim_check, 1, 1, [], ['fields.m1.dim', 'fields.m6.dim'], Passed
+i1, _dirac_bilinear_product, 1, 1, [], ['fields.m1.particles', 'fields.m2.particles'], Passed
+i1, _get_massive_particles, 1, 1, [], ['fields.m1.particles', 'fields.m2.particles'], Passed
+i1, _check_U1Y_gauge_symmetry, 1, 1, [], ['fields.m1.reps.g1', 'fields.m2.reps.g1', 'fields.m6.reps.g1'], Passed
+i1, _yukawa_mass, 1, 1, [], ['interactions.i1.fields'], Passed
+i1, _yukawa_matrix, 1, 1, [], ['interactions.i1.fields'], Passed
+i1, _mixing_matrix, 1, 1, [], ['interactions.i1.fields'], Passed
+i1, _yukawa_lagrangian, 1, 1, [], ['interactions.i1.fields'], Passed
+i2, _field_length_check, 1, 1, [], ['interactions.i2.fields'], Passed
+i2, _field_check, 1, 1, [], ['interactions.i2.fields'], Passed
+i2, _params_check, 1, 1, [], [], Passed
+i2, _all_field_pass_checks, 1, 1, [], ['interactions.i2.fields'], Passed
+i2, _check_replicate_fields, 1, 1, [], ['interactions.i2.fields'], Passed
+i2, _sort_field, 1, 1, [], ['interactions.i2.fields'], Passed
+i2, _gen_check, 1, 1, [], ['fields.m3.gen', 'fields.m4.gen'], Passed
+i2, _dim_check, 1, 1, [], ['fields.m3.dim', 'fields.m6.dim'], Passed
+i2, _dirac_bilinear_product, 1, 1, [], ['fields.m3.particles', 'fields.m4.particles'], Passed
+i2, _get_massive_particles, 1, 1, [], ['fields.m3.particles', 'fields.m4.particles'], Passed
+i2, _check_U1Y_gauge_symmetry, 1, 1, [], ['fields.m3.reps.g1', 'fields.m4.reps.g1', 'fields.m6.reps.g1'], Passed
+i2, _yukawa_mass, 1, 1, [], ['interactions.i2.fields'], Passed
+i2, _yukawa_matrix, 1, 1, [], ['interactions.i2.fields'], Passed
+i2, _mixing_matrix, 1, 1, [], ['interactions.i2.fields'], Passed
+i2, _yukawa_lagrangian, 1, 1, [], ['interactions.i2.fields'], Passed
+i3, _field_length_check, 1, 1, [], ['interactions.i3.fields'], Passed
+i3, _field_check, 1, 1, [], ['interactions.i3.fields'], Passed
+i3, _params_check, 1, 1, [], [], Passed
+i3, _all_field_pass_checks, 1, 1, [], ['interactions.i3.fields'], Passed
+i3, _check_replicate_fields, 1, 1, [], ['interactions.i3.fields'], Passed
+i3, _sort_field, 1, 1, [], ['interactions.i3.fields'], Passed
+i3, _gen_check, 1, 1, [], ['fields.m3.gen', 'fields.m5.gen'], Passed
+i3, _dim_check, 1, 1, [], ['fields.m3.dim', 'fields.m6.dim'], Passed
+i3, _dirac_bilinear_product, 1, 1, [], ['fields.m3.particles', 'fields.m5.particles'], Passed
+i3, _get_massive_particles, 1, 1, [], ['fields.m3.particles', 'fields.m5.particles'], Passed
+i3, _check_U1Y_gauge_symmetry, 1, 1, [], ['fields.m3.reps.g1', 'fields.m5.reps.g1', 'fields.m6.reps.g1'], Passed
+i3, _yukawa_mass, 1, 1, [], ['interactions.i3.fields'], Passed
+i3, _yukawa_matrix, 1, 1, [], ['interactions.i3.fields'], Passed
+i3, _mixing_matrix, 1, 1, [], ['interactions.i3.fields'], Passed
+i3, _yukawa_lagrangian, 1, 1, [], ['interactions.i3.fields'], Passed
+i4, _field_length_check, 1, 1, [], ['interactions.i4.fields'], Passed
+i4, _field_check, 1, 1, [], ['interactions.i4.fields'], Passed
+i4, _params_check, 1, 1, [], ['interactions.i4.LambdaVar'], Passed
+i4, _all_field_pass_checks, 1, 1, [], ['interactions.i4.fields'], Passed
+i4, _check_replicate_fields, 1, 1, [], ['interactions.i4.fields'], Passed
+i4, _sort_field, 1, 1, [], ['interactions.i4.fields'], Passed
+i4, _scalar_mass, 1, 1, [], ['interactions.i4.fields'], Passed
+i4, _scalar_quartic, 1, 1, [], ['interactions.i4.fields'], Passed
+i4, _scalar_lagrangian, 1, 1, [], ['interactions.i4.fields'], Passed
+global, (left)^3, 1, 1, [], [], Passed
+global, (color)^3, 1, 1, [], [], Passed
+global, (hypercharge)x(left)^2, 1, 1, [], [], Passed
+global, (hypercharge)x(color)^2, 1, 1, [], [], Passed
+global, (hypercharge)^3, 1, 1, [], [], Passed
+global, (hypercharge)^2-grav, 1, 1, [], [], Passed

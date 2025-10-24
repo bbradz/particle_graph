@@ -1,0 +1,211 @@
+{
+    "ParticleDefinitions[GaugeES]": {
+      "gB": {
+        "Description": "B-Boson Ghost",
+        "FeynArtsNr": 1,
+        "LaTeX": "\\\\eta^B",
+        "Mass": 0,
+        "OutputName": "gB",
+        "PDG": [0],
+        "Width": 0
+      },
+      "gG": {
+        "Description": "Gluon Ghost",
+        "FeynArtsNr": 5,
+        "LaTeX": "\\\\eta^G",
+        "Mass": 0,
+        "OutputName": "gG",
+        "PDG": [0],
+        "ElectricCharge": 0,
+        "Width": 0
+      },
+      "gWB": {
+        "Description": "W-Boson Ghost",
+        "FeynArtsNr": 2,
+        "LaTeX": "\\\\eta^W",
+        "Mass": 0,
+        "OutputName": "gW",
+        "PDG": [0],
+        "Width": 0      
+      },
+      "H0": {
+        "FeynArtsNr": 1,
+        "LaTeX": "H^0",
+        "Mass": "Automatic",
+        "OutputName": "H0",
+        "PDG": [0],
+        "Width": 0
+      },
+      "Hp": {
+        "Description": "Charged Higgs",
+        "FeynArtsNr": 3,
+        "LaTeX": ["H^+", "H^-"],
+        "Mass": [0],
+        "OutputName": ["Hp", "Hm"],
+        "PDG": [0],
+        "ElectricCharge": 1,
+        "Width": [0]
+      },
+      "VB": {
+        "Description": "B-Boson",
+        "FeynArtsNr": 1,
+        "LaTeX": "B",
+        "Mass": 0,
+        "OutputName": "B",
+        "PDG": [0],
+        "Width": 0
+      },
+      "VG": {
+        "Description": "Gluon",
+        "FeynArtsNr": 5,
+        "LaTeX": "g",
+        "Mass": 0,
+        "OutputName": "g",
+        "PDG": [21],
+        "ElectricCharge": 0,
+        "Width": 0
+      },
+      "VWB": {
+        "Description": "W-Bosons",
+        "FeynArtsNr": 2,
+        "LaTeX": "W",
+        "Mass": 0,
+        "OutputName": "W",
+        "PDG": [0, 24, 25],
+        "Width": 0
+      }
+    },
+    "ParticleDefinitions[EWSB]": {
+      "Ah": {
+        "Description": "Pseudo-Scalar Higgs",
+        "FeynArtsNr": 1,
+        "LaTeX": "A^0",
+        "Mass": 0,
+        "OutputName": "Ah",
+        "PDG": [0],
+        "ElectricCharge": 0,
+        "Width": [0]
+      },
+      "hh": {
+        "Description": "Higgs",
+        "FeynArtsNr": 1,
+        "LaTeX": "h",
+        "Mass": "LesHouches",
+        "OutputName": "h",
+        "PDG": [25],
+        "ElectricCharge": 0,
+        "Width": "Automatic"
+      },
+      "Hp": {
+        "Description": "Charged Higgs",
+        "FeynArtsNr": 3,
+        "LaTeX": ["H^+", "H^-"],
+        "Mass": [0],
+        "OutputName": ["Hp", "Hm"],
+        "PDG": [0],
+        "ElectricCharge": 1,
+        "Width": [0]
+      },
+      "VP": {
+        "Description": "Photon",
+        "FeynArtsNr": 1,
+        "LaTeX": "\\\\gamma",
+        "Mass": 0,
+        "OutputName": "A",
+        "PDG": [22],
+        "ElectricCharge": 0,
+        "Width": 0
+      },
+      "VZ": {
+        "Description": "Z-Boson",
+        "Goldstone": "Ah",
+        "FeynArtsNr": 2,
+        "LaTeX": "Z",
+        "Mass": 91.1876,
+        "OutputName": "Z",
+        "PDG": [23],
+        "ElectricCharge": 0,
+        "Width": 2.4952
+      },
+      "VWp": {
+        "Description": "W+ - Boson",
+        "Goldstone": "Hp",
+        "FeynArtsNr": 3,
+        "LaTeX": ["W^+", "W^-"],
+        "Mass": "Dependence",
+        "MassDependence": "Sqrt[Mass[VZ]^2/2 + Sqrt[-((Pi*Mass[VZ]^2)/(Sqrt[2]*aEWinv*Gf)) + Mass[VZ]^4/4]]",
+        "OutputName": ["Wp", "Wm"],
+        "PDG": [24],
+        "ElectricCharge": 1,
+        "Width": 2.141
+      },
+      "VG": {
+        "Description": "Gluon",
+        "FeynArtsNr": 5,
+        "LaTeX": "g",
+        "Mass": 0,
+        "OutputName": "g",
+        "PDG": [21],
+        "ElectricCharge": 0,
+        "Width": 0
+      },
+      "gP": {
+        "Description": "Photon Ghost",
+        "FeynArtsNr": 1,
+        "LaTeX": "\\\\eta^{\\\\gamma}",
+        "Mass": 0,
+        "OutputName": "gA",
+        "PDG": [0],
+        "ElectricCharge": 0,
+        "Width": 0
+      },
+      "gZ": {
+        "Description": "Z-Boson Ghost",
+        "FeynArtsNr": 2,
+        "LaTeX": "\\\\eta^Z",
+        "Mass": "Mass[VZ]",
+        "OutputName": "gZ",
+        "PDG": [0],
+        "ElectricCharge": 0,
+        "Width": "Automatic"
+      },
+      "gWp": {
+        "Description": "Positive W+ - Boson Ghost",
+        "FeynArtsNr": 3,
+        "LaTeX": "\\\\eta^+",
+        "Mass": "Mass[VWp]",
+        "OutputName": "gWp",
+        "PDG": [0],
+        "ElectricCharge": 1,
+        "Width": "Automatic"
+      },
+      "gWpC": {
+        "Description": "Negative W+ - Boson Ghost",
+        "FeynArtsNr": 4,
+        "LaTeX": "\\\\eta^-",
+        "Mass": "Mass[VWp]",
+        "OutputName": "gWC",
+        "PDG": [0],
+        "ElectricCharge": -1,
+        "Width": "Automatic"
+      },
+      "gG": {
+        "Description": "Gluon Ghost",
+        "FeynArtsNr": 5,
+        "LaTeX": "\\\\eta^G",
+        "Mass": 0,
+        "OutputName": "gG",
+        "PDG": [0],
+        "ElectricCharge": 0,
+        "Width": 0
+      }
+    },
+      "WeylFermionAndIndermediate": {
+        "q": {
+          "LaTeX": "q"
+      },
+        "H": {
+          "LaTeX": "H"
+        }
+    }
+  }

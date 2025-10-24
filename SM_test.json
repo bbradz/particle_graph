@@ -1,0 +1,189 @@
+{
+    "GaugeGroups": {
+        "g1":{
+            "name": "hypercharge",
+            "charge": "Y",
+            "group": "U_1",
+            "boson": "B"
+        },
+        "g2":{
+            "name": "left",
+            "charge": "I",
+            "group": "SU_2",
+            "boson": "WB"   
+        },
+        "g3":{
+            "name": "color",
+            "charge": "C",
+            "group": "SU_3",
+            "boson": "G"
+        }
+    },
+    "particles": {
+        "f1":{
+            "type": "fermion",
+            "name": "e",
+            "mass": 0.000511,
+            "charge": -3
+        },
+        "f2":{
+            "type": "fermion",
+            "name": "mu",
+            "mass": 0.105,
+            "charge": -3
+        },
+        "f3":{
+            "type": "fermion",
+            "name": "tau",
+            "mass": 1.777,
+            "charge": -3
+        },
+        "f4":{
+            "type": "fermion",
+            "name": "ve",
+            "mass": 0,
+            "charge": 0
+        },
+        "f5":{
+            "type": "fermion",
+            "name": "vm",
+            "mass": 0,
+            "charge": 0
+        },
+        "f6":{
+            "type": "fermion",
+            "name": "vt",
+            "mass": 0,
+            "charge": 0
+        },
+        "f7":{
+            "type": "fermion",
+            "name": "u",
+            "mass": 0.0023,
+            "charge": 2
+        },
+        "f8":{
+            "type": "fermion",
+            "name": "d",
+            "mass": 0.0047,
+            "charge": -1
+        },
+        "f9":{
+            "type": "fermion",
+            "name": "c",
+            "mass": 1.27,
+            "charge": 2
+        },
+        "f10":{
+            "type": "fermion",
+            "name": "s",
+            "mass": 0.095,
+            "charge": -1
+        },
+        "f11":{
+            "type": "fermion",
+            "name": "t",
+            "mass": [150, 500],
+            "charge": 2
+        },
+        "f12":{
+            "type": "fermion",
+            "name": "b",
+            "mass": 4.18,
+            "charge": -1
+        },
+        "s1":{
+            "type": "complex",
+            "name": "Hp",
+            "mass": 0,
+            "charge": 3
+        },
+        "s2":{
+            "type": "complex",
+            "name": "H0",
+            "mass": 0,
+            "charge": 0
+        }
+    },
+    "fields": {
+        "m1":{
+            "name": "l",
+            "type": "fermion",
+            "dim": 2,
+            "gen":3,
+            "chirality": "left",
+            "self_conjugate": false,
+            "reps": {"g1": -3, "g2": "fnd", "g3": "singlet"},
+            "particles": ["f4", "f1", "f5", "f2", "f6", "f3"]
+        },
+        "m2":{
+            "name": "e",
+            "type": "fermion",
+            "dim": 1,
+            "gen": 3,
+            "chirality": "right",
+            "self_conjugate": false,
+            "reps": {"g1": -6, "g2": "singlet", "g3": "singlet"},
+            "particles": ["f1", "f2", "f3"]
+        },
+        "m3":{
+            "name": "q",
+            "type": "fermion",
+            "dim": 2,
+            "gen": 3,
+            "chirality": "left",
+            "self_conjugate": false,
+            "reps": {"g1": 1, "g2": "fnd", "g3": "fnd"},
+            "particles": ["f7", "f8", "f9", "f10", "f11", "f12"]
+        },
+        "m4":{
+            "name": "u",
+            "type": "fermion",
+            "dim": 1,
+            "gen": 3,
+            "chirality": "right",
+            "self_conjugate": false,
+            "reps": {"g1": 4, "g2": "singlet", "g3": "fnd"},
+            "particles": ["f7", "f9", "f11"]
+        },
+        "m5":{
+            "name": "d",
+            "type": "fermion",
+            "dim": 1,
+            "gen": 3,   
+            "chirality": "right",
+            "self_conjugate": false,
+            "reps": {"g1": -2, "g2": "singlet", "g3": "fnd"},
+            "particles": ["f8", "f10", "f12"]
+        },
+        "m6":{
+            "name": "H",
+            "type": "complex",
+            "dim": 2,
+            "gen": 1,
+            "chirality": null,
+            "self_conjugate": false,
+            "reps": {"g1": 3, "g2": "fnd", "g3": "singlet"},
+            "particles": ["s1", "s2"]
+        }
+    },
+    "interactions": {
+        "i1":{
+            "type": "yukawa",
+            "fields": ["m1", "m2", "m6"]
+        },
+        "i2":{
+            "type": "yukawa",
+            "fields": ["m3", "m4", "m6"]
+        },
+        "i3":{
+            "type": "yukawa",
+            "fields": ["m3", "m5", "m6"]
+        },
+        "i4":{
+            "type": "ScalarSelfInteraction",
+            "fields": ["m6"],
+            "LambdaVar": [0.1, 1]
+        }
+    }
+}

@@ -1,0 +1,8 @@
+.venv/
+.Old_Models/
+__pycache__/
+.DS_Store
+test.py
+.vscode/cli.txt
+cli.txt
+old/

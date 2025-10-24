@@ -1,0 +1,17 @@
+# Main ML/DL Libraries
+torch
+torchvision
+torchaudio
+transformers
+accelerate
+bitsandbytes
+
+# Core Dependencies
+numpy
+scikit-learn
+sentence-transformers
+safetensors
+
+# Utilities
+tqdm
+PyYAML

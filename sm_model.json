@@ -1,0 +1,305 @@
+{
+    "GaugeGroups": [
+        {
+            "id": "g1",
+            "name": "U1Y",
+            "charge": "Y",
+            "group": "U_1",
+            "coupling": "g1",
+            "boson": "B"
+        },
+        {
+            "id": "g2",
+            "name": "SU2L",
+            "charge": "I",
+            "group": "SU_2",
+            "coupling": "gw",
+            "boson": "W"
+        },
+        {
+            "id": "g3",
+            "name": "SU3C",
+            "charge": "C",
+            "group": "SU_3",
+            "coupling": "gs",
+            "boson": "G"
+        }
+    ],
+    "vevs": [
+        {
+            "id": "higgs_vev",
+            "name": "vev",
+            "vacuum": [
+                0,
+                1
+            ],
+            "value": 246.22
+        }
+    ],
+    "particles": [
+        {
+            "id": "e",
+            "type": "fermion",
+            "name": "e",
+            "mass": 0.000511,
+            "charge": -3
+        },
+        {
+            "id": "mu",
+            "type": "fermion",
+            "name": "mu",
+            "mass": 0.1057,
+            "charge": -3
+        },
+        {
+            "id": "tau",
+            "type": "fermion",
+            "name": "tau",
+            "mass": 1.777,
+            "charge": -3
+        },
+        {
+            "id": "ve",
+            "type": "fermion",
+            "name": "ve",
+            "mass": 0.0,
+            "charge": 0
+        },
+        {
+            "id": "vm",
+            "type": "fermion",
+            "name": "vm",
+            "mass": 0.0,
+            "charge": 0
+        },
+        {
+            "id": "vt",
+            "type": "fermion",
+            "name": "vt",
+            "mass": 0.0,
+            "charge": 0
+        },
+        {
+            "id": "u",
+            "type": "fermion",
+            "name": "u",
+            "mass": 0.0023,
+            "charge": 2
+        },
+        {
+            "id": "d",
+            "type": "fermion",
+            "name": "d",
+            "mass": 0.0047,
+            "charge": -1
+        },
+        {
+            "id": "c",
+            "type": "fermion",
+            "name": "c",
+            "mass": 1.27,
+            "charge": 2
+        },
+        {
+            "id": "s",
+            "type": "fermion",
+            "name": "s",
+            "mass": 0.095,
+            "charge": -1
+        },
+        {
+            "id": "t",
+            "type": "fermion",
+            "name": "t",
+            "mass": 172.76,
+            "charge": 2
+        },
+        {
+            "id": "b",
+            "type": "fermion",
+            "name": "b",
+            "mass": 4.18,
+            "charge": -1
+        },
+        {
+            "id": "phi_p",
+            "type": "complex",
+            "name": "phip",
+            "mass": 125.0,
+            "charge": 3
+        },
+        {
+            "id": "phi_0",
+            "type": "complex",
+            "name": "phi0",
+            "mass": 125.0,
+            "charge": 0
+        }
+    ],
+    "fields": [
+        {
+            "id": "LL",
+            "name": "LL",
+            "type": "fermion",
+            "dim": 2,
+            "gen": 3,
+            "self_conjugate": false,
+            "QuantumNumber": {
+                "LeptonNumber": 3
+            },
+            "chirality": "left",
+            "reps": {
+                "g1": -3,
+                "g2": "fnd",
+                "g3": "singlet"
+            },
+            "particles": [
+                "ve",
+                "e",
+                "vm",
+                "mu",
+                "vt",
+                "tau"
+            ]
+        },
+        {
+            "id": "eR",
+            "name": "eR",
+            "type": "fermion",
+            "dim": 1,
+            "gen": 3,
+            "self_conjugate": false,
+            "QuantumNumber": {
+                "LeptonNumber": 3
+            },
+            "chirality": "right",
+            "reps": {
+                "g1": -6,
+                "g2": "singlet",
+                "g3": "singlet"
+            },
+            "particles": [
+                "e",
+                "mu",
+                "tau"
+            ]
+        },
+        {
+            "id": "QL",
+            "name": "QL",
+            "type": "fermion",
+            "dim": 2,
+            "gen": 3,
+            "self_conjugate": false,
+            "QuantumNumber": {
+                "BaryonNumber": 1
+            },
+            "chirality": "left",
+            "reps": {
+                "g1": 1,
+                "g2": "fnd",
+                "g3": "fnd"
+            },
+            "particles": [
+                "u",
+                "d",
+                "c",
+                "s",
+                "t",
+                "b"
+            ]
+        },
+        {
+            "id": "uR",
+            "name": "uR",
+            "type": "fermion",
+            "dim": 1,
+            "gen": 3,
+            "self_conjugate": false,
+            "QuantumNumber": {
+                "BaryonNumber": 1
+            },
+            "chirality": "right",
+            "reps": {
+                "g1": 4,
+                "g2": "singlet",
+                "g3": "fnd"
+            },
+            "particles": [
+                "u",
+                "c",
+                "t"
+            ]
+        },
+        {
+            "id": "dR",
+            "name": "dR",
+            "type": "fermion",
+            "dim": 1,
+            "gen": 3,
+            "self_conjugate": false,
+            "QuantumNumber": {
+                "BaryonNumber": 1
+            },
+            "chirality": "right",
+            "reps": {
+                "g1": -2,
+                "g2": "singlet",
+                "g3": "fnd"
+            },
+            "particles": [
+                "d",
+                "s",
+                "b"
+            ]
+        },
+        {
+            "id": "Phi",
+            "name": "Phi",
+            "type": "complex",
+            "dim": 2,
+            "gen": 1,
+            "self_conjugate": false,
+            "QuantumNumber": {},
+            "chirality": "none",
+            "reps": {
+                "g1": 3,
+                "g2": "fnd",
+                "g3": "singlet"
+            },
+            "particles": [
+                "phi_p",
+                "phi_0"
+            ]
+        }
+    ],
+    "interactions": [
+        {
+            "id": "Yukawa_e",
+            "type": "yukawa",
+            "fields": [
+                "LL",
+                "eR",
+                "Phi"
+            ]
+        },
+        {
+            "id": "Yukawa_u",
+            "type": "yukawa",
+            "fields": [
+                "QL",
+                "uR",
+                "Phi"
+            ]
+        },
+        {
+            "id": "Yukawa_d",
+            "type": "yukawa",
+            "fields": [
+                "QL",
+                "dR",
+                "Phi"
+            ]
+        }
+    ]
+}
