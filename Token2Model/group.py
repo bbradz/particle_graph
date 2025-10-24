@@ -294,4 +294,3 @@ if __name__ == "__main__":
     print(group.Dynkin_index("fnd")[2])
     print(group.Dynkin_index("anti_fnd")[2])
     print(group.Dynkin_index("adj")[2])
-

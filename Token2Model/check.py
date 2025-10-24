@@ -94,6 +94,36 @@ def run_checks(all_checks, checklists, skip_results=True):
                 # Ensure the result is a dict and contains max_score
                 if not isinstance(result, dict) or 'max_score' not in result:
                     raise TypeError(f"Check {check_name} returned invalid result type or missing 'max_score'.")
+                # --- Augment result with mattered_vars and level if missing ---
+                try:
+                    good_var = result.get('good_var', []) or []
+                    error_var = result.get('error_var', []) or []
+                    if 'mattered_vars' not in result or result.get('mattered_vars') is None:
+                        # Default heuristic: union of good_var and error_var
+                        result['mattered_vars'] = list({*good_var, *error_var})
+                    if 'level' not in result or result.get('level') is None:
+                        # Infer level from path prefixes if possible
+                        level = None
+                        def infer_from_paths(paths):
+                            for p in paths:
+                                if isinstance(p, str):
+                                    if p.startswith('particles.'):
+                                        return 'particle'
+                                    if p.startswith('fields.'):
+                                        return 'field'
+                                    if p.startswith('interactions.'):
+                                        return 'interaction'
+                                    if p.startswith('global'):
+                                        return 'global'
+                            return None
+                        level = infer_from_paths(good_var) or infer_from_paths(error_var)
+                        # If still unknown and no explicit variables, treat as block-level
+                        if level is None:
+                            level = 'block'
+                        result['level'] = level
+                except Exception:
+                    # Do not let augmentation errors break checks
+                    pass
                     
                 if DEBUG: print(f"[DEBUG_CHECKS]     -> COMPLETED. Result: {result}")
                 checklists[check_name] = result

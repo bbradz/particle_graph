@@ -18,6 +18,8 @@ class EnvOutcome:
     checklist: Dict[str, Any]
     token_map: Dict[Tuple, List[int]]
     unclosed_block_info: Optional[Tuple[int, int]] # (start_index, depth)
+    token_strs: List[str]
+    model_data_dict: Dict[str, Any]
     parsing_diagnostics: Dict[str, List[str]] = None
     success: bool = True
     meta: Dict[str, Any] = None
@@ -123,11 +125,31 @@ class ParticlePhysicsEnvironment:
                 model_data_dict=parsed_model_dict
             )
             env_timing['model_init_total'] = time.perf_counter() - start_model_init
+            if self.cfg.PRINT_FULL_ENV_DEBUG:
+                # Print the parsed model dict and initial model representation
+                print("\n[ENV_DEBUG] --- Parsed Model Dict ---")
+                try:
+                    import json
+                    print(json.dumps(parsed_model_dict, indent=2, default=str))
+                except Exception:
+                    print(parsed_model_dict)
+                print("\n[ENV_DEBUG] --- Model __repr__ ---")
+                try:
+                    print(model_instance)
+                except Exception as e:
+                    print(f"[ENV_DEBUG] repr failed: {e}")
             
             # [TIME] Environment & Reward: Check Propagate & Anomaly
             # 4. Propagate errors to skipped checks
             start_propagate = time.perf_counter()
             propagated_checklist = propagate_skipped_errors(model_instance.checklist)
+            if self.cfg.PRINT_FULL_ENV_DEBUG:
+                print("\n[ENV_DEBUG] --- Propagated Checklist ---")
+                try:
+                    import json
+                    print(json.dumps(propagated_checklist, indent=2))
+                except Exception:
+                    print(propagated_checklist)
             env_timing['check_propagate_time'] = time.perf_counter() - start_propagate
 
             # Check if model passes all internal physics checks
@@ -139,6 +161,8 @@ class ParticlePhysicsEnvironment:
                 checklist=propagated_checklist, 
                 token_map=token_map_from_parser,
                 unclosed_block_info=unclosed_info_from_parser,
+                token_strs=token_strs,
+                model_data_dict=parsed_model_dict,
                 parsing_diagnostics=parsing_diagnostics,
                 success=model_passes_checks, 
                 meta=env_meta
@@ -153,6 +177,8 @@ class ParticlePhysicsEnvironment:
                 checklist={}, 
                 token_map=token_map_from_parser, 
                 unclosed_block_info=self.parser._find_first_unclosed_block(token_strs),
+                token_strs=token_strs,
+                model_data_dict=parsed_model_dict,
                 parsing_diagnostics=parsing_diagnostics,
                 success=False,
                 meta=env_meta
@@ -174,6 +200,8 @@ class ParticlePhysicsEnvironment:
                     checklist=propagated_checklist, 
                     token_map=token_map_from_parser,
                     unclosed_block_info=unclosed_info_from_parser,
+                    token_strs=token_strs,
+                    model_data_dict=parsed_model_dict,
                     parsing_diagnostics=parsing_diagnostics,
                     success=False,
                     meta=env_meta
@@ -185,6 +213,8 @@ class ParticlePhysicsEnvironment:
                     checklist={}, 
                     token_map=token_map_from_parser,
                     unclosed_block_info=unclosed_info_from_parser,
+                    token_strs=token_strs,
+                    model_data_dict=parsed_model_dict,
                     parsing_diagnostics=parsing_diagnostics,
                     success=False,
                     meta=env_meta
@@ -195,8 +225,25 @@ class ParticlePhysicsEnvironment:
                     shutil.rmtree(temp_output_dir)
                 else:
                     # If keeping files, rename the temp dir to something more meaningful
+                    # Add process ID to make directory names unique across workers
+                    process_id = os.getpid()
                     run_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                    perm_dir = os.path.join(self.model_base_path, f"RL_run_{run_id}") # Use self.model_base_path
+                    perm_dir = os.path.join(self.model_base_path, f"RL_run_{run_id}_pid{process_id}") # Use self.model_base_path
                     os.makedirs(os.path.dirname(perm_dir), exist_ok=True)
-                    shutil.move(temp_output_dir, perm_dir)
-                    if self.cfg.DEBUG_PRINTS: print(f"Kept model files in: {perm_dir}")
+                    try:
+                        shutil.move(temp_output_dir, perm_dir)
+                        if self.cfg.DEBUG_PRINTS: print(f"Kept model files in: {perm_dir}")
+                    except (OSError, FileExistsError) as e:
+                        # If directory already exists, add a counter
+                        counter = 1
+                        while True:
+                            perm_dir_with_counter = f"{perm_dir}_{counter}"
+                            try:
+                                shutil.move(temp_output_dir, perm_dir_with_counter)
+                                if self.cfg.DEBUG_PRINTS: print(f"Kept model files in: {perm_dir_with_counter}")
+                                break
+                            except (OSError, FileExistsError):
+                                counter += 1
+                                if counter > 1000:  # Prevent infinite loop
+                                    if self.cfg.DEBUG_PRINTS: print(f"Failed to create unique directory after 1000 attempts")
+                                    break

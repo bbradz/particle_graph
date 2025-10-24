@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
+from typing import Optional
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig, PreTrainedModel
 from transformers.modeling_outputs import CausalLMOutput
 from config import Config
@@ -174,18 +175,83 @@ class HuggingFacePolicy(nn.Module):
         
         hidden_size = self.model.config.hidden_size
         
-        # Multi-headed critic: output vector of check scores instead of single scalar
-        self.value_head = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.LayerNorm(hidden_size),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size, hidden_size // 2),
-            nn.LayerNorm(hidden_size // 2),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size // 2, NUM_CHECKS),
-            nn.LeakyReLU()
-        )
-        self.value_head.to(self.model.device, dtype=torch_dtype)
+        # Three-headed critic architecture
+        if config.CRITIC_ARCHITECTURE == "three_headed":
+            # Value head: predicts expected future rewards
+            self.value_head = nn.Sequential(
+                nn.Linear(hidden_size, hidden_size),
+                nn.LayerNorm(hidden_size),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size, hidden_size // 2),
+                nn.LayerNorm(hidden_size // 2),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size // 2, NUM_CHECKS),
+                nn.LeakyReLU()
+            )
+            
+            # Reward head: predicts immediate rewards
+            self.reward_head = nn.Sequential(
+                nn.Linear(hidden_size, hidden_size),
+                nn.LayerNorm(hidden_size),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size, hidden_size // 2),
+                nn.LayerNorm(hidden_size // 2),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size // 2, NUM_CHECKS),
+                nn.LeakyReLU()
+            )
+            
+            # Criticality head: predicts how critical each check is for success
+            #  "For the token at this timestep, is it structurally relevant to a specific check?"
+            self.criticality_head = nn.Sequential(
+                nn.Linear(hidden_size, hidden_size),
+                nn.LayerNorm(hidden_size),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size, hidden_size // 2),
+                nn.LayerNorm(hidden_size // 2),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size // 2, NUM_CHECKS),
+            )
+            
+            # 4. Exploration Q-Head (goal-agnostic): outputs per-token, per-check contribution logits
+            self.vocab_size = len(tokenizer)
+            self.exploration_q_head = nn.Sequential(
+                nn.Linear(hidden_size, hidden_size),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size, self.vocab_size * NUM_CHECKS),
+            )
+            
+            # 5. RND (Curiosity) Heads
+            self.rnd_target_network = nn.Sequential(
+                nn.Linear(hidden_size, 256),
+                nn.LeakyReLU()
+            )
+            self.rnd_predictor_network = nn.Sequential(
+                nn.Linear(hidden_size, 512),
+                nn.ReLU(),
+                nn.Linear(512, 256)
+            )
+
+            # Freeze the RND target network permanently
+            for param in self.rnd_target_network.parameters():
+                param.requires_grad = False
+
+            # Move all heads to the same device and dtype
+            for head in [self.value_head, self.reward_head, self.criticality_head, self.exploration_q_head, self.rnd_target_network, self.rnd_predictor_network]:
+                head.to(self.model.device, dtype=torch_dtype)
+        else:
+            # Single-headed critic (backward compatibility)
+            self.value_head = nn.Sequential(
+                nn.Linear(hidden_size, hidden_size),
+                nn.LayerNorm(hidden_size),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size, hidden_size // 2),
+                nn.LayerNorm(hidden_size // 2),
+                nn.LeakyReLU(),
+                nn.Linear(hidden_size // 2, NUM_CHECKS),
+                nn.LeakyReLU()
+            )
+            self.value_head.to(self.model.device, dtype=torch_dtype)
 
     def forward(
         self,
@@ -205,20 +271,54 @@ class HuggingFacePolicy(nn.Module):
     def value(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
         """Computes the vector of check scores from the final hidden states."""
         return self.value_head(hidden_states.to(self.value_head[0].weight.device, dtype=self.value_head[0].weight.dtype))
+    
+    def reward(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
+        """Computes the immediate reward predictions from the final hidden states."""
+        if hasattr(self, 'reward_head'):
+            return self.reward_head(hidden_states.to(self.reward_head[0].weight.device, dtype=self.reward_head[0].weight.dtype))
+        else:
+            # Fallback to value head if reward head doesn't exist
+            return self.value(hidden_states)
+    
+    def criticality(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
+        """Computes the criticality scores from the final hidden states."""
+        if hasattr(self, 'criticality_head'):
+            return self.criticality_head(hidden_states.to(self.criticality_head[0].weight.device, dtype=self.criticality_head[0].weight.dtype))
+        else:
+            # Fallback: return uniform criticality
+            batch_size, seq_len = hidden_states.shape[:2]
+            return torch.ones(batch_size, seq_len, NUM_CHECKS, device=hidden_states.device, dtype=hidden_states.dtype) * 0.5
+
+    def exploration_q_values(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
+        """
+        Computes a matrix of score contributions for all (token, check) pairs.
+        Output Shape: (B, T, V, C)
+        """
+        if not hasattr(self, 'exploration_q_head'):
+            raise AttributeError("exploration_q_head is not defined in this policy configuration")
+
+        B, T, H = hidden_states.size()
+
+        # Raw output from the head using only hidden states
+        q_logits_flat = self.exploration_q_head(hidden_states) # Shape: (B, T, V * C)
+        
+        # Reshape to get per-token, per-check predictions
+        q_preds_matrix = q_logits_flat.view(B, T, self.vocab_size, NUM_CHECKS)
+        return q_preds_matrix
 
 
 class SimpleTransformerPolicy(nn.Module):
-    """A simple PyTorch transformer implementation for the policy."""
-    
+    """
+    A simple PyTorch DECODER implementation for the policy.
+    This version uses a proper causal mask and ties embedding weights.
+    """
     def __init__(self, config: Config, tokenizer):
         super().__init__()
         self.config = config
         
-        # Update vocab size from tokenizer
         vocab_size = len(tokenizer)
         config.TRANSFORMER_VOCAB_SIZE = vocab_size
         
-        # Model parameters
         self.vocab_size = vocab_size
         self.d_model = config.TRANSFORMER_D_MODEL
         self.nhead = config.TRANSFORMER_NHEAD
@@ -227,11 +327,10 @@ class SimpleTransformerPolicy(nn.Module):
         self.dropout = config.TRANSFORMER_DROPOUT
         self.max_len = config.TRANSFORMER_MAX_LEN
         
-        # Token embedding
         self.token_embedding = nn.Embedding(vocab_size, self.d_model)
         
-        # Transformer layers with RoPE
-        encoder_layer = RoPETransformerEncoderLayer(
+        # TransformerEncoder with causal masking for decoder-only model
+        encoder_layer = nn.TransformerEncoderLayer(
             d_model=self.d_model,
             nhead=self.nhead,
             dim_feedforward=self.dim_feedforward,
@@ -240,104 +339,167 @@ class SimpleTransformerPolicy(nn.Module):
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=self.num_layers)
         
-        # Output projection
-        self.output_projection = nn.Linear(self.d_model, vocab_size)
-        
-        # Value head for critic
-        self.value_head = nn.Sequential(
-            nn.Linear(self.d_model, self.d_model),
-            nn.LayerNorm(self.d_model),
-            nn.LeakyReLU(),
-            nn.Linear(self.d_model, self.d_model // 2),
-            nn.LayerNorm(self.d_model // 2),
-            nn.LeakyReLU(),
-            nn.Linear(self.d_model // 2, NUM_CHECKS),
-            nn.LeakyReLU()
-        )
-        
-        # Initialize weights
+        # Three-headed critic architecture
+        if config.CRITIC_ARCHITECTURE == "three_headed":
+            # Value head: predicts expected future rewards
+            self.value_head = nn.Sequential(
+                nn.Linear(self.d_model, self.d_model),
+                nn.LayerNorm(self.d_model),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model, self.d_model // 2),
+                nn.LayerNorm(self.d_model // 2),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model // 2, NUM_CHECKS),
+                nn.LeakyReLU()
+            )
+            
+            # Reward head: predicts immediate rewards
+            self.reward_head = nn.Sequential(
+                nn.Linear(self.d_model, self.d_model),
+                nn.LayerNorm(self.d_model),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model, self.d_model // 2),
+                nn.LayerNorm(self.d_model // 2),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model // 2, NUM_CHECKS),
+                nn.LeakyReLU()
+            )
+            
+            # Criticality head: predicts how critical each check is for success
+            self.criticality_head = nn.Sequential(
+                nn.Linear(self.d_model, self.d_model),
+                nn.LayerNorm(self.d_model),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model, self.d_model // 2),
+                nn.LayerNorm(self.d_model // 2),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model // 2, NUM_CHECKS)
+                # Removed sigmoid - output logits for autocast safety
+            )
+            # Exploration Q-Head (goal-agnostic): outputs per-token, per-check contribution logits
+            self.exploration_q_head = nn.Sequential(
+                nn.Linear(self.d_model, self.d_model),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model, self.vocab_size * NUM_CHECKS)
+            )
+            # RND (Curiosity) Heads
+            self.rnd_target_network = nn.Sequential(
+                nn.Linear(self.d_model, 256),
+                nn.LeakyReLU()
+            )
+            self.rnd_predictor_network = nn.Sequential(
+                nn.Linear(self.d_model, 512),
+                nn.ReLU(),
+                nn.Linear(512, 256)
+            )
+            for param in self.rnd_target_network.parameters():
+                param.requires_grad = False
+        else:
+            # Single-headed critic (backward compatibility)
+            self.value_head = nn.Sequential(
+                nn.Linear(self.d_model, self.d_model),
+                nn.LayerNorm(self.d_model),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model, self.d_model // 2),
+                nn.LayerNorm(self.d_model // 2),
+                nn.LeakyReLU(),
+                nn.Linear(self.d_model // 2, NUM_CHECKS),
+                nn.LeakyReLU()
+            )
+
         self._init_weights()
-        
-        # Set device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
-        
-        print(f"Initialized SimpleTransformerPolicy with RoPE, {self.num_layers} layers, {self.nhead} heads, d_model={self.d_model}")
-    
+        print(f"Initialized Simple DECODER Policy with {self.num_layers} layers.")
+
     def _init_weights(self):
-        """Initialize model weights."""
+        # Weight tying: The output projection shares weights with the token embedding
+        self.token_embedding.weight.data.normal_(mean=0.0, std=0.02)
         for module in self.modules():
             if isinstance(module, nn.Linear):
                 torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
                 if module.bias is not None:
                     torch.nn.init.zeros_(module.bias)
-            elif isinstance(module, nn.Embedding):
-                torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
-    
+
     def _create_causal_mask(self, seq_len: int) -> torch.Tensor:
-        """Create causal mask for autoregressive generation."""
-        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
-        return mask.to(self.device)
-    
+        """Creates a square causal mask for the decoder's self-attention.
+        Returns a boolean mask (True means mask) to match src_key_padding_mask dtype.
+        """
+        # Upper-triangular (excluding diagonal) is masked (True)
+        return torch.triu(torch.ones((seq_len, seq_len), dtype=torch.bool, device=self.device), diagonal=1)
+
     def forward(
         self,
         input_ids: torch.LongTensor,
-        attention_mask: torch.LongTensor = None,
-        past_key_values: tuple = None
+        attention_mask: torch.LongTensor = None
     ) -> CausalLMOutput:
-        """
-        Forward pass for the transformer.
-        Note: past_key_values is ignored for simplicity in this implementation.
-        """
-        batch_size, seq_len = input_ids.shape
+        """Forward pass for the decoder-based transformer."""
+        seq_len = input_ids.shape[1]
         
-        # Token embeddings
-        x = self.token_embedding(input_ids)  # (batch_size, seq_len, d_model)
-        
-        # Create causal mask
+        # Create a causal mask to prevent attending to future tokens
         causal_mask = self._create_causal_mask(seq_len)
         
-        # Prepare attention mask for transformer
-        # PyTorch transformer expects src_key_padding_mask where True means "ignore this position"
-        src_key_padding_mask = None
+        # Create a padding mask (True where tokens are PAD)
+        padding_mask = None
         if attention_mask is not None:
-            # Convert to boolean first
-            attention_mask = attention_mask.bool()
-            
-            # Ensure attention_mask has the same sequence length as input
-            if attention_mask.size(1) != seq_len:
-                # If mask is shorter, pad with True (attend to new positions)
-                if attention_mask.size(1) < seq_len:
-                    padding = torch.ones(batch_size, seq_len - attention_mask.size(1), 
-                                        dtype=torch.bool, device=attention_mask.device)
-                    attention_mask = torch.cat([attention_mask, padding], dim=1)
-                # If mask is longer, truncate
-                else:
-                    attention_mask = attention_mask[:, :seq_len]
-            
-            # Invert: True in attention_mask means "attend", 
-            # but src_key_padding_mask expects True to mean "ignore"
-            src_key_padding_mask = ~attention_mask
+            # Convert attention_mask to boolean and invert for src_key_padding_mask
+            # True in src_key_padding_mask means "ignore this position"
+            padding_mask = ~attention_mask.bool()
+        elif hasattr(self.config, 'PAD_TOKEN_ID'):
+            # Fallback: create padding mask from PAD tokens
+            padding_mask = (input_ids == self.config.PAD_TOKEN_ID)
         
-        # Transformer forward pass with proper mask handling
+        # 1. Get standard token embeddings
+        # Clone to avoid CUDAGraphs output being reused across compiled steps
+        x = self.token_embedding(input_ids).clone()
+        
+        # Use TransformerEncoder with causal masking for decoder-only model
         hidden_states = self.transformer(
-            x, 
-            src_key_padding_mask=src_key_padding_mask,
-            mask=causal_mask
+            x,
+            mask=causal_mask,
+            src_key_padding_mask=padding_mask
         )
         
-        # Output logits
-        logits = self.output_projection(hidden_states)
-        
-        # Create CausalLMOutput-like object
+        # Project using the transpose of the embedding matrix
+        logits = F.linear(hidden_states, self.token_embedding.weight)
+
+        # Create a compatible output object
         class SimpleCausalLMOutput:
             def __init__(self, logits, hidden_states):
                 self.logits = logits
-                self.hidden_states = [hidden_states]  # List to match HuggingFace format
-                self.past_key_values = None  # Not implemented for simplicity
+                self.hidden_states = [hidden_states] # Keep as list for compatibility
+                self.past_key_values = None
         
         return SimpleCausalLMOutput(logits, hidden_states)
-    
+
+    # (The value, reward, and criticality methods remain exactly the same)
     def value(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
-        """Computes the vector of check scores from the hidden states."""
         return self.value_head(hidden_states)
+    
+    def reward(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
+        if hasattr(self, 'reward_head'):
+            return self.reward_head(hidden_states)
+        return self.value(hidden_states)
+    
+    def criticality(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
+        if hasattr(self, 'criticality_head'):
+            return self.criticality_head(hidden_states)
+        return torch.ones_like(self.value(hidden_states)) * 0.5
+
+    def exploration_q_values(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
+        """
+        Computes a matrix of score contributions for all (token, check) pairs.
+        Output Shape: (B, T, V, C)
+        """
+        if not hasattr(self, 'exploration_q_head'):
+            raise AttributeError("exploration_q_head is not defined in this policy configuration")
+
+        B, T, H = hidden_states.size()
+        
+        # Raw output from the head using only hidden states
+        q_logits_flat = self.exploration_q_head(hidden_states) # Shape: (B, T, V * C)
+        
+        # Reshape to get per-token, per-check predictions
+        vocab_size = self.exploration_q_head[-1].out_features // NUM_CHECKS
+        q_preds_matrix = q_logits_flat.view(B, T, vocab_size, NUM_CHECKS)
+        return q_preds_matrix

@@ -43,6 +43,23 @@ class Interaction:
     def _all_checks(self):
         """ All checks for the initial INPUTs of the 'Interaction' class. """
         self.all_checks = []
+        
+        from functools import wraps
+
+        def _finalize_result(result: dict) -> dict:
+            good_var = result.get('good_var', []) or []
+            error_var = result.get('error_var', []) or []
+            mattered = list({*good_var, *error_var})
+            result['mattered_vars'] = mattered
+            # If neither good nor error vars were specified, treat as block-level
+            result['level'] = 'interaction' if mattered else 'block'
+            return result
+        
+        def _wrap(fn):
+            @wraps(fn)
+            def wrapped():
+                return _finalize_result(fn())
+            return wrapped
 
         def _params_check():
             result = {"score": 1, 
@@ -165,12 +182,12 @@ class Interaction:
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
             return result
 
-        self.all_checks.extend([(_field_length_check, 1), 
-                                (_field_check, 1), 
-                                (_params_check, 1),
-                                (_all_field_pass_checks, 1), 
-                                (_check_replicate_fields, 1),
-                                (_sort_field, 1)
+        self.all_checks.extend([(_wrap(_field_length_check), 1), 
+                                (_wrap(_field_check), 1), 
+                                (_wrap(_params_check), 1),
+                                (_wrap(_all_field_pass_checks), 1), 
+                                (_wrap(_check_replicate_fields), 1),
+                                (_wrap(_sort_field), 1)
                                 ])
 
     def __check__(self):
@@ -181,6 +198,14 @@ class Interaction:
     def _all_validations(self):
         """ All validations for the 'Interaction' class. """
         self.all_validations = []
+        
+        def _finalize_result(result: dict) -> dict:
+            good_var = result.get('good_var', []) or []
+            error_var = result.get('error_var', []) or []
+            mattered = list({*good_var, *error_var})
+            result['mattered_vars'] = mattered
+            result['level'] = 'interaction' if mattered else 'block'
+            return result
 
     def __validate__(self):
         self._all_validations()
@@ -300,273 +325,283 @@ class Yukawa(Interaction):
     # --------------------------------------------------------------------
     #                       Validation Checks
     # --------------------------------------------------------------------
-    def _dirac_bilinear_product(self):
-        result = {"score": 1, 
-                  "error_var": [], 
-                  "good_var": [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"], 
-                  "message": "Passed", 
-                  "max_score": 1,
-                  }
-        try:
-            left = np.array([[p.id for p in gen] for gen in self.sorted_fields[0]._unphy_fields]).transpose()
-            right = np.array([[p.id for p in gen] for gen in self.sorted_fields[1]._unphy_fields])
+        def _dirac_bilinear_product(self):
+            # Define good_var inside the function to ensure it's always fresh
+            good_var = [
+                f"fields.{self.sorted_fields[0].id}.particles",
+                f"fields.{self.sorted_fields[1].id}.particles"
+            ]
+            result = {"score": 1, "max_score": 1, "message": "Passed", "good_var": good_var, "error_var": []}
+            try:
+                left = np.array([[p.id for p in gen] for gen in self.sorted_fields[0]._unphy_fields]).transpose()
+                right = np.array([[p.id for p in gen] for gen in self.sorted_fields[1]._unphy_fields])
 
-            rows_left, cols_left = left.shape
-            rows_right, cols_right = right.shape
-            assert cols_left == rows_right, \
-                f"AssertionError: {self.sorted_fields[0].name} and {self.sorted_fields[1].name} have incompatible dimensions"
+                rows_left, cols_left = left.shape
+                rows_right, cols_right = right.shape
+                assert cols_left == rows_right, \
+                    f"AssertionError: {self.sorted_fields[0].name} and {self.sorted_fields[1].name} have incompatible dimensions"
 
-            # Matrix Multiplication of the Left-Handed and Right-Handed Fermions
-            self.dirac_bilinears = [[f"{left[i][k].replace('_L', '')}*{right[k][j].replace('_R', '')}" 
-                    for k in range(cols_left)] 
-                    for j in range(cols_right) 
-                    for i in range(rows_left)]
-            
-        except Exception as e:
-            result.update({"score": 0, 
-                           "error_var": [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"], 
-                           "good_var": [], 
-                           "message": f"Error: {e}"
-                           })
-        return result
+                # Matrix Multiplication of the Left-Handed and Right-Handed Fermions
+                self.dirac_bilinears = [[f"{left[i][k].replace('_L', '')}*{right[k][j].replace('_R', '')}" 
+                        for k in range(cols_left)] 
+                        for j in range(cols_right) 
+                        for i in range(rows_left)]
+                
+            except Exception as e:
+                error_var = [f"fields.{f.id}.dim" for f in self.fields] + [f"fields.{f.id}.gen" for f in self.fields]
+                result.update({"score": 0, "error_var": error_var, "good_var": [], "message": f"Error forming Dirac bilinear: {e}"})
+            return result
 
-    def _get_massive_particles(self):
-        result = {"score": 1, 
-                  "error_var": [], 
-                  "good_var": [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"], 
-                  "message": "Passed", 
-                  "max_score":1,
-                  }
-        try:
-            for idx, row in enumerate(self.dirac_bilinears):
-                correct_term = all([col.split("*")[0] == col.split("*")[1] for col in row])   
-                if correct_term: 
-                    self.particle_ids = [col.split("*")[0] for col in row]
-                    self.massive_particles = {pid: self.all_particles[pid] for pid in self.particle_ids}
-                    self.higgs_loc = idx
-                    break
-        except Exception as e:
-            result.update({"score": 0, 
-                           "error_var": [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"], 
-                           "good_var": [], 
-                           "message": f"Error: {e}"
-                           })
-        return result
+        def _get_massive_particles(self):
+            # Define good_var for success case
+            good_var = [f"fields.{f.id}.particles" for f in self.fields]
+            result = {"score": 1, "max_score": 1, "message": "Passed", "good_var": good_var, "error_var": []}
+            try:
+                for idx, row in enumerate(self.dirac_bilinears):
+                    correct_term = all([col.split("*")[0] == col.split("*")[1] for col in row])   
+                    if correct_term: 
+                        self.particle_ids = [col.split("*")[0] for col in row]
+                        self.massive_particles = {pid: self.all_particles[pid] for pid in self.particle_ids}
+                        self.higgs_loc = idx
+                        break
+            except Exception as e:
+                result.update({"score": 0, "error_var": good_var, "good_var": [], "message": f"Error: {e}"})
+            return result
 
-    def _check_U1Y_gauge_symmetry(self):
-        result = {"score": 1, 
-                  "error_var": [], 
-                  "good_var": [f"fields.{self.sorted_fields[0].id}.reps.g1", f"fields.{self.sorted_fields[1].id}.reps.g1", f"fields.{self.sorted_fields[2].id}.reps.g1"], 
-                  "message": "Passed", 
-                  "max_score": 1,
-                  }
-        try:
-            Y_psi_L = self.sorted_fields[0].reps["g1"]
-            Y_psi_R = self.sorted_fields[1].reps["g1"]
-            Y_Phi = self.sorted_fields[2].reps["g1"]
-            sum = -Y_psi_L + Y_psi_R + (-1 if self.higgs_loc == 0 else 1) * Y_Phi
-            sign = "+" if self.higgs_loc == 1 else "-"
-            
-            if sum != 0:
-                result.update({"score": 0, 
-                               "error_var": [f"fields.{self.sorted_fields[0].id}.reps.g1", f"fields.{self.sorted_fields[1].id}.reps.g1", f"fields.{self.sorted_fields[2].id}.reps.g1"], 
-                               "good_var": [], 
-                               "message": f"Violates U(1)Y gauge symmetry. {Y_psi_L} + {Y_psi_R} {sign} {Y_Phi} = {sum}"
-                               })
-        except Exception as e:
-            result.update({"score": 0, 
-                           "error_var": [f"fields.{self.sorted_fields[0].id}.reps.g1", f"fields.{self.sorted_fields[1].id}.reps.g1", f"fields.{self.sorted_fields[2].id}.reps.g1"], 
-                           "good_var": [], 
-                           "message": f"Error: {e}"
-                           })
-        return result
+        def _check_U1Y_gauge_symmetry(self):
+            # Define good_var for success case
+            good_var = [f"fields.{f.id}.reps.g1" for f in self.fields]
+            result = {"score": 1, "max_score": 1, "message": "Passed", "good_var": good_var, "error_var": []}
+            try:
+                Y_psi_L = self.sorted_fields[0].reps["g1"]
+                Y_psi_R = self.sorted_fields[1].reps["g1"]
+                Y_Phi = self.sorted_fields[2].reps["g1"]
+                sum = -Y_psi_L + Y_psi_R + (-1 if self.higgs_loc == 0 else 1) * Y_Phi
+                sign = "+" if self.higgs_loc == 1 else "-"
+                
+                if sum != 0:
+                    # On failure, the good_var from the initial dict is cleared
+                    result.update({"score": 0, "error_var": good_var, "good_var": [], "message": f"Violates U(1)Y gauge symmetry. {Y_psi_L} + {Y_psi_R} {sign} {Y_Phi} = {sum}"})
+            except Exception as e:
+                result.update({"score": 0, "error_var": good_var, "good_var": [], "message": f"Error: {e}"})
+            return result
 
-    def _set_yukawa_name(self):
-        result = {"score": 1, 
+        def _set_yukawa_name(self):
+            result = {"score": 1, 
                   "error_var": [], 
                   "good_var": [f"fields.{self.sorted_fields[0].id}"], 
                   "message": "Passed", 
                   "max_score":1,
                   }
-        try:
-            if not self.is_SM_yukawa:
-                self.name = f"Y{self.sorted_fields[0].name}"
-                self.Description = f"{self.name}-Yukawa-Coupling"
-                self.LaTeX = f"Y_{{{self.sorted_fields[0].name}}}"
-        except Exception as e:
-            result.update({"score": 0, 
-                           "error_var": [f"fields.{self.sorted_fields[0].id}"], 
-                           "good_var": [], 
-                           "message": f"Error: {e}"
-                           })
-        return result
+            try:
+                if not self.is_SM_yukawa:
+                    self.name = f"Y{self.sorted_fields[0].name}"
+                    self.Description = f"{self.name}-Yukawa-Coupling"
+                    self.LaTeX = f"Y_{{{self.sorted_fields[0].name}}}"
+            except Exception as e:
+                result.update({"score": 0, 
+                               "error_var": [f"fields.{self.sorted_fields[0].id}"], 
+                               "good_var": [], 
+                               "message": f"Error: {e}"
+                               })
+            return result
 
-    def _yukawa_mass(self):
-        result = {"score": 1, 
+        def _yukawa_mass(self):
+            result = {"score": 1, 
                   "error_var": [], 
                   "good_var": [f"interactions.{self.id}.fields"], 
                   "message": "Passed", 
                   "max_score":1,
                   }
-        try:
-            # !!! we omit top quark here !!!
-            sm_fermion = ["e", "mu", "tau", "ve", "vm", "vt", "u", "c", "d", "s", "b"]
-            for particle in self.massive_particles.values():
-                if particle.name in sm_fermion:
-                    pass
-                else:
-                    particle_mass_name = f"M{particle.name}"
-                    mf = ExternalParameter(particle_mass_name, 
-                                        f"Mass of {particle.name}", 
-                                        particle_mass_name, 
-                                        "YUKAWA", 
-                                        Real = True, 
-                                        Value = particle.mass,
-                                        LesHouches = particle_mass_name,
-                                        LaTeX = f"m_{particle.name}")
-                    self.ExtParams[mf.name] = mf
-        except Exception as e:
-            result.update({"score": 0, 
-                           "error_var": [f"interactions.{self.id}.fields"], 
-                           "good_var": [], 
-                           "message": f"Error: {e}"
-                           })
-        return result
+            try:
+                # !!! we omit top quark here !!!
+                sm_fermion = ["e", "mu", "tau", "ve", "vm", "vt", "u", "c", "d", "s", "b"]
+                for particle in self.massive_particles.values():
+                    if particle.name in sm_fermion:
+                        pass
+                    else:
+                        particle_mass_name = f"M{particle.name}"
+                        mf = ExternalParameter(particle_mass_name, 
+                                            f"Mass of {particle.name}", 
+                                            particle_mass_name, 
+                                            "YUKAWA", 
+                                            Real = True, 
+                                            Value = particle.mass,
+                                            LesHouches = particle_mass_name,
+                                            LaTeX = f"m_{particle.name}")
+                        self.ExtParams[mf.name] = mf
+            except Exception as e:
+                result.update({"score": 0, 
+                               "error_var": [f"interactions.{self.id}.fields"], 
+                               "good_var": [], 
+                               "message": f"Error: {e}"
+                               })
+            return result
 
-    def _yukawa_matrix(self):
-        result = {"score": 1, 
+        def _yukawa_matrix(self):
+            result = {"score": 1, 
                   "error_var": [], 
                   "good_var": [f"interactions.{self.id}.fields"], 
                   "message": "Passed", 
                   "max_score":1,
                   }
-        try:
-            self._set_yukawa_name()
-            yukawa_matrix = InternalParameter(self.name,
-                                              self.Description,
-                                              self.name,
-                                              "YUKAWA",
-                                              LaTeX = self.LaTeX,
-                                              LesHouches = self.name)
-            self.IntParams[self.name] = yukawa_matrix
+            try:
+                self._set_yukawa_name()
+                yukawa_matrix = InternalParameter(self.name,
+                                                  self.Description,
+                                                  self.name,
+                                                  "YUKAWA",
+                                                  LaTeX = self.LaTeX,
+                                                  LesHouches = self.name)
+                self.IntParams[self.name] = yukawa_matrix
 
-            for i, (_, value) in enumerate(self.massive_particles.items()):
-                math_idx = i + 1
-                if value.name == "e":
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YeSM[1,1]")
-                elif value.name == "mu":
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YeSM[2,2]")
-                elif value.name == "tau":
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YeSM[3,3]")
-                elif value.name == "u":
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YuSM[1,1]")
-                elif value.name == "c":
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YuSM[2,2]")
-                elif value.name == "d":
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YdSM[1,1]")
-                elif value.name == "s":
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YdSM[2,2]")
-                elif value.name == "b":
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YdSM[3,3]")
-                # elif value.name == "t":
-                #     self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YuSM[3,3]")
-                else:
-                    self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], Sqrt[2]/vSM*M{value.name}")
-        except Exception as e:
-            result.update({"score": 0, 
-                           "error_var": [f"interactions.{self.id}.fields"], 
-                           "good_var": [], 
-                           "message": f"Error: {e}"
-                           })
-        return result
+                for i, (_, value) in enumerate(self.massive_particles.items()):
+                    math_idx = i + 1
+                    if value.name == "e":
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YeSM[1,1]")
+                    elif value.name == "mu":
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YeSM[2,2]")
+                    elif value.name == "tau":
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YeSM[3,3]")
+                    elif value.name == "u":
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YuSM[1,1]")
+                    elif value.name == "c":
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YuSM[2,2]")
+                    elif value.name == "d":
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YdSM[1,1]")
+                    elif value.name == "s":
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YdSM[2,2]")
+                    elif value.name == "b":
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YdSM[3,3]")
+                    # elif value.name == "t":
+                    #     self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], YuSM[3,3]")
+                    else:
+                        self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], Sqrt[2]/vSM*M{value.name}")
+            except Exception as e:
+                result.update({"score": 0, 
+                               "error_var": [f"interactions.{self.id}.fields"], 
+                               "good_var": [], 
+                               "message": f"Error: {e}"
+                               })
+            return result
         
-    def _yukawa_lagrangian(self):
-        result = {"score": 1, 
-                  "error_var": [], 
-                  "good_var": [f"interactions.{self.id}.fields"], 
-                  "message": "Passed", 
-                  "max_score":1,
-                  }
-        try:
-            if self.higgs_loc == 1:
-                lag = f"- {self.name} conj[{self.scalar_name}].{self.sorted_fields[1].name}.{self.sorted_fields[0].name}"
-            else:
-                lag = f"- {self.name} {self.sorted_fields[1].name}.{self.sorted_fields[0].name}.{self.scalar_name}"
-            self.LagHC.append(lag)
-            self.sorted_fields[0].mass_term.append(self.id)
-            self.sorted_fields[1].mass_term.append(self.id)
-        except Exception as e:
-            result.update({"score": 0, 
-                           "error_var": [f"interactions.{self.id}.fields"], 
-                           "good_var": [], 
-                           "message": f"Error: {e}"
-                           })
-        return result
+        def _yukawa_lagrangian(self):
+            # Define good_var for success case
+            good_var = [f"interactions.{self.id}.fields"]
+            result = {"score": 1, "max_score": 1, "message": "Passed", "good_var": good_var, "error_var": []}
+            try:
+                if self.higgs_loc == 1:
+                    lag = f"- {self.name} conj[{self.scalar_name}].{self.sorted_fields[1].name}.{self.sorted_fields[0].name}"
+                else:
+                    lag = f"- {self.name} {self.sorted_fields[1].name}.{self.sorted_fields[0].name}.{self.scalar_name}"
+                self.LagHC.append(lag)
+                self.sorted_fields[0].mass_term.append(self.id)
+                self.sorted_fields[1].mass_term.append(self.id)
+            except Exception as e:
+                result.update({"score": 0, "error_var": good_var, "good_var": [], "message": f"Error: {e}"})
+            return result
         
-    def _mixing_matrix(self):
-        result = {"score": 1, 
+        def _mixing_matrix(self):
+            result = {"score": 1, 
                   "error_var": [], 
                   "good_var": [f"interactions.{self.id}.fields"], 
                   "message": "Passed", 
                   "max_score":1,
                   }
-        try:
-            all_left_spinors = self.sorted_fields[0].phy_field_info
-            self.left_spinor = [key for key, value in all_left_spinors.items() if value["location"] == self.higgs_loc][0]
-            self.right_spinor = list(self.sorted_fields[1].phy_field_info.keys())[0]
-            self.dirac_spinor = self.right_spinor[:-1]
+            try:
+                all_left_spinors = self.sorted_fields[0].phy_field_info
+                self.left_spinor = [key for key, value in all_left_spinors.items() if value["location"] == self.higgs_loc][0]
+                self.right_spinor = list(self.sorted_fields[1].phy_field_info.keys())[0]
+                self.dirac_spinor = self.right_spinor[:-1]
 
-            if self.is_lR:
-                left_description = "Left-Lepton-Mixing-Matrix"
-                right_description = "Right-Lepton-Mixing-Matrix"
-            elif self.is_uR:
-                left_description = "Left-Up-Mixing-Matrix"
-                right_description = "Right-Up-Mixing-Matrix"
-            elif self.is_dR:
-                left_description = "Left-Down-Mixing-Matrix"
-                right_description = "Right-Down-Mixing-Matrix"
-            else:
-                left_description = f"Left-{self.dirac_spinor}-Mixing-Matrix"
-                right_description = f"Right-{self.dirac_spinor}-Mixing-Matrix"
+                if self.is_lR:
+                    left_description = "Left-Lepton-Mixing-Matrix"
+                    right_description = "Right-Lepton-Mixing-Matrix"
+                elif self.is_uR:
+                    left_description = "Left-Up-Mixing-Matrix"
+                    right_description = "Right-Up-Mixing-Matrix"
+                elif self.is_dR:
+                    left_description = "Left-Down-Mixing-Matrix"
+                    right_description = "Right-Down-Mixing-Matrix"
+                else:
+                    left_description = f"Left-{self.dirac_spinor}-Mixing-Matrix"
+                    right_description = f"Right-{self.dirac_spinor}-Mixing-Matrix"
 
-            if f"V{self.dirac_spinor}" not in GlobalParameterRegistry.all_parameters():
-                left_MIX = InternalParameter(f"V{self.dirac_spinor}", 
-                                            left_description, 
-                                            f"Z{self.left_spinor.upper()}", 
-                                            Block = "YUKAWA", 
-                                            LaTeX = f"U^{{{self.dirac_spinor}}}_L", 
-                                            LesHouches = f"U{self.left_spinor.upper()}MIX")
-                self.IntParams[left_MIX.name] = left_MIX
-            
-            if f"U{self.dirac_spinor}" not in GlobalParameterRegistry.all_parameters():
-                right_MIX = InternalParameter(f"U{self.dirac_spinor}", 
-                                            right_description, 
-                                            f"Z{self.right_spinor.upper()}", 
-                                            Block = "YUKAWA", 
-                                            LaTeX = f"U^{{{self.dirac_spinor}}}_R", 
-                                            LesHouches = f"U{self.right_spinor.upper()}MIX")
-                self.IntParams[right_MIX.name] = right_MIX
+                if f"V{self.dirac_spinor}" not in GlobalParameterRegistry.all_parameters():
+                    left_MIX = InternalParameter(f"V{self.dirac_spinor}", 
+                                                left_description, 
+                                                f"Z{self.left_spinor.upper()}", 
+                                                Block = "YUKAWA", 
+                                                LaTeX = f"U^{{{self.dirac_spinor}}}_L", 
+                                                LesHouches = f"U{self.left_spinor.upper()}MIX")
+                    self.IntParams[left_MIX.name] = left_MIX
+                
+                if f"U{self.dirac_spinor}" not in GlobalParameterRegistry.all_parameters():
+                    right_MIX = InternalParameter(f"U{self.dirac_spinor}", 
+                                                right_description, 
+                                                f"Z{self.right_spinor.upper()}", 
+                                                Block = "YUKAWA", 
+                                                LaTeX = f"U^{{{self.dirac_spinor}}}_R", 
+                                                LesHouches = f"U{self.right_spinor.upper()}MIX")
+                    self.IntParams[right_MIX.name] = right_MIX
 
-            self.EWSB_matter_sector = f"{{{{{self.left_spinor}}}, {{conj[{self.right_spinor}]}}}}, {{{{{self.left_spinor.upper()}, V{self.dirac_spinor}}}, {{{self.right_spinor.upper()}, U{self.dirac_spinor}}}}}"
-        except Exception as e:
-            result.update({"score": 0, 
-                           "error_var": [f"interaction.{self.id}.fields"], 
-                           "good_var": [], 
-                           "message": f"Error: {e}"
-                           })
-        return result
+                self.EWSB_matter_sector = f"{{{{{self.left_spinor}}}, {{conj[{self.right_spinor}]}}}}, {{{{{self.left_spinor.upper()}, V{self.dirac_spinor}}}, {{{self.right_spinor.upper()}, U{self.dirac_spinor}}}}}"
+            except Exception as e:
+                result.update({"score": 0, 
+                               "error_var": [f"interaction.{self.id}.fields"], 
+                               "good_var": [], 
+                               "message": f"Error: {e}"
+                               })
+            return result
        
     def _all_validations(self):
         super()._all_validations()
         
-        self.all_validations.extend([(self._dirac_bilinear_product, 1), 
-                                     (self._get_massive_particles, 1), 
+        def _finalize_result(result: dict) -> dict:
+            good_var = result.get('good_var', []) or []
+            error_var = result.get('error_var', []) or []
+            mattered = list({*good_var, *error_var})
+            result['mattered_vars'] = mattered
+            result['level'] = 'interaction' if mattered else 'block'
+            return result
+
+        # Named wrappers to preserve original function names
+        def _dirac_bilinear_product_wrapped():
+            return _finalize_result(self._dirac_bilinear_product())
+        _dirac_bilinear_product_wrapped.__name__ = '_dirac_bilinear_product'
+
+        def _get_massive_particles_wrapped():
+            return _finalize_result(self._get_massive_particles())
+        _get_massive_particles_wrapped.__name__ = '_get_massive_particles'
+
+        def _check_U1Y_gauge_symmetry_wrapped():
+            return _finalize_result(self._check_U1Y_gauge_symmetry())
+        _check_U1Y_gauge_symmetry_wrapped.__name__ = '_check_U1Y_gauge_symmetry'
+
+        def _yukawa_mass_wrapped():
+            return _finalize_result(self._yukawa_mass())
+        _yukawa_mass_wrapped.__name__ = '_yukawa_mass'
+
+        def _yukawa_matrix_wrapped():
+            return _finalize_result(self._yukawa_matrix())
+        _yukawa_matrix_wrapped.__name__ = '_yukawa_matrix'
+
+        def _mixing_matrix_wrapped():
+            return _finalize_result(self._mixing_matrix())
+        _mixing_matrix_wrapped.__name__ = '_mixing_matrix'
+
+        def _yukawa_lagrangian_wrapped():
+            return _finalize_result(self._yukawa_lagrangian())
+        _yukawa_lagrangian_wrapped.__name__ = '_yukawa_lagrangian'
+
+        self.all_validations.extend([(_dirac_bilinear_product_wrapped, 1), 
+                                     (_get_massive_particles_wrapped, 1), 
                                      #self._check_massive_particles,
-                                     (self._check_U1Y_gauge_symmetry, 1),
-                                     (self._yukawa_mass, 1),
-                                     (self._yukawa_matrix, 1),
-                                     (self._mixing_matrix, 1),
-                                     (self._yukawa_lagrangian, 1)
+                                     (_check_U1Y_gauge_symmetry_wrapped, 1),
+                                     (_yukawa_mass_wrapped, 1),
+                                     (_yukawa_matrix_wrapped, 1),
+                                     (_mixing_matrix_wrapped, 1),
+                                     (_yukawa_lagrangian_wrapped, 1)
                                      ])
 
 # ====================================================================

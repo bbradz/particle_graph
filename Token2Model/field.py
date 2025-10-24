@@ -65,6 +65,23 @@ class Field:
     def _all_checks(self):
         """ All checks for the initial INPUTs of the 'Field' class. """
         self.all_checks = []
+        
+        from functools import wraps
+
+        def _finalize_result(result: dict) -> dict:
+            good_var = result.get('good_var', []) or []
+            error_var = result.get('error_var', []) or []
+            mattered = list({*good_var, *error_var})
+            result['mattered_vars'] = mattered
+            # If neither good nor error vars were specified, treat as block-level
+            result['level'] = 'field' if mattered else 'block'
+            return result
+        
+        def _wrap(fn):
+            @wraps(fn)
+            def wrapped():
+                return _finalize_result(fn())
+            return wrapped
 
         # ------------------------- Simple Checks ------------------------------
         # check if the name is a string
@@ -371,17 +388,18 @@ class Field:
 
         # check if the number of particles is consistent with the dim and gen
         def _particle_numbers():
+            good_var = [f"fields.{self.id}.particles", f"fields.{self.id}.dim", f"fields.{self.id}.gen"]
             result = {"score": 1, 
                       "error_var": [], 
-                      "good_var": [f"fields.{self.id}.particles", f"fields.{self.id}.gen", f"fields.{self.id}.dim"], 
+                      "good_var": good_var, 
                       "message": "Passed", 
                       "max_score": 1,
                       }
             if len(self.particles) != self.dim * self.gen:
                 result.update({"score": 0, 
-                               "error_var": [f"fields.{self.id}.particles", f"fields.{self.id}.gen"], 
+                               "error_var": good_var, 
                                "good_var": [], 
-                               "message": f"there must be (dim * gen) number of particles"
+                               "message": f"Number of particles ({len(self.particles)}) does not match dim ({self.dim}) * gen ({self.gen})"
                                })
                 return result
             return result
@@ -499,28 +517,26 @@ class Field:
             else:
                 error_var = [f"particles.{p.id}.charge" for p in self.particles if p.charge not in self.allowed_Q]
             
-            # ========= START: MODIFIED BLOCK =========
             if error_var:
-                # Safely find the first invalid particle to create a specific error message
+                # More precise attribution: blame the specific reps that define allowed_Q and the first invalid charge.
                 first_invalid_particle = next((p for p in self.particles if (p.fermion.charge if self.type == "fermion" else p.charge) not in self.allowed_Q), None)
                 
                 message = "A particle's charge is not in the allowed charges for this field."
+                precise_error_var = [f"fields.{self.id}.reps.g1", f"fields.{self.id}.reps.g2"] # The root cause
                 if first_invalid_particle:
                     p_charge = first_invalid_particle.fermion.charge if self.type == "fermion" else first_invalid_particle.charge
-                    message = f"Charge {p_charge/3.0} (internal unit: {p_charge}) for particle '{first_invalid_particle.name}' is not in allowed charges {np.array(self.allowed_Q)/3.0} for this field."
+                    p_id = first_invalid_particle.fermion.id if self.type == "fermion" else first_invalid_particle.id
+                    precise_error_var.append(f"particles.{p_id}.charge") # The symptom
+                    message = f"Charge {p_charge/3.0} for particle '{p_id}' is not in allowed charges {np.array(self.allowed_Q)/3.0}, derived from reps."
 
-                if self.type == "fermion":
-                    good_var = [f"particles.{p.fermion.id}.charge" for p in self.particles if p.fermion.charge in self.allowed_Q]
-                else:
-                    good_var = [f"particles.{p.id}.charge" for p in self.particles if p.charge in self.allowed_Q]
+                good_var = [f"particles.{p.id}.charge" for p in self.particles if (p.fermion.charge if self.type == "fermion" else p.charge) in self.allowed_Q]
                 
                 result.update({"score": 0, 
-                               "error_var": error_var, 
+                               "error_var": precise_error_var, 
                                "good_var": good_var, 
                                "message": message
                                })
                 return result
-            # ========= END: MODIFIED BLOCK =========
             
             for p in self.particles:
                 if self.type == "fermion":
@@ -550,24 +566,24 @@ class Field:
             return result
     
 
-        self.all_checks = [(_name_check, 1),    
-                           (_type_check, 1), 
-                           (_groups_check, 1), 
-                           (_reps_check, 3), 
-                           (_dim_check, 1), 
-                           (_gen_check, 1), 
-                           (_particles_check, 1), 
-                           (_self_conjugate_check, 1), 
-                           (_sort_reps, 3),
-                           (_reps_dim_consistency, 1),
-                           (_gen_type_consistency, 1),
-                           (_allowed_charges, 1),
-                           (_deplicate_particles, 1),
-                           (_particle_numbers, 1), 
-                           (_particle_types, 1),
-                           (_particle_charges, 1),
-                           (_all_particle_pass, 1),
-                           (_sort_particles, 2)
+        self.all_checks = [(_wrap(_name_check), 1),    
+                           (_wrap(_type_check), 1), 
+                           (_wrap(_groups_check), 1), 
+                           (_wrap(_reps_check), 3), 
+                           (_wrap(_dim_check), 1), 
+                           (_wrap(_gen_check), 1), 
+                           (_wrap(_particles_check), 1), 
+                           (_wrap(_self_conjugate_check), 1), 
+                           (_wrap(_sort_reps), 3),
+                           (_wrap(_reps_dim_consistency), 1),
+                           (_wrap(_gen_type_consistency), 1),
+                           (_wrap(_allowed_charges), 1),
+                           (_wrap(_deplicate_particles), 1),
+                           (_wrap(_particle_numbers), 1), 
+                           (_wrap(_particle_types), 1),
+                           (_wrap(_particle_charges), 1),
+                           (_wrap(_all_particle_pass), 1),
+                           (_wrap(_sort_particles), 2)
                            ]
 
     def __check__(self):
@@ -580,35 +596,45 @@ class Field:
         """ All validations for the 'Field' class. """
 
         def _mass_term_check():
-            result = {"score": 10, 
-                      "error_var": [], # the field by itself is good, but lacks mass term from the interactions
-                      "good_var": [], 
-                      "message": "Passed", 
-                      "max_score": 10,
-                      }
+            result = {"score": 10, "max_score": 10, "error_var": [], "good_var": [], "message": "Passed"}
             if self.type == "fermion":
                 self.is_massive = any(p.fermion.mass != 0 for p in self.particles)
             else:
                 self.is_massive = any(p.mass != 0 for p in self.particles)
             
             if self.is_massive and self.mass_term == []:
-                error_var = ["interactions"] # the field is massive, but no mass term is defined
-                result.update({"score": 0, 
-                               "error_var": error_var, 
-                               "good_var": [], 
-                               "message": "this field is massive, but no mass term is defined"
-                               })
+                error_var = [f"fields.{self.id}"]
+                if self.type == "fermion":
+                    error_var.extend([f"particles.{p.fermion.id}.mass" for p in self.particles if p.fermion.mass > 0])
+                else:
+                    error_var.extend([f"particles.{p.id}.mass" for p in self.particles if p.mass > 0])
+                result.update({"score": 0, "error_var": error_var, "message": "this field is massive, but no mass term is defined"})
             elif not self.is_massive and self.mass_term != []:
                 error_var = [f"interactions.{m_term}" for m_term in self.mass_term]
-                result.update({"score": 0, 
-                               "error_var": error_var, 
-                               "good_var": [], 
-                               "message": "this field is massless, but a mass term is defined"
-                               })
-
+                result.update({"score": 0, "error_var": error_var, "message": "this field is massless, but a mass term is defined"})
+            else:
+                # On success, credit the particles and any relevant interactions
+                good_var = [f"fields.{self.id}.particles"]
+                if self.mass_term:
+                    good_var.extend([f"interactions.{m_term}" for m_term in self.mass_term])
+                result["good_var"] = good_var
             return result
         
-        self.all_validations = [(_mass_term_check, 10)]
+        def _finalize_result(result: dict) -> dict:
+            good_var = result.get('good_var', []) or []
+            error_var = result.get('error_var', []) or []
+            mattered = list({*good_var, *error_var})
+            result['mattered_vars'] = mattered
+            # If neither good nor error vars were specified, treat as block-level
+            result['level'] = 'field' if mattered else 'block'
+            return result
+        
+        # Preserve name for validation wrapper
+        def _mass_term_check_wrapped():
+            return _finalize_result(_mass_term_check())
+        _mass_term_check_wrapped.__name__ = '_mass_term_check'
+
+        self.all_validations = [(_mass_term_check_wrapped, 10)]
 
     def __validate__(self):
         self._all_validations()
@@ -818,24 +844,12 @@ class ScalarField(Field):
         super()._all_validations()
         
         def _potential_term_check():
-            result = {"score": 1, 
-                      "error_var": [], 
-                      "good_var": [], 
-                      "message": "Passed", 
-                      "max_score": 1,
-                      }
+            result = {"score": 1, "max_score": 1, "error_var": [], "good_var": [], "message": "Passed"}
             if self.potential == []:
-                result.update({"score": 0, 
-                               "error_var": ["interactions"], 
-                               "good_var": [], 
-                               "message": "scalar field must have a potential term"
-                               })
+                result.update({"score": 0, "error_var": [f"fields.{self.id}"], "message": "scalar field must have a potential term"})
             else:
-                result.update({"score": 1, 
-                               "error_var": [], 
-                               "good_var": [f"interactions.{itr}" for itr in self.potential], 
-                               "message": "Passed"
-                               })
+                # FIX: Ensure good_var is populated on success
+                result.update({"score": 1, "good_var": [f"interactions.{itr}" for itr in self.potential], "message": "Passed"})
             return result
         
         self.all_validations.extend([(_potential_term_check, 1)])

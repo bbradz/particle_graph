@@ -14,8 +14,10 @@ from .reward import RewardShaper, ShapedRewards
 from .grammar import GrammarMasker, GrammarState
 from .vocabulary import initialize_tokenizer_and_mappings, GRAMMAR_TOKEN_NAMES
 from .advantages import compute_advantages
-from .curriculum import Curriculum
+from .curriculum import Curriculum, CurriculumManager
 from .utils import finalize_sequence_inplace
+from .replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
+from .plotting import TrainingPlotter
 
 # Define the public API of the 'rl' package.
 __all__ = [
@@ -41,8 +43,12 @@ __all__ = [
     "compute_advantages",
     # from curriculum.py
     "Curriculum",
+    "CurriculumManager",
     # from utils.py
     "finalize_sequence_inplace",
     # from replay_buffer.py
     "ReplayBuffer",
+    "PrioritizedReplayBuffer",
+    # from plotting.py
+    "TrainingPlotter",
 ]

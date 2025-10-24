@@ -42,6 +42,23 @@ class Particle:
         """ All checks for the initial INPUTs of the 'Particle' class. """
         self.all_checks = []
         
+        from functools import wraps
+
+        def _finalize_result(result: dict) -> dict:
+            good_var = result.get('good_var', []) or []
+            error_var = result.get('error_var', []) or []
+            mattered = list({*good_var, *error_var})
+            result['mattered_vars'] = mattered
+            # If neither good nor error vars were specified, treat as block-level
+            result['level'] = 'particle' if mattered else 'block'
+            return result
+        
+        def _wrap(fn):
+            @wraps(fn)
+            def wrapped():
+                return _finalize_result(fn())
+            return wrapped
+        
         def _type_check():
             result = {"score": 1, 
                       "error_var": [], 
@@ -102,10 +119,10 @@ class Particle:
                                })
             return result
     
-        self.all_checks = [(_type_check, 1), 
-                           (_name_check, 1), 
-                           (_mass_check, 1), 
-                           (_charge_check, 1)
+        self.all_checks = [(_wrap(_type_check), 1), 
+                           (_wrap(_name_check), 1), 
+                           (_wrap(_mass_check), 1), 
+                           (_wrap(_charge_check), 1)
                            ]
 
     def __check__(self):

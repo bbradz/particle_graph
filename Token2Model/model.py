@@ -125,8 +125,9 @@ class Model:
             if sf["type"] in ["real", "complex", "scalar"]:
                 try:
                     scalar_list = [self.scalar_particles[id] for id in sf["particles"]]
-                    for s in scalar_list:
-                        scalar_particles.pop(s.id, None)
+                    # Removed destructive pop operation - particles can be reused across fields
+                    # for s in scalar_list:
+                    #     scalar_particles.pop(s.id, None)
                 except:
                     scalar_list = sf["particles"]
 
@@ -156,9 +157,10 @@ class Model:
                 try:
                     weyl_list = [chiral_fermions.get(f"{p}_left", p) if ff["chirality"] == "left" else chiral_fermions.get(f"{p}_right", p) for p in ff["particles"]]
 
-                    for weyl_fermion in weyl_list:
-                        if not isinstance(weyl_fermion, str):
-                            chiral_fermions.pop(weyl_fermion.id, None)
+                    # Removed destructive pop operation - particles can be reused across fields
+                    # for weyl_fermion in weyl_list:
+                    #     if not isinstance(weyl_fermion, str):
+                    #         chiral_fermions.pop(weyl_fermion.id, None)
                 
                 except Exception as e:
                     print(e)
@@ -367,10 +369,14 @@ class Model:
                     color_index = f.full_reps["g3"]
                     anomaly_coeff += anomaly_func(chiral, dim, gen, color_index)
 
+                # Define the set of all variables that matter for ANY global anomaly check
+                all_fermion_reps = [f"fields.{f.id}.reps" for f in self.fermion_fields.values()]
+
                 if anomaly_coeff != 0:
-                    self.checklist['global'][anomaly_name] = {"score": score(anomaly_coeff), "max_score": 1, "error_var": error_var, "good_var": [], "message": f"{anomaly_name} anomaly detected."}
+                    self.checklist['global'][anomaly_name] = {"score": score(anomaly_coeff), "max_score": 1, "error_var": error_var, "good_var": [], "message": f"{anomaly_name} anomaly detected.", "mattered_vars": error_var, "level": "global"}
                 else:
-                    self.checklist['global'][anomaly_name] = {"score": 1, "max_score": 1, "error_var": [], "good_var": [], "message": "Passed"}                    
+                    # On success, credit all fermion fields' representations, as they collectively cancelled the anomaly.
+                    self.checklist['global'][anomaly_name] = {"score": 1, "max_score": 1, "error_var": [], "good_var": all_fermion_reps, "message": "Passed", "mattered_vars": all_fermion_reps, "level": "global"}                    
 
     def _read_check_list(self):
         model_components = [self.particles, self.fields, self.interactions]

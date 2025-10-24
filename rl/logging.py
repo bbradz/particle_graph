@@ -1,4 +1,5 @@
 from typing import List, Dict, Any, Tuple, Optional
+import json
 import torch
 import torch.nn.functional as F
 from collections import defaultdict
@@ -11,6 +12,38 @@ def _trim_pad_tokens(tokens: List[str]) -> List[str]:
         return tokens[:first_pad_index]
     except ValueError:
         return tokens
+
+def format_sequence_with_full_details(
+    tokens: List[str],
+    immediate_rewards: torch.Tensor,
+    target_rewards: torch.Tensor,
+    predicted_values: torch.Tensor,
+    criticality_scores: torch.Tensor,
+    exploration_head_scores: torch.Tensor,
+    check_idx: int
+) -> str:
+    """
+    Formats a token sequence with detailed reward, value, criticality, and exploration info.
+    """
+    tokens = _trim_pad_tokens(tokens)
+    if not tokens: return ""
+    
+    output = []
+    header = f"{'Token':<20} | {'r_t':>6} | {'R_target':>8} | {'V(s_t)':>8} | {'Crit':>6} | {'Expl_head':>9} | {'Crit*Expl':>9}"
+    output.append(header)
+    output.append("-" * len(header))
+    
+    max_len = len(tokens)
+    for i, token in enumerate(tokens):
+        r_t = immediate_rewards[i].item() if i < immediate_rewards.numel() else float('nan')
+        R_target = target_rewards[i].item() if i < target_rewards.numel() else float('nan')
+        V_st = predicted_values[i].item() if i < predicted_values.numel() else float('nan')
+        crit_score = criticality_scores[i, check_idx].item() if i < criticality_scores.size(0) and criticality_scores.size(1) > check_idx else float('nan')
+        expl_head = exploration_head_scores[i, check_idx].item() if i < exploration_head_scores.size(0) and exploration_head_scores.size(1) > check_idx else float('nan')
+        crit_times_expl = crit_score * expl_head if not (torch.isnan(torch.tensor(crit_score)) or torch.isnan(torch.tensor(expl_head))) else float('nan')
+        output.append(f"{token:<20} | {r_t:>6.3f} | {R_target:>8.3f} | {V_st:>8.3f} | {crit_score:>6.3f} | {expl_head:>9.3f} | {crit_times_expl:>9.3f}")
+        
+    return "\n".join(output)
 
 def format_sequence_with_indents(tokens: List[str]) -> str:
     """
@@ -107,6 +140,8 @@ def log_batch_summary(
     batch_idx: int, outcome: Any, sequence_tokens: List[str], rewards_info: Any,
     predicted_score_vectors: torch.Tensor, per_token_instantaneous_rewards: torch.Tensor, 
     per_token_target_scores: torch.Tensor, averaged_check_type_scores: torch.Tensor, 
+    active_checks: List[str], per_token_exploration_bonus: torch.Tensor,
+    criticality_scores: torch.Tensor, exploration_head_scores: torch.Tensor,
     print_sequence: bool = True, print_detailed_checklist: bool = True, 
     print_per_check_rewards_detail: bool = False,
     step_number: Optional[int] = None,
@@ -121,10 +156,15 @@ def log_batch_summary(
         print(f"Generated Sequence (Length: {len(trimmed_tokens)}) - [Sequence content hidden]")
 
     # Overall Summary
+    total_seq_reward = (
+        rewards_info.get('scalar_total_reward', 0.0)
+        if isinstance(rewards_info, dict)
+        else getattr(rewards_info, 'scalar_total_reward', 0.0)
+    )
     if step_number is not None:
-        print(f"\n--- Overall Summary: Step {step_number} ---\n  Total Sequence Reward: {rewards_info.scalar_total_reward:.4f}")
+        print(f"\n--- Overall Summary: Step {step_number} ---\n  Total Sequence Reward (Curriculum-Masked): {total_seq_reward:.4f}")
     else:
-        print(f"\n--- Overall Summary ---\n  Total Sequence Reward: {rewards_info.scalar_total_reward:.4f}")
+        print(f"\n--- Overall Summary ---\n  Total Sequence Reward (Curriculum-Masked): {total_seq_reward:.4f}")
     
     # Pipeline Timings (New Section)
     if timings:
@@ -166,49 +206,64 @@ def log_batch_summary(
         env_reward_total = print_timing_line("2. Environment & Reward (Total - CPU)", 'env_and_reward_total', 0, is_subtotal=True)
         
         # 2.1. Environment Processing (Parsing + Model Init) - Average per sequence
-        parse_time = timings.get('avg_env_timing_parsing_time', 0.0)
-        model_init_total = timings.get('avg_env_timing_model_init_total', 0.0)
+        parse_time = timings.get('avg_env_total', 0.0)  # Use new timing key
+        model_init_total = timings.get('avg_env_total', 0.0)  # Use new timing key
         env_processing_time_avg = parse_time + model_init_total
 
         print(f"  - Environment Processing (Avg per seq): {env_processing_time_avg:.4f}s ({(env_processing_time_avg/total_pipeline_time)*100:.1f}%)")
-        print_timing_line("    - Parsing Sequence", 'avg_env_timing_parsing_time', 2)
+        print_timing_line("    - Parsing Sequence", 'avg_env_total', 2)
         
-        model_init_and_val_total = print_timing_line("    - Model Init & Validation (Total)", 'avg_env_timing_model_init_total', 2)
-        print_timing_line("      - Check Propagate & Anomaly", 'avg_env_timing_check_propagate_time', 3)
+        model_init_and_val_total = print_timing_line("    - Model Init & Validation (Total)", 'avg_env_total', 2)
+        print_timing_line("      - Check Propagate & Anomaly", 'avg_env_total', 3)
 
         # 2.2. Reward Shaping - Average per sequence
-        reward_avg_total = timings.get('avg_reward_timing_reward_total_time', 0.0)
+        reward_avg_total = timings.get('avg_reward_total', 0.0)  # Use new timing key
         print(f"  - Reward Shaping (Avg per seq): {reward_avg_total:.4f}s ({(reward_avg_total/total_pipeline_time)*100:.1f}%)")
-        print_timing_line("    - Aggregate Check Data (Token Map)", 'avg_reward_timing_aggregate_data_time', 2)
-        print_timing_line("    - Calculate Instantaneous Rewards", 'avg_reward_timing_instantaneous_reward_time', 2)
+        print_timing_line("    - Aggregate Check Data (Token Map)", 'avg_reward_total', 2)
+        print_timing_line("    - Calculate Instantaneous Rewards", 'avg_reward_total', 2)
         # New breakdown for Discounted Return
-        print_timing_line("    - Discounted Return Loop (R_target)", 'avg_reward_timing_discounted_return_loop_time', 2)
-        print_timing_line("    - Misc Scalar/Mask Calculation", 'avg_reward_timing_misc_scalar_mask_time', 2)
+        print_timing_line("    - Discounted Return Loop (R_target)", 'avg_reward_total', 2)
+        print_timing_line("    - Misc Scalar/Mask Calculation", 'avg_reward_total', 2)
         
         print("-" * 90)
+
+    # Print parsed model dict if available
+    outcome_model_dict = outcome.get('model_data_dict') if isinstance(outcome, dict) else getattr(outcome, 'model_data_dict', None)
+    if outcome_model_dict:
+        try:
+            print("\n--- Parsed Model Dict ---")
+            print(json.dumps(outcome_model_dict, indent=2))
+        except Exception:
+            print("\n--- Parsed Model Dict (raw) ---")
+            print(outcome_model_dict)
     
     effective_seq_len = min(len(trimmed_tokens), predicted_score_vectors.size(0))
     if effective_seq_len > 0:
         avg_value_loss = F.l1_loss(predicted_score_vectors[:effective_seq_len], per_token_target_scores[:effective_seq_len]).item()
         print(f"  Average Value Loss (L1): {avg_value_loss:.4f}")
 
-    if not outcome.success:
-        print(f"  {outcome.meta.get('error') or outcome.meta.get('message', 'CHECK FAILURE')}")
-    if outcome.unclosed_block_info:
-        start, depth = outcome.unclosed_block_info
+    outcome_success = outcome.get('success', False) if isinstance(outcome, dict) else getattr(outcome, 'success', False)
+    outcome_meta = outcome.get('meta', {}) if isinstance(outcome, dict) else getattr(outcome, 'meta', {})
+    outcome_unclosed = outcome.get('unclosed_block_info') if isinstance(outcome, dict) else getattr(outcome, 'unclosed_block_info', None)
+    if not outcome_success:
+        print(f"  {outcome_meta.get('error') or outcome_meta.get('message', 'CHECK FAILURE')}")
+    if outcome_unclosed:
+        start, depth = outcome_unclosed
         print(f"  Structural Penalty applied for {depth} unclosed block(s) from token index {start}.")
         
     if print_detailed_checklist:
-        print("\n--- Detailed Checklist & Reward Breakdown (Grouped by Unique Check) ---")
+        print("\n--- Detailed Checklist & Reward Breakdown (Active Checks Only) ---")
         header = f"{'Check Name':<35} | {'Target Avg Score':>16} | {'Value Pred (Avg)':>16} | {'Value Loss (L1)':>16} | {'Overall Status'}"
         print(header); print("-" * len(header))
 
         unique_check_summary = defaultdict(lambda: {'instance_count': 0, 'passed_instances': 0, 'failed_instances': 0, 'messages': set(), 'error_vars': set(), 'good_vars': set(), 'check_idx': -1, 'obj_types_found': set()})
         obj_type_map = {'f': 'particle', 's': 'particle', 'm': 'field', 'i': 'itract', 'g': 'global'}
         
-        checklist_data = rewards_info.diagnostics.get("checks", {})
+        diagnostics = rewards_info.get('diagnostics', {}) if isinstance(rewards_info, dict) else getattr(rewards_info, 'diagnostics', {})
+        checklist_data = diagnostics.get("checks", {})
         for obj_id, checks in checklist_data.items():
             for check_name, result in checks.items():
+                if check_name not in active_checks: continue  # CURRICULUM FILTER
                 if check_name not in CHECK_TO_IDX: continue
                 check_idx = CHECK_TO_IDX[check_name]
                 summary = unique_check_summary[check_name]
@@ -223,8 +278,8 @@ def log_batch_summary(
                 if result.get('message') and result['message'] != "Passed": summary['messages'].add(result['message'])
                 summary['error_vars'].update(v for v in result.get('error_var', []) if v)
                 summary['good_vars'].update(v for v in result.get('good_var', []) if v)
-
-        sorted_check_names = sorted(unique_check_summary.keys(), key=lambda k: (_get_check_category_priority(f"({'/'.join(sorted(list(unique_check_summary[k]['obj_types_found'])))} ) {k}"), k))
+        
+        sorted_check_names = sorted([name for name in unique_check_summary.keys() if name in active_checks], key=lambda k: (_get_check_category_priority(f"({'/'.join(sorted(list(unique_check_summary[k]['obj_types_found'])))} ) {k}"), k))
 
         for check_name in sorted_check_names:
             summary = unique_check_summary[check_name]
@@ -248,13 +303,15 @@ def log_batch_summary(
             print(f"{display_name:<35} | {target_avg:>16.4f} | {pred_avg:>16.4f} | {l1:>16.4f} | {status} {' - '.join(details)}")
 
             if print_per_check_rewards_detail and check_idx != -1:
-                print(f"  Per-token rewards for '{display_name}':")
-                print(format_sequence_with_rewards(
-                    trimmed_tokens,
-                    per_token_instantaneous_rewards[:effective_seq_len, check_idx],
-                    per_token_target_scores[:effective_seq_len, check_idx],
-                    predicted_score_vectors[:effective_seq_len, check_idx],
-                    print_sequence
+                print(f"  Token-by-token details for '{display_name}':")
+                print(format_sequence_with_full_details(
+                    tokens=trimmed_tokens,
+                    immediate_rewards=per_token_instantaneous_rewards[:effective_seq_len, check_idx],
+                    target_rewards=per_token_target_scores[:effective_seq_len, check_idx],
+                    predicted_values=predicted_score_vectors[:effective_seq_len, check_idx],
+                    criticality_scores=criticality_scores[:effective_seq_len],
+                    exploration_head_scores=exploration_head_scores[:effective_seq_len],
+                    check_idx=check_idx
                 ))
                 print("-" * len(header))
         print("-" * len(header) + "\n")

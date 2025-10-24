@@ -46,7 +46,7 @@ class SequenceParser:
         # token_map key format: (object_type_str, object_id_str, attribute_path_str) -> List[int]
         self.token_map: Dict[Tuple[str, str, str], List[int]] = {}
         # Keep track of generated IDs for current sequence to avoid duplicates
-        self._generated_ids: Dict[str, Dict[str, bool]] = {'i': {}, 'm': {}, 'f': {}} # {prefix: {id_str: used}}
+        self._generated_ids: Dict[str, Dict[str, bool]] = {'i': {}}
         # Diagnostics about parsing attempts and failures
         self.parsing_diagnostics: Dict[str, List[str]] = {}
 
@@ -79,7 +79,7 @@ class SequenceParser:
         self.tokens = tokens
         self.cursor = 0
         self.token_map = {}
-        self._generated_ids = {'i': {}, 'm': {}, 'f': {}} # Reset IDs for each parse call
+        self._generated_ids = {'i': {}}
         self.parsing_diagnostics = {'failed_fields': [], 'failed_particles': []}
 
         model_dict = {
@@ -156,6 +156,7 @@ class SequenceParser:
 
         fields_in_interaction = []
         particles_in_interaction = []
+        field_ids_in_this_interaction = set() # Local set for field IDs
 
         # Parse nested fields
         while self.cursor < len(self.tokens) and self.tokens[self.cursor] == "FIELD":
@@ -169,9 +170,10 @@ class SequenceParser:
                 field_num = self._get_value_from_token(field_id_token, regex_pattern=r'\d+')
                 field_id = f"m{field_num}"
 
-                if field_id in self._generated_ids['m']:
-                    raise ParsingError(f"Duplicate field ID: {field_id}")
-                self._generated_ids['m'][field_id] = True
+                # Check for duplicate fields within this interaction.
+                if field_id in field_ids_in_this_interaction:
+                    raise ParsingError(f"Duplicate field ID '{field_id}' within interaction '{itract_id}'")
+                field_ids_in_this_interaction.add(field_id)
 
                 field_dict, particles_in_field = self._parse_field_block(field_id)
                 fields_in_interaction.append(field_dict)
@@ -232,6 +234,7 @@ class SequenceParser:
             "chirality": chirality, "reps": reps, "particles": []
         }
         particles_in_field = []
+        particle_ids_in_this_field = set() # Local set of particle IDs
 
         # Parse nested particles
         while self.cursor < len(self.tokens) and self.tokens[self.cursor] == "PARTICLE":
@@ -245,9 +248,10 @@ class SequenceParser:
                 particle_num = self._get_value_from_token(particle_id_token, regex_pattern=r'\d+')
                 particle_id = f"f{particle_num}"
 
-                if particle_id in self._generated_ids['f']:
-                    raise ParsingError(f"Duplicate particle ID: {particle_id}")
-                self._generated_ids['f'][particle_id] = True
+                # Check for duplicate particles within this field.
+                if particle_id in particle_ids_in_this_field:
+                    raise ParsingError(f"Duplicate particle ID '{particle_id}' within field '{field_id}'")
+                particle_ids_in_this_field.add(particle_id)
 
                 particle_dict = self._parse_particle_block(particle_id, parent_field_type=field_type)
 

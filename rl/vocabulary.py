@@ -1,5 +1,12 @@
 from transformers import AutoTokenizer
 from typing import Tuple, Dict, List
+from dataclasses import dataclass
+
+try:
+    # Optional import; avoid circulars if not needed
+    from config import Config
+except Exception:
+    Config = None  # type: ignore
 
 # A definitive list of all symbolic tokens that define the grammar's vocabulary.
 GRAMMAR_TOKEN_NAMES: List[str] = [
@@ -42,48 +49,100 @@ GRAMMAR_TOKEN_NAMES: List[str] = [
     "NA"
 ]
 
-def initialize_tokenizer_and_mappings(config) -> Tuple[AutoTokenizer, Dict[str, int], Dict[int, str], int]:
+@dataclass
+class SimpleGrammarTokenizer:
+    """A minimal tokenizer that treats each grammar token as an atomic token.
+
+    This provides the small surface the rest of the code expects: __len__,
+    convert_tokens_to_ids, pad_token_id, eos_token_id.
     """
-    Loads the specified Hugging Face tokenizer, adds the grammar tokens as special
-    tokens, and returns the tokenizer along with the necessary vocabulary mappings.
+    vocab: List[str]
+
+    def __post_init__(self) -> None:
+        self._tok2id: Dict[str, int] = {t: i for i, t in enumerate(self.vocab)}
+        self._id2tok: Dict[int, str] = {i: t for t, i in self._tok2id.items()}
+        # Required special token ids
+        if 'PAD' not in self._tok2id or 'EOS' not in self._tok2id:
+            raise ValueError("'PAD' and 'EOS' must be present in GRAMMAR_TOKEN_NAMES")
+        self.pad_token_id: int = self._tok2id['PAD']
+        self.eos_token_id: int = self._tok2id['EOS']
+
+    def __len__(self) -> int:
+        return len(self.vocab)
+
+    def convert_tokens_to_ids(self, token: str) -> int:
+        if token not in self._tok2id:
+            raise KeyError(f"Unknown grammar token: {token}")
+        return self._tok2id[token]
+
+    # Convenience accessors used elsewhere
+    @property
+    def pad_token(self) -> str:
+        return 'PAD'
+
+    @property
+    def eos_token(self) -> str:
+        return 'EOS'
+
+    # Compatibility no-op for HF API parity where called
+    def add_special_tokens(self, *_args, **_kwargs) -> None:
+        return None
+
+    # Expose mappings if needed by callers
+    @property
+    def token_to_id(self) -> Dict[str, int]:
+        return self._tok2id
+
+    @property
+    def id_to_token(self) -> Dict[int, str]:
+        return self._id2tok
+
+
+def initialize_tokenizer_and_mappings(config) -> Tuple[object, Dict[str, int], Dict[int, str], int]:
     """
-    tokenizer = AutoTokenizer.from_pretrained(
-        config.HF_MODEL_NAME,
-        trust_remote_code=config.TRUST_REMOTE_CODE
-    )
+    Initialize tokenizer and mappings.
 
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    - If MODEL_TYPE == 'hf': use Hugging Face tokenizer and register grammar tokens
+      as special tokens (legacy path).
+    - If MODEL_TYPE == 'transformer': use a simple grammar tokenizer where the
+      vocabulary is exactly the set of grammar tokens.
+    """
+    model_type = getattr(config, 'MODEL_TYPE', 'transformer')
 
-    # Add grammar tokens to the tokenizer's vocabulary.
-    # This ensures they are treated as single, indivisible units.
-    tokenizer.add_special_tokens({'additional_special_tokens': GRAMMAR_TOKEN_NAMES})
+    if model_type == 'hf':
+        tokenizer = AutoTokenizer.from_pretrained(
+            config.HF_MODEL_NAME,
+            trust_remote_code=getattr(config, 'TRUST_REMOTE_CODE', True)
+        )
 
-    # Create the mappings that the rest of the application will use.
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        tokenizer.add_special_tokens({'additional_special_tokens': GRAMMAR_TOKEN_NAMES})
+
+        TOKEN_TO_IDX = {tok: tokenizer.convert_tokens_to_ids(tok) for tok in GRAMMAR_TOKEN_NAMES}
+        IDX_TO_TOKEN = {idx: tok for tok, idx in TOKEN_TO_IDX.items()}
+
+        TOKEN_TO_IDX['PAD'] = tokenizer.pad_token_id
+        IDX_TO_TOKEN[tokenizer.pad_token_id] = 'PAD'
+
+        if 'EOS' not in TOKEN_TO_IDX:
+            if tokenizer.eos_token_id is not None:
+                TOKEN_TO_IDX['EOS'] = tokenizer.eos_token_id
+                IDX_TO_TOKEN[tokenizer.eos_token_id] = 'EOS'
+            else:
+                raise ValueError("EOS token not found in vocabulary after adding special tokens")
+
+        VOCAB_SIZE = len(tokenizer)
+        print(f"Vocabulary initialized. Size: {VOCAB_SIZE}. PAD ID: {tokenizer.pad_token_id}, EOS ID: {tokenizer.eos_token_id}")
+        return tokenizer, TOKEN_TO_IDX, IDX_TO_TOKEN, VOCAB_SIZE
+
+    # MODEL_TYPE == 'transformer' → use grammar-only tokenizer
+    tokenizer = SimpleGrammarTokenizer(GRAMMAR_TOKEN_NAMES)
+
     TOKEN_TO_IDX = {tok: tokenizer.convert_tokens_to_ids(tok) for tok in GRAMMAR_TOKEN_NAMES}
     IDX_TO_TOKEN = {idx: tok for tok, idx in TOKEN_TO_IDX.items()}
 
-    # Ensure PAD token is correctly mapped
-    TOKEN_TO_IDX['PAD'] = tokenizer.pad_token_id
-    IDX_TO_TOKEN[tokenizer.pad_token_id] = 'PAD'
-    
-    # Ensure EOS token is correctly mapped - always use the grammar token EOS
-    # This ensures EOS and PAD have distinct IDs
-    if 'EOS' in TOKEN_TO_IDX:
-        # EOS was added as a special token, use its ID
-        pass  # TOKEN_TO_IDX['EOS'] is already set
-    else:
-        # Fallback: if EOS wasn't added as special token, use eos_token_id
-        if tokenizer.eos_token_id is not None:
-            TOKEN_TO_IDX['EOS'] = tokenizer.eos_token_id
-            IDX_TO_TOKEN[tokenizer.eos_token_id] = 'EOS'
-        else:
-            # This should not happen since EOS is in GRAMMAR_TOKEN_NAMES
-            raise ValueError("EOS token not found in vocabulary after adding special tokens")
-
-
     VOCAB_SIZE = len(tokenizer)
-
     print(f"Vocabulary initialized. Size: {VOCAB_SIZE}. PAD ID: {tokenizer.pad_token_id}, EOS ID: {tokenizer.eos_token_id}")
-
     return tokenizer, TOKEN_TO_IDX, IDX_TO_TOKEN, VOCAB_SIZE
