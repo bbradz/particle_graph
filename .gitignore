@@ -6,3 +6,5 @@ test.py
 .vscode/cli.txt
 cli.txt
 old/
+pretrain_cache/
+training_checkpoints/
