@@ -1,4 +1,5 @@
 # Import DEBUG from config
+from typing import Any
 from sympy import false
 from config import get_config
 DEBUG = get_config().DEBUG_PRINTS
@@ -110,7 +111,7 @@ def run_checks(all_checks, checklists, level, skip_results=False):
 
                 good_var = result.get('good_var', [])
                 error_var = result.get('error_var', [])
-                mattered_var = list({*good_var, *error_var})
+                mattered_var = list[Any]({*good_var, *error_var})
                 result.update({"mattered_vars": mattered_var})
                 result.update({"level": level})
             

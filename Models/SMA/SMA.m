@@ -3,7 +3,7 @@ Off[General::spell];
 Model`Name = "SMA";
 Model`NameLaTeX = "SM Model A";
 Model`Authors = "Cooper";
-Model`Date = "2025-10-29-02-49-05";
+Model`Date = "2025-10-29-14-33-58";
 
 (*-------------------------------------------*)
 (*   Particle Content*)

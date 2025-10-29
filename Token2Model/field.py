@@ -26,7 +26,7 @@ class Field:
     particles: list of Particle
     self_conjugate: bool
     """
-    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate, chirality=None):
+    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate, chirality):
         self.id = id
         self.name = name
         self.type = type
@@ -265,6 +265,28 @@ class Field:
                                "error_var": crucial_var, 
                                "good_var": [], 
                                "message": f"'particles' must be a list"
+                               })
+            return result
+
+        def _chirality_check():
+            crucial_var = [f"fields.{self.id}.chirality"]
+            result = {"score": 1, 
+                      "error_var": [], 
+                      "good_var": crucial_var, 
+                      "message": "Passed", 
+                      "max_score": 1,
+                      }
+            if self.type == "fermion" and self.chirality not in ["left", "right"]:
+                result.update({"score": 0, 
+                               "error_var": crucial_var, 
+                               "good_var": [], 
+                               "message": "chirality must be left or right for fermion fields"
+                               })
+            elif self.type != "fermion" and self.chirality is not None:
+                result.update({"score": 0, 
+                               "error_var": crucial_var, 
+                               "good_var": [], 
+                               "message": "chirality must be None for non-fermion fields"
                                })
             return result
 
@@ -584,6 +606,7 @@ class Field:
                            (_particle_number_check, 1),
                            (_particle_field_consistency, 1),
                            (_gen_type_consistency, 1),
+                           (_chirality_check, 1),
                            (_sort_reps, 1),
                            (_reps_dim_consistency, 1),
                            #(_allowed_charges, 1),
@@ -697,22 +720,6 @@ class FermionField(Field):
 
     def _all_checks(self):
         super()._all_checks()
-
-        def _chirality_check():
-            crucial_var = [f"fields.{self.id}.chirality"]
-            result = {"score": 1, 
-                      "error_var": [], 
-                      "good_var": crucial_var, 
-                      "message": "Passed", 
-                      "max_score": 1,
-                      }
-            if self.chirality not in ["left", "right"]:
-                result.update({"score": 0, 
-                               "error_var": crucial_var, 
-                               "good_var": [], 
-                               "message": "chirality must be left or right"
-                               })
-            return result
         
         # ------------------------------------------------------------------
         
@@ -743,8 +750,25 @@ class FermionField(Field):
                                })
             return result
 
-        self.all_checks.extend([(_chirality_check, 1),
-                                (_assign_colors, 1)
+        def _chirality_consistency():
+            result = {"score": 1, 
+                      "error_var": [], 
+                      "good_var": [f"fields.{self.id}.chirality"], 
+                      "message": "Passed", 
+                      "max_score": 1,
+                      }
+            error_var = [ws.chirality for ws in self.weyl_spinors if ws.chirality != self.chirality]
+            if error_var:
+                good_var = [ws.chirality for ws in self.weyl_spinors if ws.chirality == self.chirality]
+                result.update({"score": 0, 
+                               "error_var": error_var, 
+                               "good_var": good_var, 
+                               "message": "chirality is not consistent for the weyl spinors"
+                               })
+            return result
+
+        self.all_checks.extend([(_assign_colors, 1),
+                                #(_chirality_consistency, 1)
                                 ])
 
         
@@ -840,9 +864,8 @@ class FermionField(Field):
 #                            Scalar Field
 # ====================================================================
 class ScalarField(Field):
-    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate):
-        self.chirality = None
-        super().__init__(id, name, type, groups, reps, dim, gen, particles, self_conjugate)
+    def __init__(self, id, name, type, groups, reps, dim, gen, particles, self_conjugate, chirality):
+        super().__init__(id, name, type, groups, reps, dim, gen, particles, self_conjugate, chirality)
         self.potential = None
         self.vev = None
         self.get_vev = False
