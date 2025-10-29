@@ -302,8 +302,8 @@ class Model:
                 if key == "G^3":
                     G, _, _ = check
                     anomaly_name = f"({G.name})^3"
-                    #error_var = ["all fermions", "reps", check]
-                    error_var = [f"fields.{f.id}.reps.{G.id}" for f in self.fermion_fields.values()]
+                    #crucial_var = ["all fermions", "reps", check]
+                    crucial_var = [f"fields.{f.id}.reps.{G.id}" for f in self.fermion_fields.values()]
                     
                     def anomaly_func(chiral, dim, gen, color_index):
                         field_rep = f.reps[f"{G.id}"]
@@ -312,9 +312,9 @@ class Model:
                 elif key == "U1-G^2":
                     G, _, U1 = check
                     anomaly_name = f"({U1.name})x({G.name})^2"
-                    #error_var = ["all fermions", "reps", check]
-                    error_var = [f"fields.{f.id}.reps.{G.id}" for f in self.fermion_fields.values()]
-                    error_var.extend([f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()])
+                    #crucial_var = ["all fermions", "reps", check]
+                    crucial_var = [f"fields.{f.id}.reps.{G.id}" for f in self.fermion_fields.values()]
+                    crucial_var.extend([f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()])
                     
                     def anomaly_func(chiral, dim, gen, color_index):
                         field_rep = f.reps[f"{G.id}"]
@@ -323,8 +323,8 @@ class Model:
                 elif key == "U1^3":
                     U1, _, _ = check
                     anomaly_name = f"({U1.name})^3"
-                    #error_var = ["all fermions", "reps", check]
-                    error_var = [f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()]
+                    #crucial_var = ["all fermions", "reps", check]
+                    crucial_var = [f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()]
                     def anomaly_func(chiral, dim, gen, color_index):
                         Y = f.reps[f"{U1.id}"]
                         return gen * dim * chiral * Y**3 * color_index
@@ -332,8 +332,8 @@ class Model:
                 elif key == "U1-grav":
                     U1, _, _ = check
                     anomaly_name = f"({U1.name})^2-grav"
-                    #error_var = ["all fermions", "reps", check]
-                    error_var = [f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()]
+                    #crucial_var = ["all fermions", "reps", check]
+                    crucial_var = [f"fields.{f.id}.reps.{U1.id}" for f in self.fermion_fields.values()]
                     def anomaly_func(chiral, dim, gen, color_index):
                         Y = f.reps[f"{U1.id}"]
                         return gen * dim * chiral * Y * color_index
@@ -341,10 +341,10 @@ class Model:
                 elif key == "U1-mixing":
                     U1i, U1j, U1k = check
                     anomaly_name = f"({U1i.name})x({U1j.name})x({U1k.name})"
-                    #error_var = ["all fermions", "reps", check]
-                    error_var = [f"fields.{f.id}.reps.{U1i.id}" for f in self.fermion_fields.values()]
-                    error_var.extend([f"fields.{f.id}.reps.{U1j.id}" for f in self.fermion_fields.values()])
-                    error_var.extend([f"fields.{f.id}.reps.{U1k.id}" for f in self.fermion_fields.values()])
+                    #crucial_var = ["all fermions", "reps", check]
+                    crucial_var = [f"fields.{f.id}.reps.{U1i.id}" for f in self.fermion_fields.values()]
+                    crucial_var.extend([f"fields.{f.id}.reps.{U1j.id}" for f in self.fermion_fields.values()])
+                    crucial_var.extend([f"fields.{f.id}.reps.{U1k.id}" for f in self.fermion_fields.values()])
                     def anomaly_func(chiral, dim, gen, color_index):
                         Y1 = f.reps[f"{U1i.id}"]
                         Y2 = f.reps[f"{U1j.id}"]
@@ -371,17 +371,17 @@ class Model:
                 if anomaly_coeff != 0:
                     self.checklist['global'][anomaly_name] = {"score": score(anomaly_coeff), 
                                                               "max_score": 1, 
-                                                              "error_var": error_var, 
+                                                              "error_var": crucial_var, 
                                                               "good_var": [], 
-                                                              "mattered_vars": error_var,
+                                                              "mattered_vars": crucial_var,
                                                               "message": f"{anomaly_name} anomaly detected.", 
                                                               "level": "global"}
                 else:
                     self.checklist['global'][anomaly_name] = {"score": 1, 
                                                               "max_score": 1, 
                                                               "error_var": [], 
-                                                              "good_var": [], 
-                                                              "mattered_vars": [],
+                                                              "good_var": crucial_var, 
+                                                              "mattered_vars": crucial_var,
                                                               "message": "Passed", 
                                                               "level": "global"}                    
 

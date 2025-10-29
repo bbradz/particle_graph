@@ -1,4 +1,4 @@
-id, check, score, max_score, error_var, good_var, message
+id, check, score, max_score, error_var, good_var, message, level
 s1, _type_check, 1, 1, [], ['particles.s1.type'], Passed, particle
 s1, _name_check, 1, 1, [], ['particles.s1.name'], Passed, particle
 s1, _mass_check, 1, 1, [], ['particles.s1.mass'], Passed, particle
@@ -239,9 +239,9 @@ i4, _sort_field, 1, 1, [], ['interactions.i4.fields'], Passed, interaction
 i4, _scalar_mass, 1, 1, [], ['interactions.i4.fields'], Passed, interaction
 i4, _scalar_quartic, 1, 1, [], ['interactions.i4.fields'], Passed, interaction
 i4, _scalar_lagrangian, 1, 1, [], ['interactions.i4.fields'], Passed, interaction
-global, (left)^3, 1, 1, [], [], Passed, global
-global, (color)^3, 1, 1, [], [], Passed, global
-global, (hypercharge)x(left)^2, 1, 1, [], [], Passed, global
-global, (hypercharge)x(color)^2, 1, 1, [], [], Passed, global
-global, (hypercharge)^3, 1, 1, [], [], Passed, global
-global, (hypercharge)^2-grav, 1, 1, [], [], Passed, global
+global, (left)^3, 1, 1, [], ['fields.m1.reps.g2', 'fields.m2.reps.g2', 'fields.m3.reps.g2', 'fields.m4.reps.g2', 'fields.m5.reps.g2'], Passed, global
+global, (color)^3, 1, 1, [], ['fields.m1.reps.g3', 'fields.m2.reps.g3', 'fields.m3.reps.g3', 'fields.m4.reps.g3', 'fields.m5.reps.g3'], Passed, global
+global, (hypercharge)x(left)^2, 1, 1, [], ['fields.m1.reps.g2', 'fields.m2.reps.g2', 'fields.m3.reps.g2', 'fields.m4.reps.g2', 'fields.m5.reps.g2', 'fields.m1.reps.g1', 'fields.m2.reps.g1', 'fields.m3.reps.g1', 'fields.m4.reps.g1', 'fields.m5.reps.g1'], Passed, global
+global, (hypercharge)x(color)^2, 1, 1, [], ['fields.m1.reps.g3', 'fields.m2.reps.g3', 'fields.m3.reps.g3', 'fields.m4.reps.g3', 'fields.m5.reps.g3', 'fields.m1.reps.g1', 'fields.m2.reps.g1', 'fields.m3.reps.g1', 'fields.m4.reps.g1', 'fields.m5.reps.g1'], Passed, global
+global, (hypercharge)^3, 1, 1, [], ['fields.m1.reps.g1', 'fields.m2.reps.g1', 'fields.m3.reps.g1', 'fields.m4.reps.g1', 'fields.m5.reps.g1'], Passed, global
+global, (hypercharge)^2-grav, 1, 1, [], ['fields.m1.reps.g1', 'fields.m2.reps.g1', 'fields.m3.reps.g1', 'fields.m4.reps.g1', 'fields.m5.reps.g1'], Passed, global

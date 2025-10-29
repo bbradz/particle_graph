@@ -37,8 +37,8 @@ DEFINITION[MatchingConditions]= {
 ListDecayParticles = {hh,Fv,Fe,Fu,Fd};
 
 DefaultInputValues={
-MtINPUT -> 365.8408830200282,
-LambdaVari4INPUT -> 0.8485735150972227
+MtINPUT -> 492.5204756058893,
+LambdaVari4INPUT -> 0.45919069847507965
 };
 
 RenConditionsDecays={
