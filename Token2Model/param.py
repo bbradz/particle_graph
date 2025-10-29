@@ -43,7 +43,10 @@ class ParameterRegistry:
         """Clear all registered parameters. Use this before creating a new model."""
         self._parameters.clear()
         self._descriptions.clear()
-    
+        # Force garbage collection to ensure references are broken
+        import gc
+        gc.collect()
+        
     def __len__(self):
         return len(self._parameters)
     

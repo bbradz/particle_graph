@@ -21,7 +21,7 @@ class Particle:
     color: int
     flavor: str
     """
-    def __init__(self, id, name, type, mass, charge, color=1, flavor=None, simplify_checklist = True):
+    def __init__(self, id, name, type, mass, charge, color=1, flavor=None):
         self.id = id
         self._name = name # _name can be overridden by the pdg_info
         self.type = type
@@ -30,7 +30,6 @@ class Particle:
         self._width = "Automatic" # _width can be overridden by the pdg_info
         self.color = color # color can be assigned by field class
         self.flavor = flavor # flavor can be assigned by field class
-        self.simplify_checklist = simplify_checklist
         self.__check__()
 
     def __str__(self):
@@ -103,20 +102,17 @@ class Particle:
                                })
             return result
     
-        if self.simplify_checklist:
-            self.all_checks = []
-        else:
-            self.all_checks = [(_type_check, 1), 
-                               (_name_check, 1), 
-                               (_mass_check, 1), 
-                               (_charge_check, 1)
-                               ]
+        self.all_checks = [(_type_check, 1), 
+                           (_name_check, 1), 
+                           (_mass_check, 1), 
+                           (_charge_check, 1)
+                           ]
 
     def __check__(self):
         """ Input checks for the particle class. """
         self.checklist = {}
         self._all_checks()
-        run_checks(self.all_checks, self.checklist)
+        run_checks(self.all_checks, self.checklist, level="particle")
 
     @property
     def spin(self):
@@ -165,12 +161,28 @@ class Particle:
 
     def __validate__(self):
         self._all_validations()
-        run_checks(self.all_validations, self.checklist, skip_results=True)
+        run_checks(self.all_validations, self.checklist, level="particle", skip_results=True)
 
     def pass_all_checks(self):
         score, max_score = self.score
         return score == max_score
 
+    @property
+    def failed_checks(self):
+        return {k: v for k, v in self.checklist.items() if v['message'] != "Passed"}
+    
+    @property
+    def all_error_vars(self):
+        error_vars = [v['error_var'] for v in self.checklist.values()]
+        flat_error_vars = [ev for ev_list in error_vars for ev in ev_list]
+        return flat_error_vars
+
+    @property
+    def all_good_vars(self):
+        good_vars = [v['good_var'] for v in self.checklist.values()]
+        flat_good_vars = [gv for gv_list in good_vars for gv in gv_list]
+        return flat_good_vars
+    
 # ====================================================================
 #                              WeylSpinor
 # ====================================================================
@@ -200,8 +212,8 @@ class WeylSpinor:
 #                              Fermion
 # ====================================================================
 class Fermion(Particle):
-    def __init__(self, id, name, mass, charge, simplify_checklist = True):
-        super().__init__(id, name, "fermion", mass, charge, simplify_checklist = simplify_checklist)
+    def __init__(self, id, name, mass, charge):
+        super().__init__(id, name, "fermion", mass, charge)
         self.left = WeylSpinor(self, "left")
         self.right = WeylSpinor(self, "right")
 
@@ -211,8 +223,8 @@ class Fermion(Particle):
 #                            Real Scalar
 # ====================================================================
 class RealScalar(Particle):
-    def __init__(self, id, name, mass, charge, simplify_checklist = True):
-        super().__init__(id, "real", name, mass, charge, simplify_checklist = simplify_checklist)
+    def __init__(self, id, name, mass, charge):
+        super().__init__(id, name, "real", mass, charge)
 
 
 
@@ -220,16 +232,16 @@ class RealScalar(Particle):
 #                           Complex Scalar
 # ====================================================================
 class ComplexScalar(Particle):
-    def __init__(self, id, name, mass, charge, simplify_checklist = True):
-        super().__init__(id, name, "complex", mass, charge, simplify_checklist = simplify_checklist)
+    def __init__(self, id, name, mass, charge):
+        super().__init__(id, name, "complex", mass, charge)
 
 
 # ====================================================================
 #                           Vector Boson
 # ====================================================================
 class VectorBoson(Particle):
-    def __init__(self, id, name, mass, charge, simplify_checklist = True):
-        super().__init__(id, "vector", name, mass, charge, simplify_checklist = simplify_checklist)
+    def __init__(self, id, name, mass, charge):
+        super().__init__(id, name, "vector", mass, charge)
 
 
 

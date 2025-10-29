@@ -5,12 +5,14 @@
 ### ========================================================================== ###
 
 # Standard library imports
+from optparse import Option
 import os
 import json
 from datetime import datetime
 import random
 import shutil
 import numpy as np
+from typing import Optional, Dict, Any
 from .check import run_checks
 from .param import GlobalParameterRegistry
 
@@ -21,10 +23,9 @@ class Model:
     """
     Particle Physics Model Class: read JSON file and write FR model file
     """
-    def __init__(self, model_name, author, JSON_PATH, OUTPUT_PATH, 
+    def __init__(self, model_name: str, author: str, JSON_PATH, OUTPUT_PATH, 
                  sm_particles_json = "sm_particles.json", 
-                 sm_parameters_json = "sm_parameters.json",
-                 simplify_checklist = True):
+                 sm_parameters_json = "sm_parameters.json"):
         self.model_name = model_name
         self.model_symbol = ''.join(word[0].upper() for word in self.model_name.split() if word)
         self.author = author
@@ -42,7 +43,6 @@ class Model:
 
         self.sm_particles_json = os.path.join(os.path.dirname(__file__), sm_particles_json)
         self.sm_parameters_json = os.path.join(os.path.dirname(__file__), sm_parameters_json)
-        self.simplify_checklist = simplify_checklist
 
         self.free_params = {}
         self.checklist = {}
@@ -98,13 +98,13 @@ class Model:
 
             if p["type"] == "fermion":
                 p.pop("type")
-                self.fermion_particles[key] = Fermion(**p, simplify_checklist = self.simplify_checklist)
+                self.fermion_particles[key] = Fermion(**p)
             elif p["type"] == "real":
                 p.pop("type")
-                self.scalar_particles[key] = RealScalar(**p, simplify_checklist = self.simplify_checklist)
+                self.scalar_particles[key] = RealScalar(**p)
             elif p["type"] == "complex":
                 p.pop("type")
-                self.scalar_particles[key] = ComplexScalar(**p, simplify_checklist = self.simplify_checklist)
+                self.scalar_particles[key] = ComplexScalar(**p)
             else:
                 print(f"invalid field type {p['type']}")
 
@@ -128,7 +128,7 @@ class Model:
                 sf.pop('chirality')
                 sf["groups"] = self.gauge_groups
                 sf["particles"] = scalar_list
-                new_scalar_field = ScalarField(**sf, simplify_checklist = self.simplify_checklist)
+                new_scalar_field = ScalarField(**sf)
                 self.scalar_fields[key] = new_scalar_field
 
     # Read Vector Fields
@@ -162,7 +162,7 @@ class Model:
                 ff["groups"] = self.gauge_groups
                 ff["particles"] = weyl_list
                 ff.pop('type')
-                new_fermion_field = FermionField(**ff, simplify_checklist = self.simplify_checklist)
+                new_fermion_field = FermionField(**ff)
                 self.fermion_fields[key] = new_fermion_field
 
         try:        
@@ -352,7 +352,13 @@ class Model:
                         return gen * dim * chiral * Y1 * Y2 * Y3 * color_index
     
                 if not self.pass_all_checks():
-                    self.checklist['global'][anomaly_name] = {"score": 0, "max_score": 1, "error_var": [], "good_var": [], "message": "Skipped"}
+                    self.checklist['global'][anomaly_name] = {"score": 0, 
+                                                              "max_score": 1, 
+                                                              "error_var": [], 
+                                                              "good_var": [], 
+                                                              "mattered_vars": [],
+                                                              "message": "Skipped", 
+                                                              "level": "global"}
                     continue
                 
                 for f in self.fermion_fields.values():
@@ -363,9 +369,21 @@ class Model:
                     anomaly_coeff += anomaly_func(chiral, dim, gen, color_index)
 
                 if anomaly_coeff != 0:
-                    self.checklist['global'][anomaly_name] = {"score": score(anomaly_coeff), "max_score": 1, "error_var": error_var, "good_var": [], "message": f"{anomaly_name} anomaly detected."}
+                    self.checklist['global'][anomaly_name] = {"score": score(anomaly_coeff), 
+                                                              "max_score": 1, 
+                                                              "error_var": error_var, 
+                                                              "good_var": [], 
+                                                              "mattered_vars": error_var,
+                                                              "message": f"{anomaly_name} anomaly detected.", 
+                                                              "level": "global"}
                 else:
-                    self.checklist['global'][anomaly_name] = {"score": 1, "max_score": 1, "error_var": [], "good_var": [], "message": "Passed"}                    
+                    self.checklist['global'][anomaly_name] = {"score": 1, 
+                                                              "max_score": 1, 
+                                                              "error_var": [], 
+                                                              "good_var": [], 
+                                                              "mattered_vars": [],
+                                                              "message": "Passed", 
+                                                              "level": "global"}                    
 
     def _read_check_list(self):
         model_components = [self.particles, self.fields, self.interactions]
@@ -410,6 +428,7 @@ class Model:
         [itr.__validate__() for itr in self.interactions.values()]
         [field.__validate__() for field in self.fields.values()]
         [ptcl.__validate__() for ptcl in self.particles.values()]
+ 
         self._make_anomaly_checklist()
         
         self._read_parameters()
@@ -562,11 +581,10 @@ class Model:
     # ------------------------------------------------------------------
     def write_checklist(self):
         with open(os.path.join(self.output_dir, "checklist.csv"), "w") as f:
-            f.write("id, check, score, max_score, error_var, good_var, message\n")
+            f.write("id, check, score, max_score, error_var, good_var, message, level\n")
             for id, checklist in self.checklist.items():
                 for key, value in checklist.items():
-
-                    f.write(f"{id}, {key}, {value['score']}, {value['max_score']}, {value['error_var']}, {value['good_var']}, {value['message']}\n")
+                    f.write(f"{id}, {key}, {value['score']}, {value['max_score']}, {value['error_var']}, {value['good_var']}, {value['message']}, {value['level']}\n")
 
 
 

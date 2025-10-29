@@ -42,62 +42,63 @@ class Interaction:
 
     def _all_checks(self):
         """ All checks for the initial INPUTs of the 'Interaction' class. """
-        self.all_checks = []
-
         def _params_check():
-            result = {"score": 1, 
-                      "error_var": [], 
-                      "good_var": [], 
-                      "message": "Passed", 
-                      "max_score": 1,
-                      }
             error_var = [f"interactions.{self.id}.{par}" for par in self.param_list if par not in self.params.keys()]
             good_var = [f"interactions.{self.id}.{par}" for par in self.param_list if par in self.params.keys()]
-            if error_var:
-                result.update({"score": 0, 
-                               "error_var": error_var, 
-                               "good_var": good_var, 
-                               "message": f"Invalid parameters: {error_var}"
-                               })
-            else:
-                result.update({"score": 1, 
-                               "error_var": [], 
-                               "good_var": good_var, 
-                               "message": "Passed"
-                               })
-            return result
-
-        def _field_length_check():
             result = {"score": 1, 
-                      "error_var": [], 
-                      "good_var": [], 
+                      "error_var": error_var, 
+                      "good_var": good_var, 
                       "message": "Passed", 
                       "max_score": 1,
                       }
-            if len(self.fields) != len(self.requirements):
-                result.update({"score": 0, 
-                               "error_var": [f"interactions.{self.id}.fields"], 
-                               "good_var": [], 
-                               "message": f"Number of fields ({len(self.fields)}) does not match number of requirements ({len(self.requirements)})"
-                               })
-            else:
-                result.update({"score": 1, 
-                               "error_var": [], 
-                               "good_var": [f"interactions.{self.id}.fields"], 
-                               "message": "Passed"
-                               })
+    
+            if error_var: result.update({"score": 0, "message": f"Invalid parameters: {error_var}"})
+
             return result
 
-        def _field_check():
+        def _fields_integrity_check():
             result = {"score": 1, 
                       "error_var": [], 
                       "good_var": [f"interactions.{self.id}.fields"], 
                       "message": "Passed", 
                       "max_score": 1,
                       }
-            error_var = [f"interactions.{self.id}.fields.{field.id}" for field in self.fields if not isinstance(field, Field)]
+            # Length consistency check
+            if len(self.fields) != len(self.requirements):
+                result.update({"score": 0, 
+                               "error_var": [f"interactions.{self.id}.fields"], 
+                               "good_var": [], 
+                               "message": f"Number of fields ({len(self.fields)}) does not match number of requirements ({len(self.requirements)})"
+                               })
+                return result
+
+            # Duplicate fields check
+            all_fields = [f.id for f in self.fields]
+            duplicates = list(set([field for field in all_fields if all_fields.count(field) > 1]))
+            if duplicates:
+                good_var = list(set([field for field in all_fields if all_fields.count(field) == 1]))
+                result.update({"score": 0, 
+                               "error_var": duplicates, 
+                               "good_var": good_var, 
+                               "message": f"Duplicate fields found: {duplicates}"
+                               })
+                return result
+
+            # Set aggregated particles only when integrity checks pass
+            self.all_particles = [p for f in self.fields for p in f.particles]
+            self.all_particles = {p.id: p for p in self.all_particles}
+            return result
+
+        def _field_check():
+            result = {"score": 1, 
+                      "error_var": [], 
+                      "good_var": [f"fields.{field.id}" for field in self.fields], 
+                      "message": "Passed", 
+                      "max_score": 1,
+                      }
+            error_var = [f"fields.{field.id}" for field in self.fields if not isinstance(field, Field)]
             if error_var:
-                good_var = [f"interactions.{self.id}.fields.{field.id}" for field in self.fields if isinstance(field, Field)]
+                good_var = [f"fields.{field.id}" for field in self.fields if isinstance(field, Field)]
                 result.update({"score": 0, 
                                "error_var": error_var, 
                                "good_var": good_var, 
@@ -122,26 +123,7 @@ class Interaction:
                                })
             return result
                 
-        def _check_replicate_fields():
-            result = {"score": 1, 
-                      "error_var": [], 
-                      "good_var": [f"interactions.{self.id}.fields"], 
-                      "message": "Passed", 
-                      "max_score": 1,
-                      }
-            all_fields = [f.id for f in self.fields]
-            error_var = list(set([field for field in all_fields if all_fields.count(field) > 1]))
-            if error_var:
-                good_var = list(set([field for field in all_fields if all_fields.count(field) == 1]))
-                result.update({"score": 0, 
-                               "error_var": error_var, 
-                               "good_var": good_var, 
-                               "message": f"Duplicate fields found: {error_var}"
-                               })
-            else:
-                self.all_particles = [p.fermion if f.type == "fermion" else p for f in self.fields for p in f.particles]
-                self.all_particles = {p.id: p for p in self.all_particles}
-            return result
+        
 
         def _sort_field():
             result = {"score": 1, 
@@ -165,18 +147,17 @@ class Interaction:
                 result.update({"score": 0, "error_var": error_var, "message": error_message})
             return result
 
-        self.all_checks.extend([(_field_length_check, 1), 
+        self.all_checks = [] if not self.param_list else [(_params_check, 1)]
+        self.all_checks.extend([(_fields_integrity_check, 1), 
                                 (_field_check, 1), 
-                                (_params_check, 1),
                                 (_all_field_pass_checks, 1), 
-                                (_check_replicate_fields, 1),
                                 (_sort_field, 1)
                                 ])
 
     def __check__(self):
         self.checklist = {}
         self._all_checks()
-        run_checks(self.all_checks, self.checklist, skip_results = True)
+        run_checks(self.all_checks, self.checklist, level="interaction", skip_results = True)
 
     def _all_validations(self):
         """ All validations for the 'Interaction' class. """
@@ -184,7 +165,7 @@ class Interaction:
 
     def __validate__(self):
         self._all_validations()
-        run_checks(self.all_validations, self.checklist, skip_results = True)
+        run_checks(self.all_validations, self.checklist, level="interaction", skip_results = True)
 
     @property
     def score(self):
@@ -301,12 +282,12 @@ class Yukawa(Interaction):
     #                       Validation Checks
     # --------------------------------------------------------------------
     def _dirac_bilinear_product(self):
-        result = {"score": 1, 
-                  "error_var": [], 
-                  "good_var": [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"], 
-                  "message": "Passed", 
-                  "max_score": 1,
-                  }
+        good_var = [
+            f"fields.{self.sorted_fields[0].id}.particles",
+            f"fields.{self.sorted_fields[1].id}.particles"
+        ]
+        result = {"score": 1, "max_score": 1, "message": "Passed", "good_var": good_var, "error_var": []}
+
         try:
             left = np.array([[p.id for p in gen] for gen in self.sorted_fields[0]._unphy_fields]).transpose()
             right = np.array([[p.id for p in gen] for gen in self.sorted_fields[1]._unphy_fields])
@@ -547,7 +528,7 @@ class Yukawa(Interaction):
                                             LesHouches = f"U{self.right_spinor.upper()}MIX")
                 self.IntParams[right_MIX.name] = right_MIX
 
-            self.EWSB_matter_sector = f"{{{{{self.left_spinor}}}, {{conj[{self.right_spinor}]}}}}, {{{{{self.left_spinor.upper()}, V{self.dirac_spinor}}}, {{{self.right_spinor.upper()}, U{self. dirac_spinor}}}}}"
+            self.EWSB_matter_sector = f"{{{{{self.left_spinor}}}, {{conj[{self.right_spinor}]}}}}, {{{{{self.left_spinor.upper()}, V{self.dirac_spinor}}}, {{{self.right_spinor.upper()}, U{self.dirac_spinor}}}}}"
         except Exception as e:
             result.update({"score": 0, 
                            "error_var": [f"interaction.{self.id}.fields"], 
@@ -561,7 +542,6 @@ class Yukawa(Interaction):
         
         self.all_validations.extend([(self._dirac_bilinear_product, 1), 
                                      (self._get_massive_particles, 1), 
-                                     #self._check_massive_particles,
                                      (self._check_U1Y_gauge_symmetry, 1),
                                      (self._yukawa_mass, 1),
                                      (self._yukawa_matrix, 1),
