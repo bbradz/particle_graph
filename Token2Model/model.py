@@ -125,7 +125,6 @@ class Model:
                 except:
                     scalar_list = sf["particles"]
 
-                sf.pop('chirality')
                 sf["groups"] = self.gauge_groups
                 sf["particles"] = scalar_list
                 new_scalar_field = ScalarField(**sf)

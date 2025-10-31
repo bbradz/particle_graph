@@ -13,41 +13,50 @@ def get_all_possible_check_names():
     # This list must be comprehensive and the order must be static.
     # We will build it from the various _all_checks and _all_validations methods.
     
-    # Particle Checks
+    # Particle Checks (from particle.py)
     particle_checks = [
         '_type_check', '_name_check', '_mass_check', '_charge_check'
     ]
     
-    # Field Checks
+    # Field Checks (from field.py - Field class)
     field_checks = [
-        '_name_check', '_type_check', '_groups_check', '_reps_check', 
-        '_dim_check', '_gen_check', '_particles_check', '_self_conjugate_check', 
-        '_sort_reps', '_reps_dim_consistency', '_gen_type_consistency', 
-        '_allowed_charges', '_deplicate_particles', '_particle_numbers', 
-        '_particle_types', '_particle_charges', '_all_particle_pass', 
+        '_name_check', '_type_check', '_groups_check', 
+        '_reps_type_check', '_reps_length_check', '_reps_value_check', 
+        '_dim_check', '_gen_check', '_self_conjugate_check', 
+        '_particle_list_check', '_all_particle_pass',
+        '_particle_type_check', '_particle_number_check', 
+        '_particle_field_consistency', '_gen_type_consistency', 
+        '_chirality_check', '_sort_reps', '_reps_dim_consistency', 
+        '_conj_charges_consistency', '_rep_charge_consistency', 
         '_sort_particles'
     ]
     
-    # Fermion-specific Field Checks
-    fermion_field_checks = ['_chirality_check', '_assign_colors']
+    # FermionField-specific Checks (from field.py - FermionField class)
+    fermion_field_checks = ['_assign_colors']
     
-    # Field Validation Checks
+    # Field Validation Checks (from field.py)
     field_validation_checks = ['_mass_term_check', '_potential_term_check']
     
-    # Interaction Checks
+    # Interaction Checks (from interaction.py - Interaction class)
     interaction_checks = [
-        '_field_length_check', '_field_check', '_params_check', 
-        '_all_field_pass_checks', '_check_replicate_fields', '_sort_field'
+        '_params_check', '_fields_integrity_check', '_field_check', 
+        '_all_field_pass_checks', '_sort_field'
     ]
     
-    # Yukawa-specific Checks
-    yukawa_checks = ['_gen_check', '_dim_check', '_dirac_bilinear_product', 
-                     '_get_massive_particles', '_check_U1Y_gauge_symmetry', 
-                     '_yukawa_mass', '_yukawa_matrix', '_mixing_matrix', 
-                     '_yukawa_lagrangian']
+    # Yukawa-specific Checks (from interaction.py - Yukawa class)
+    yukawa_checks = ['_gen_check', '_dim_check']
+    
+    # Yukawa Validation Checks (from interaction.py - Yukawa class)
+    yukawa_validation_checks = [
+        '_dirac_bilinear_product', '_get_massive_particles', 
+        '_check_U1Y_gauge_symmetry', '_yukawa_mass', '_yukawa_matrix', 
+        '_mixing_matrix', '_yukawa_lagrangian'
+    ]
 
-    # Scalar Self-Interaction Checks
-    scalar_self_interaction_checks = ['_scalar_mass', '_scalar_quartic', '_scalar_lagrangian']
+    # ScalarSelfInteraction Validation Checks (from interaction.py - ScalarSelfInteraction class)
+    scalar_self_interaction_checks = [
+        '_scalar_mass', '_scalar_quartic', '_scalar_lagrangian'
+    ]
 
     # Global Anomaly Checks
     global_checks = [
@@ -59,7 +68,8 @@ def get_all_possible_check_names():
     all_checks = sorted(list(set(
         particle_checks + field_checks + fermion_field_checks + 
         field_validation_checks + interaction_checks + 
-        yukawa_checks + scalar_self_interaction_checks + global_checks
+        yukawa_checks + yukawa_validation_checks + 
+        scalar_self_interaction_checks + global_checks
     )))
     
     return all_checks

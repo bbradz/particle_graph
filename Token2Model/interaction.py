@@ -73,7 +73,7 @@ class Interaction:
                 return result
 
             # Duplicate fields check
-            all_fields = [f.id for f in self.fields]
+            all_fields = [f"interactions.{self.id}.fields.{f.id}" for f in self.fields]
             duplicates = list(set([field for field in all_fields if all_fields.count(field) > 1]))
             if duplicates:
                 good_var = list(set([field for field in all_fields if all_fields.count(field) == 1]))
@@ -92,13 +92,13 @@ class Interaction:
         def _field_check():
             result = {"score": 1, 
                       "error_var": [], 
-                      "good_var": [f"fields.{field.id}" for field in self.fields], 
+                      "good_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                       "message": "Passed", 
                       "max_score": 1,
                       }
-            error_var = [f"fields.{field.id}" for field in self.fields if not isinstance(field, Field)]
+            error_var = [f"interactions.{self.id}.fields.{f.id}" for f in self.fields if not isinstance(f, Field)]
             if error_var:
-                good_var = [f"fields.{field.id}" for field in self.fields if isinstance(field, Field)]
+                good_var = [f"interactions.{self.id}.fields.{f.id}" for f in self.fields if isinstance(f, Field)]
                 result.update({"score": 0, 
                                "error_var": error_var, 
                                "good_var": good_var, 
@@ -109,42 +109,58 @@ class Interaction:
         def _all_field_pass_checks():
             result = {"score": 1, 
                       "error_var": [], 
-                      "good_var": [f"interactions.{self.id}.fields"], 
+                      "good_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                       "message": "Passed", 
                       "max_score": 1,
                       }
-            error_var = [f"interactions.{self.id}.fields.{field.id}" for field in self.fields if not field.pass_all_checks()]
-            if error_var:
-                good_var = [f"interactions.{self.id}.fields.{field.id}" for field in self.fields if field.pass_all_checks()]
-                result.update({"score": 0, 
+
+            passed_fields = [f for f in self.fields if f.pass_all_checks()]
+            if len(passed_fields) != len(self.fields):
+                failed_fields = [f for f in self.fields if f not in passed_fields]
+                error_var = [ev for f in failed_fields for ev in f.all_error_vars]
+                good_var = [f"interactions.{self.id}.fields.{f.id}" for f in passed_fields]
+                message = f"Some fields did not pass all checks"
+                score = len(passed_fields)/len(self.fields)
+                result.update({"score": score, 
                                "error_var": error_var, 
                                "good_var": good_var, 
-                               "message": f"Fields failed checks: {error_var}"
+                               "message": message
                                })
             return result
                 
-        
-
         def _sort_field():
             result = {"score": 1, 
                       "error_var": [], 
-                      "good_var": [f"interactions.{self.id}.fields"], 
+                      "good_var": [f"interactions.{self.id}.fields.{f.id}.type" for f in self.fields], 
                       "message": "Passed", 
                       "max_score": 1,
                       }
-            try:
-                self.sorted_fields = {}
-                for pos, reqs in self.requirements.items():
-                    candidate = self.fields
-                    for key, value in reqs.items():
-                        candidate = [f for f in candidate if f.__dict__()[key] == value or f.__dict__()[key] in value]
-                    assert len(candidate) == 1, \
-                        f"AssertionError: Multiple fields with \"{key} = {value}\" found for {self.id}: {candidate}"
+            error_var = []
+            good_var = []
+            message = "Passed"
+
+            self.sorted_fields = {}
+            all_fields = self.fields
+            for pos, reqs in self.requirements.items():
+                candidate = all_fields
+                for key, value in reqs.items():
+                    candidate = [f for f in candidate if f.__dict__()[key] == value or f.__dict__()[key] in value]
+                if len(candidate) > 1:
+                    error_var.extend([f"interactions.{self.id}.fields.{f.id}.type" for f in candidate])
+                    
+                elif len(candidate) < 1:
+                    error_var.extend([f"interactions.{self.id}.END_INTERACTION"])
+                else:
                     self.sorted_fields[pos] = candidate[0]
-            except Exception as e:
-                error_var = [f"interactions.{self.id}.fields"]
-                error_message = f"Error: {e}"
-                result.update({"score": 0, "error_var": error_var, "message": error_message})
+                    good_var.extend([f"interactions.{self.id}.fields.{candidate[0].id}.type"])
+                all_fields.remove(candidate[0])
+
+            if error_var:
+                result.update({"score": len(good_var)/len(self.requirements), 
+                               "error_var": error_var, 
+                               "good_var": good_var, 
+                               "message": f"Field sorting failed: {error_var}"
+                               })
             return result
 
         self.all_checks = [] if not self.param_list else [(_params_check, 1)]
@@ -246,13 +262,13 @@ class Yukawa(Interaction):
         def _gen_check():
             result = {"score": 1, 
                       "error_var": [], 
-                      "good_var": [f"fields.{self.sorted_fields[0].id}.gen", f"fields.{self.sorted_fields[1].id}.gen"], 
+                      "good_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.gen", f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.gen"], 
                       "message": "Passed", 
                       "max_score": 1,
                       }
             if self.sorted_fields[0].gen != self.sorted_fields[1].gen:
                 result.update({"score": 0, 
-                               "error_var": [f"fields.{self.sorted_fields[0].id}.gen", f"fields.{self.sorted_fields[1].id}.gen"], 
+                               "error_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.gen", f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.gen"], 
                                "good_var": [], 
                                "message": f"The two fermions have different generations: {self.sorted_fields[0].gen} != {self.sorted_fields[1].gen}"
                                })
@@ -261,13 +277,13 @@ class Yukawa(Interaction):
         def _dim_check():
             result = {"score": 1, 
                       "error_var": [], 
-                      "good_var": [f"fields.{self.sorted_fields[0].id}.dim", f"fields.{self.sorted_fields[2].id}.dim"], 
+                      "good_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.dim", f"interactions.{self.id}.fields.{self.sorted_fields[2].id}.dim"], 
                       "message": "Passed", 
                       "max_score": 1,
                       }
             if self.sorted_fields[0].dim != self.sorted_fields[2].dim:
                 result.update({"score": 0, 
-                               "error_var": [f"fields.{self.sorted_fields[0].id}.dim", f"fields.{self.sorted_fields[2].id}.dim"], 
+                               "error_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.dim", f"interactions.{self.id}.fields.{self.sorted_fields[2].id}.dim"], 
                                "good_var": [], 
                                "message": f"The scalar and fermions have different dimensions: {self.sorted_fields[0].dim} != {self.sorted_fields[2].dim}"
                                })
@@ -283,8 +299,8 @@ class Yukawa(Interaction):
     # --------------------------------------------------------------------
     def _dirac_bilinear_product(self):
         good_var = [
-            f"fields.{self.sorted_fields[0].id}.particles",
-            f"fields.{self.sorted_fields[1].id}.particles"
+            f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.particles",
+            f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.particles"
         ]
         result = {"score": 1, "max_score": 1, "message": "Passed", "good_var": good_var, "error_var": []}
 
@@ -305,7 +321,7 @@ class Yukawa(Interaction):
             
         except Exception as e:
             result.update({"score": 0, 
-                           "error_var": [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"], 
+                           "error_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.particles", f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.particles"], 
                            "good_var": [], 
                            "message": f"Error: {e}"
                            })
@@ -314,7 +330,7 @@ class Yukawa(Interaction):
     def _get_massive_particles(self):
         result = {"score": 1, 
                   "error_var": [], 
-                  "good_var": [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"], 
+                  "good_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.particles", f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.particles"], 
                   "message": "Passed", 
                   "max_score":1,
                   }
@@ -328,7 +344,7 @@ class Yukawa(Interaction):
                     break
         except Exception as e:
             result.update({"score": 0, 
-                           "error_var": [f"fields.{self.sorted_fields[0].id}.particles", f"fields.{self.sorted_fields[1].id}.particles"], 
+                           "error_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.particles", f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.particles"], 
                            "good_var": [], 
                            "message": f"Error: {e}"
                            })
@@ -337,7 +353,7 @@ class Yukawa(Interaction):
     def _check_U1Y_gauge_symmetry(self):
         result = {"score": 1, 
                   "error_var": [], 
-                  "good_var": [f"fields.{self.sorted_fields[0].id}.reps.g1", f"fields.{self.sorted_fields[1].id}.reps.g1", f"fields.{self.sorted_fields[2].id}.reps.g1"], 
+                  "good_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.reps.g1", f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.reps.g1", f"interactions.{self.id}.fields.{self.sorted_fields[2].id}.reps.g1"], 
                   "message": "Passed", 
                   "max_score": 1,
                   }
@@ -350,13 +366,13 @@ class Yukawa(Interaction):
             
             if sum != 0:
                 result.update({"score": 0, 
-                               "error_var": [f"fields.{self.sorted_fields[0].id}.reps.g1", f"fields.{self.sorted_fields[1].id}.reps.g1", f"fields.{self.sorted_fields[2].id}.reps.g1"], 
+                               "error_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.reps.g1", f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.reps.g1", f"interactions.{self.id}.fields.{self.sorted_fields[2].id}.reps.g1"], 
                                "good_var": [], 
                                "message": f"Violates U(1)Y gauge symmetry. {Y_psi_L} + {Y_psi_R} {sign} {Y_Phi} = {sum}"
                                })
         except Exception as e:
             result.update({"score": 0, 
-                           "error_var": [f"fields.{self.sorted_fields[0].id}.reps.g1", f"fields.{self.sorted_fields[1].id}.reps.g1", f"fields.{self.sorted_fields[2].id}.reps.g1"], 
+                           "error_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}.reps.g1", f"interactions.{self.id}.fields.{self.sorted_fields[1].id}.reps.g1", f"interactions.{self.id}.fields.{self.sorted_fields[2].id}.reps.g1"], 
                            "good_var": [], 
                            "message": f"Error: {e}"
                            })
@@ -365,7 +381,7 @@ class Yukawa(Interaction):
     def _set_yukawa_name(self):
         result = {"score": 1, 
                   "error_var": [], 
-                  "good_var": [f"fields.{self.sorted_fields[0].id}"], 
+                  "good_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}"], 
                   "message": "Passed", 
                   "max_score":1,
                   }
@@ -376,7 +392,7 @@ class Yukawa(Interaction):
                 self.LaTeX = f"Y_{{{self.sorted_fields[0].name}}}"
         except Exception as e:
             result.update({"score": 0, 
-                           "error_var": [f"fields.{self.sorted_fields[0].id}"], 
+                           "error_var": [f"interactions.{self.id}.fields.{self.sorted_fields[0].id}"], 
                            "good_var": [], 
                            "message": f"Error: {e}"
                            })
@@ -385,7 +401,7 @@ class Yukawa(Interaction):
     def _yukawa_mass(self):
         result = {"score": 1, 
                   "error_var": [], 
-                  "good_var": [f"interactions.{self.id}.fields"], 
+                  "good_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                   "message": "Passed", 
                   "max_score":1,
                   }
@@ -408,7 +424,7 @@ class Yukawa(Interaction):
                     self.ExtParams[mf.name] = mf
         except Exception as e:
             result.update({"score": 0, 
-                           "error_var": [f"interactions.{self.id}.fields"], 
+                           "error_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                            "good_var": [], 
                            "message": f"Error: {e}"
                            })
@@ -417,7 +433,7 @@ class Yukawa(Interaction):
     def _yukawa_matrix(self):
         result = {"score": 1, 
                   "error_var": [], 
-                  "good_var": [f"interactions.{self.id}.fields"], 
+                  "good_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                   "message": "Passed", 
                   "max_score":1,
                   }
@@ -455,7 +471,7 @@ class Yukawa(Interaction):
                     self.MatchingConditions.append(f"{self.name}[{math_idx}, {math_idx}], Sqrt[2]/vSM*M{value.name}")
         except Exception as e:
             result.update({"score": 0, 
-                           "error_var": [f"interactions.{self.id}.fields"], 
+                           "error_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                            "good_var": [], 
                            "message": f"Error: {e}"
                            })
@@ -464,7 +480,7 @@ class Yukawa(Interaction):
     def _yukawa_lagrangian(self):
         result = {"score": 1, 
                   "error_var": [], 
-                  "good_var": [f"interactions.{self.id}.fields"], 
+                  "good_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                   "message": "Passed", 
                   "max_score":1,
                   }
@@ -478,7 +494,7 @@ class Yukawa(Interaction):
             self.sorted_fields[1].mass_term.append(self.id)
         except Exception as e:
             result.update({"score": 0, 
-                           "error_var": [f"interactions.{self.id}.fields"], 
+                           "error_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                            "good_var": [], 
                            "message": f"Error: {e}"
                            })
@@ -487,7 +503,7 @@ class Yukawa(Interaction):
     def _mixing_matrix(self):
         result = {"score": 1, 
                   "error_var": [], 
-                  "good_var": [f"interactions.{self.id}.fields"], 
+                  "good_var": [f"interactions.{self.id}.fields.{f.id}" for f in self.fields], 
                   "message": "Passed", 
                   "max_score":1,
                   }
@@ -531,7 +547,7 @@ class Yukawa(Interaction):
             self.EWSB_matter_sector = f"{{{{{self.left_spinor}}}, {{conj[{self.right_spinor}]}}}}, {{{{{self.left_spinor.upper()}, V{self.dirac_spinor}}}, {{{self.right_spinor.upper()}, U{self.dirac_spinor}}}}}"
         except Exception as e:
             result.update({"score": 0, 
-                           "error_var": [f"interaction.{self.id}.fields"], 
+                           "error_var": [f"interaction.{self.id}.fields.{f.id}" for f in self.fields], 
                            "good_var": [], 
                            "message": f"Error: {e}"
                            })

@@ -295,7 +295,7 @@ class Field:
         def _all_particle_pass():
             result = {"score": 1, 
                       "error_var": [], 
-                      "good_var": [f"particles.{p.id}" for p in self.particles], 
+                      "good_var": [f"fields.{self.id}.particles.{p.id}" for p in self.particles], 
                       "message": "Passed", 
                       "max_score": 1,
                       }
@@ -304,7 +304,7 @@ class Field:
             if len(passed_particles) != len(self.particles):
                 failed_particles = [p for p in self.particles if p not in passed_particles]
                 error_var = [ev for p in failed_particles for ev in p.all_error_vars]
-                good_var = [f"particles.{p.id}" for p in passed_particles]
+                good_var = [f"fields.{self.id}.particles.{p.id}" for p in passed_particles]
                 message = f"Some particles did not pass all checks"
                 score = len(passed_particles)/len(self.particles)
                 result.update({"score": score, 
@@ -316,16 +316,16 @@ class Field:
 
         # check if the particles are a list of Particle
         def _particle_type_check():
-            crucial_var = [f"particles.{p.id}" for p in self.particles]
+            crucial_var = [f"fields.{self.id}.particles.{p.id}" for p in self.particles]
             result = {"score": 1, 
                       "error_var": [], 
                       "good_var": crucial_var, 
                       "message": "Passed", 
                       "max_score": 1,
                       }
-            error_var = [f"particles.{p.id}" for p in self.particles if not isinstance(p, Particle)]
+            error_var = [f"fields.{self.id}.particles.{p.id}" for p in self.particles if not isinstance(p, Particle)]
             if error_var:
-                good_var = [f"particles.{p.id}" 
+                good_var = [f"fields.{self.id}.particles.{p.id}" 
                             for p in self.particles if isinstance(p, Particle)
                             ]
                 message = f"'particles' must be a list of Particle objects"
@@ -349,10 +349,14 @@ class Field:
             error_var = []
             good_var = []
             if len(self.particles) != len(set(self.particles)):
-                error_var.extend([f"particles.{p.id}" for p in self.particles if self.particles.count(p) > 1])
-                good_var.extend([f"particles.{p.id}" for p in self.particles if self.particles.count(p) == 1])
+                error_var.extend([f"fields.{self.id}.particles.{p.id}" for p in self.particles if self.particles.count(p) > 1])
+                good_var.extend([f"fields.{self.id}.particles.{p.id}" for p in self.particles if self.particles.count(p) == 1])
 
-            if len(self.particles) != self.dim * self.gen:
+            if len(self.particles) < self.dim * self.gen:
+                error_var.extend([f"fields.{self.id}.dim", f"fields.{self.id}.gen", f"fields.{self.id}.END_FIELD"])
+            elif len(self.particles) > self.dim * self.gen:
+                extra_particles = [p for p in self.particles if p not in self.particles[:self.dim * self.gen]]
+                error_var.extend([f"fields.{self.id}.particles.{p.id}" for p in extra_particles])
                 error_var.extend([f"fields.{self.id}.dim", f"fields.{self.id}.gen"])
 
             if error_var:
@@ -374,8 +378,8 @@ class Field:
             mismatched_particle = [p for p in self.particles if p.type != self.type]
 
             if mismatched_particle:
-                error_var = [f"particles.{p.id}.type" for p in mismatched_particle]
-                good_var = [f"particles.{p.id}.type" for p in self.particles if p.type == self.type]
+                error_var = [f"fields.{self.id}.particles.{p.id}.type" for p in mismatched_particle]
+                good_var = [f"fields.{self.id}.particles.{p.id}.type" for p in self.particles if p.type == self.type]
                 message = f"{mismatched_particle[0].name} is a {mismatched_particle[0].type} particle, but this field is a {self.type} field."
                 result.update({"score": 0, 
                                "error_var": error_var, 
@@ -512,7 +516,7 @@ class Field:
 
         # check if self-conjugate is consistent with the charges
         def _conj_charges_consistency():
-            good_var = [f"particles.{p.id}.charge" for p in self.particles] + [f"fields.{self.id}.self_conjugate"]
+            good_var = [f"fields.{self.id}.particles.{p.id}.charge" for p in self.particles] + [f"fields.{self.id}.self_conjugate"]
 
             result = {"score": 1, 
                       "error_var": [],
@@ -523,9 +527,9 @@ class Field:
                       
             error_var = []
             if self.self_conjugate:
-                error_var = [f"particles.{p.id}.charge" for p in self.particles if p.charge != 0]
+                error_var = [f"fields.{self.id}.particles.{p.id}.charge" for p in self.particles if p.charge != 0]
             if error_var:
-                good_var = [f"particles.{p.id}.charge" for p in self.particles if p.charge == 0]
+                good_var = [f"fields.{self.id}.particles.{p.id}.charge" for p in self.particles if p.charge == 0]
                 message = f"this field is self-conjugate, but the particles have non-zero charges."
                 result.update({"score": 0, 
                                "error_var": error_var, 
@@ -536,7 +540,7 @@ class Field:
 
         # check if the charges are consistent with the allowed charges
         def _rep_charge_consistency():
-            good_var = [f"particles.{p.id}.charge" for p in self.particles]
+            good_var = [f"fields.{self.id}.particles.{p.id}.charge" for p in self.particles]
             result = {"score": 1, 
                       "error_var": [], 
                       "good_var": good_var, 
@@ -544,12 +548,12 @@ class Field:
                       "max_score": 1,
                       }
 
-            error_var = [f"particles.{p.id}.charge" for p in self.particles if p.charge not in self.allowed_Q]
+            error_var = [f"fields.{self.id}.particles.{p.id}.charge" for p in self.particles if p.charge not in self.allowed_Q]
         
             if error_var:
                 error_var = error_var[:1] # only keep the first invalid charge
                 error_var.extend([f"fields.{self.id}.reps.g1", f"fields.{self.id}.reps.g2"]) # not sure if we want to punish the reps
-                good_var = [f"particles.{p.id}.charge" for p in self.particles if p.charge in self.allowed_Q]
+                good_var = [f"fields.{self.id}.particles.{p.id}.charge" for p in self.particles if p.charge in self.allowed_Q]
                 message = f"Charge {error_var[0].charge} is not in allowed charges"
 
                 result.update({"score": 0, 
@@ -564,7 +568,7 @@ class Field:
         def _sort_particles():
             result = {"score": 1, 
                       "error_var": [], 
-                      "good_var": [f"particles.{p.id}" for p in self.particles], 
+                      "good_var": [f"fields.{self.id}.particles.{p.id}" for p in self.particles], 
                       "message": "Passed", 
                       "max_score": 1,
                       }
@@ -578,7 +582,7 @@ class Field:
                 ptcls.sort(key=lambda p: p.mass)
 
             if len(charge_eigenval) != self.dim:
-                error_var = [f"particles.{p.id}.charge" for p in self.particles]
+                error_var = [f"fields.{self.id}.particles.{p.id}.charge" for p in self.particles]
                 result.update({"score": 0, 
                                "error_var": error_var, 
                                "good_var": [f"fields.{self.id}.reps.g1", f"fields.{self.id}.reps.g2"], 
@@ -609,7 +613,6 @@ class Field:
                            (_chirality_check, 1),
                            (_sort_reps, 1),
                            (_reps_dim_consistency, 1),
-                           #(_allowed_charges, 1),
                            (_conj_charges_consistency, 1),
                            (_rep_charge_consistency, 1),
                            (_sort_particles, 1)
@@ -680,7 +683,21 @@ class Field:
         score, max_score = self.score
         return score == max_score
         
+    @property
+    def failed_checks(self):
+        return {k: v for k, v in self.checklist.items() if v['message'] != "Passed"}
+    
+    @property
+    def all_error_vars(self):
+        error_vars = [v['error_var'] for v in self.checklist.values()]
+        flat_error_vars = [ev for ev_list in error_vars for ev in ev_list]
+        return flat_error_vars
 
+    @property
+    def all_good_vars(self):
+        good_vars = [v['good_var'] for v in self.checklist.values()]
+        flat_good_vars = [gv for gv_list in good_vars for gv in gv_list]
+        return flat_good_vars
 # ====================================================================
 #                            Fermion Field
 # ====================================================================
@@ -738,9 +755,9 @@ class FermionField(Field):
                 try:
                     if self.color is not None:
                         p.color = self.color
-                        good_var.append(f"particles.{p.id}")
+                        good_var.append(f"fields.{self.id}.particles.{p.id}")
                 except Exception as e:
-                    error_var.append(f"particles.{p.id}")
+                    error_var.append(f"fields.{self.id}.particles.{p.id}")
                     error_msg.append(f"Error: {e}")
             if error_var:
                 result.update({"score": 0, 
