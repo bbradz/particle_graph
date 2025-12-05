@@ -1,0 +1,43 @@
+# GAUGE BLOCK
+# start   id   rank    end        # name         boson 
+GAUGE_U   g_1  rank_1  END_GAUGE  # hypercharge  B
+GAUGE_SU  g_2  rank_2  END_GAUGE  # left         WB
+GAUGE_SU  g_3  rank_3  END_GAUGE  # color        G
+
+# PARTICLE BLOCK
+PTCL_SCALAR null
+NO_COLOR
+    charge_6   TAG_Hp END_PTCL  
+    charge_0   TAG_H0 END_PTCL 
+PTCL_FERMION left 
+COLOR
+    charge_4   TAG_U TAG_C TAG_T END_PTCL
+    charge_-2  TAG_D TAG_S TAG_B END_PTCL
+NO_COLOR
+    charge_-6  TAG_E  TAG_MU TAG_TAU END_PTCL
+    charge_0   TAG_VE TAG_VM TAG_VT  END_PTCL
+PTCL_FERMION right  
+COLOR  
+    charge_4   TAG_U TAG_C TAG_T END_PTCL
+    charge_-2  TAG_D TAG_S TAG_B END_PTCL
+NO_COLOR
+    charge_-6  TAG_E TAG_MU TAG_TAU END_PTCL
+END_PARTICLE_BLOCK
+
+
+# MATTER BLOCK
+# start       id   chirality  reps    
+MPLT_SCALAR   m_1  null       REPS  singlet fnd hypercharge_3 END_REPS       dim_2  gen_1  END_MULTIPLET  # Higgs doublet                                       dim    gen    end
+MPLT_FERMION  m_2  left       REPS  singlet fnd hypercharge_-3 END_REPS      dim_2  gen_3  END_MULTIPLET  # left lepton
+MPLT_FERMION  m_3  right      REPS  singlet singlet hypercharge_-6 END_REPS  dim_1  gen_3  END_MULTIPLET  # electron-like lepton
+MPLT_FERMION  m_4  left       REPS  fnd fnd hypercharge_1 END_REPS           dim_2  gen_3  END_MULTIPLET  # left quark
+MPLT_FERMION  m_5  right      REPS  fnd singlet hypercharge_4 END_REPS       dim_1  gen_3  END_MULTIPLET  # right up-type quark
+MPLT_FERMION  m_6  right      REPS  fnd singlet hypercharge_-2 END_REPS      dim_1  gen_3  END_MULTIPLET  # right down-type quark
+
+
+# Dynamic Block
+# start      id   mplt_list                   parameters                                     end
+TERM_PHI4    i_1  MPLTS m_1 END_MPLT          PARAMS param_1e-1 END_PARAM                    END_INTERACTION
+TERM_YUKAWA  i_2  MPLTS m_1 m_2 m_3 END_MPLT  PARAMS mass_1e-4 mass_1e-1 mass_1e0 END_PARAM  END_INTERACTION
+TERM_YUKAWA  i_3  MPLTS m_1 m_4 m_5 END_MPLT  PARAMS mass_1e-3 mass_1e0 mass_1e2  END_PARAM  END_INTERACTION
+TERM_YUKAWA  i_4  MPLTS m_1 m_4 m_6 END_MPLT  PARAMS mass_1e-3 mass_1e-1 mass_1e1 END_PARAM  END_INTERACTION

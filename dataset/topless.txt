@@ -1,0 +1,27 @@
+# GAUGE BLOCK
+GAUGE_U   g_1  rank_1  END_GAUGE  # hypercharge
+GAUGE_SU  g_2  rank_2  END_GAUGE  # left
+GAUGE_SU  g_3  rank_3  END_GAUGE  # color
+
+# PARTICLE BLOCK
+PTCL_SCALAR null
+NO_COLOR
+    charge_6   TAG_Hp END_PTCL  
+    charge_0   TAG_H0 END_PTCL 
+PTCL_FERMION left 
+COLOR
+    charge_4   TAG_U   TAG_C END_PTCL
+    charge_-2  TAG_D   TAG_S   TAG_B END_PTCL
+NO_COLOR
+    charge_-6  TAG_E   TAG_MU  TAG_TAU END_PTCL
+    charge_0   TAG_VE  TAG_VM  TAG_VT END_PTCL
+PTCL_FERMION right  
+COLOR  
+    charge_4   TAG_U   TAG_C  END_PTCL
+    charge_-2  TAG_D   TAG_S  TAG_B END_PTCL
+NO_COLOR
+    charge_-6  TAG_E   TAG_MU  TAG_TAU END_PTCL
+END_PARTICLE_BLOCK
+
+# MATTER BLOCK
+MPLT_SCALAR   m_1  null       REPS  singlet fnd hypercharge_3 END_REPS       dim_2  gen_1  END_MULTIPLET  # Higgs doublet

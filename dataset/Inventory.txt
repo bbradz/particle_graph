@@ -1,0 +1,13 @@
+PARTICLE_FERMION  TAG_E color_false  charge_-6  END_PARTICLE  # e
+PARTICLE_FERMION  TAG_MU color_false  charge_-6  END_PARTICLE  # mu
+PARTICLE_FERMION  TAG_TAU color_false  charge_-6  END_PARTICLE  # tau
+PARTICLE_FERMION  TAG_VE color_false  charge_0   END_PARTICLE  # ve
+PARTICLE_FERMION  TAG_VM color_false  charge_0   END_PARTICLE  # vm
+PARTICLE_FERMION  TAG_VT color_false  charge_0   END_PARTICLE  # vt
+PARTICLE_FERMION  TAG_U color_true   charge_4   END_PARTICLE  # u
+PARTICLE_FERMION  TAG_C color_true   charge_4   END_PARTICLE  # c
+PARTICLE_FERMION  TAG_D color_true   charge_-2  END_PARTICLE  # d
+PARTICLE_FERMION  TAG_S color_true   charge_-2  END_PARTICLE  # s
+PARTICLE_FERMION  TAG_B color_true   charge_-2  END_PARTICLE  # b
+PARTICLE_SCALAR   TAG_Hp color_false  charge_6   END_PARTICLE  # Hp
+PARTICLE_SCALAR   TAG_H0 color_false  charge_0   END_PARTICLE  # H0
